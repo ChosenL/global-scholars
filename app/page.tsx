@@ -6,6 +6,7 @@ import Services from "@/components/home/Services";
 import About from "@/components/home/About";
 import AudienceCards from "@/components/home/AudienceCards";
 import SuccessStories from "@/components/home/SuccessStories";
+import FAQ from "@/components/home/FAQ";
 import CTA from "@/components/home/CTA";
 import Footer from "@/components/layout/Footer";
 
@@ -20,6 +21,7 @@ export default function Home() {
       <About />
       <AudienceCards />
       <SuccessStories />
+      <FAQ />
       <CTA />
       <Footer />
     </main>
