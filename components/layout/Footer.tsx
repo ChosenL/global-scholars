@@ -7,13 +7,13 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-20">
         <div className="grid gap-14 lg:grid-cols-4">
           <div>
-            <Image
-              src="/logo.svg"
-              alt="Global Scholars"
-              width={220}
-              height={60}
-              className="w-48"
-            />
+           <Image
+  src="/logo.png"
+  alt="Global Scholars"
+  width={220}
+  height={60}
+  className="h-auto w-48"
+/>
 
             <p className="mt-6 leading-7 text-white/70">
               Guiding students and families through every step of the
