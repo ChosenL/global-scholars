@@ -29,14 +29,13 @@ export default function Navbar() {
 
         {/* Logo */}
 
-        <Image
-          src="/logo.svg"
-          alt="Global Scholars Pathway Advisors"
-          width={220}
-          height={55}
-          priority
-          className="h-12 w-auto"
-        />
+       <Image
+  src="/logo.png"
+  alt="Global Scholars Pathway Advisors"
+  width={56}
+  height={56}
+  priority
+/>
 
         {/* Desktop Navigation */}
 
