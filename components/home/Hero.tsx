@@ -26,7 +26,7 @@ const trustPoints = [
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-white">
+    <section id="home" className="relative overflow-hidden bg-white">
       <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-[#C8A24A]/10 blur-3xl" />
       <div className="absolute right-0 top-24 h-96 w-96 rounded-full bg-[#0F2747]/10 blur-3xl" />
 

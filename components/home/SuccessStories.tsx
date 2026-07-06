@@ -3,7 +3,7 @@ import FadeIn from "../ui/FadeIn";
 
 export default function SuccessStories() {
   return (
-    <section className="bg-[#0F2747] py-24 text-white">
+    <section id="success-stories" className="bg-[#0F2747] py-24 text-white">
       <div className="mx-auto max-w-7xl px-6">
 
         <FadeIn>

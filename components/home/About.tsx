@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 
 export default function About() {
   return (
-    <section className="bg-white py-24">
+    <section id="about" className="bg-white py-24">
       <div className="mx-auto grid max-w-7xl items-center gap-16 px-6 lg:grid-cols-2">
 
         {/* Founder Photo */}

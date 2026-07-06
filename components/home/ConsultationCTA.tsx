@@ -3,7 +3,7 @@ import { Calendar, Phone, CheckCircle2, ArrowRight } from "lucide-react";
 
 export default function ConsultationCTA() {
   return (
-    <section className="relative overflow-hidden py-24">
+    <section id="contact" className="relative overflow-hidden py-24">
       <div className="absolute inset-0 bg-gradient-to-br from-[#071526] via-[#0F2747] to-[#173A68]" />
       <div className="absolute -left-24 top-0 h-80 w-80 rounded-full bg-[#C8A24A]/20 blur-3xl" />
       <div className="absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
