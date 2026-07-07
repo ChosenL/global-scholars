@@ -42,11 +42,7 @@ export const metadata: Metadata = {
     "Education Consultant",
   ],
 
-  authors: [
-    {
-      name: "Global Scholars Pathway Advisors",
-    },
-  ],
+  authors: [{ name: "Global Scholars Pathway Advisors" }],
 
   creator: "Global Scholars Pathway Advisors",
 
@@ -95,14 +91,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${merriweather.variable}`}
-    >
+    <html lang="en" className={`${inter.variable} ${merriweather.variable}`}>
       <body>
-          <StructuredData />
+        <StructuredData />
+
         {children}
-        
 
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-2VVH8SD99D"
@@ -113,8 +106,8 @@ export default function RootLayout({
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-2VVH8SD99D');
+            gtag("js", new Date());
+            gtag("config", "G-2VVH8SD99D");
           `}
         </Script>
       </body>
