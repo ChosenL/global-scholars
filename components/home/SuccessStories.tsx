@@ -1,108 +1,66 @@
-import Image from "next/image";
 import FadeIn from "../ui/FadeIn";
+import { Quote, Star } from "lucide-react";
 
-const milestones = [
+const testimonials = [
   {
-    year: "2015",
-    title: "The Dream Began",
-    text:
-      "Dwayne began studying Information and Communication Technology at the Vocational Training and Development Institute in Jamaica. Even then, he dreamed of studying abroad, but without guidance, the path seemed out of reach.",
-    image: "/dwayne-start.jpg",
+    name: "Britney Thompson",
+    role: "Honors Graduate, Western Connecticut State University",
+    quote:
+      "My journey from UCC in Jamaica to completing my degree in the United States taught me how important proper guidance is. With research, preparation, and the right support, I was able to transfer credits, graduate with honors, and gain valuable professional experience in Human Resources.",
   },
   {
-    year: "2022",
-    title: "Britney Begins University",
-    text:
-      "Britney started pursuing her bachelor's degree at the University of the Commonwealth Caribbean (UCC) in Jamaica. Although grateful for the opportunity, she desired greater global opportunities and a learning environment that would maximize her potential.",
-    image: "/britney-ucc.jpg",
-  },
-  {
-    year: "April 2024",
-    title: "A New Beginning",
-    text:
-      "After getting married, we combined our dreams into one mission. Together we researched universities, compared programs, completed applications, organized documents, and prepared for one of the biggest decisions of our lives.",
-    image: "/wedding.jpg",
-  },
-  {
-    year: "2024",
-    title: "Crossing Borders",
-    text:
-      "Just weeks after our wedding, we packed everything we owned and moved to the United States so Britney could continue her education. It was exciting, uncertain, and life-changing.",
-    image: "/campus-britney.jpg",
-  },
-  {
-    year: "2026",
-    title: "Dream Achieved",
-    text:
-      "Britney graduated with Honors from Western Connecticut State University with a degree in Management, concentrating in Human Resource Management. She also gained valuable professional HR experience while studying.",
-    image: "/graduation.jpg",
-  },
-  {
-    year: "Today",
-    title: "Helping Others Build Their Future",
-    text:
-      "Everything we learned through our own journey became the foundation of Global Scholars Pathway Advisors. Today we help students and families navigate the same path with clarity, confidence, and genuine care.",
-    image: "/founders.jpg",
+    name: "Student Testimonial",
+    role: "Guided Student Experience",
+    quote:
+      "The support I received helped me understand the process more clearly and feel more confident about my next steps. What once felt confusing became easier to navigate with proper guidance and encouragement.",
   },
 ];
 
 export default function SuccessStories() {
   return (
-    <section
-      id="success-stories"
-      className="bg-[#F8F9FB] py-24"
-    >
-      <div className="mx-auto max-w-6xl px-6">
+    <section id="success-stories" className="bg-[#F8F9FB] py-24">
+      <div className="mx-auto max-w-7xl px-6">
         <FadeIn>
-          <div className="text-center">
+          <div className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-bold uppercase tracking-[0.35em] text-[#C8A24A]">
-              Our Journey
+              Testimonials
             </p>
 
-            <h2 className="mt-4 text-5xl font-black text-[#0F2747]">
-              From Our Story...
-              <br />
-              To Yours.
+            <h2 className="mt-4 text-5xl font-black leading-tight text-[#0F2747] md:text-6xl">
+              Real Stories. Real Encouragement.
             </h2>
 
-            <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600">
-              Global Scholars wasn't created in a boardroom.
-              It was created through real experiences,
-              real obstacles, and a dream that became our mission.
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+              Behind every pathway is a student, a family, and a dream. These
+              stories reflect why Global Scholars exists.
             </p>
           </div>
         </FadeIn>
 
-        <div className="mt-20 space-y-20">
-          {milestones.map((item, index) => (
-            <FadeIn key={item.year} delay={index * 0.08}>
-              <div
-                className={`grid items-center gap-10 lg:grid-cols-2 ${
-                  index % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""
-                }`}
-              >
-                <div>
-                  <div className="inline-flex rounded-full bg-[#C8A24A] px-5 py-2 text-sm font-bold text-white">
-                    {item.year}
-                  </div>
-
-                  <h3 className="mt-5 text-3xl font-black text-[#0F2747]">
-                    {item.title}
-                  </h3>
-
-                  <p className="mt-5 text-lg leading-8 text-slate-600">
-                    {item.text}
-                  </p>
+        <div className="mt-16 grid gap-8 lg:grid-cols-2">
+          {testimonials.map((item, index) => (
+            <FadeIn key={item.name} delay={index * 0.08}>
+              <div className="h-full rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-xl">
+                <div className="flex items-center gap-2 text-[#C8A24A]">
+                  {[...Array(5)].map((_, starIndex) => (
+                    <Star key={starIndex} size={18} fill="currentColor" />
+                  ))}
                 </div>
 
-                <div className="overflow-hidden rounded-[30px] shadow-2xl">
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    width={700}
-                    height={500}
-                    className="h-full w-full object-cover transition duration-700 hover:scale-105"
-                  />
+                <Quote className="mt-8 text-[#C8A24A]" size={42} />
+
+                <p className="mt-6 text-lg leading-8 text-slate-700">
+                  “{item.quote}”
+                </p>
+
+                <div className="mt-8 border-t border-slate-200 pt-6">
+                  <p className="text-xl font-black text-[#0F2747]">
+                    {item.name}
+                  </p>
+
+                  <p className="mt-1 text-sm font-semibold text-[#C8A24A]">
+                    {item.role}
+                  </p>
                 </div>
               </div>
             </FadeIn>
