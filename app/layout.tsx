@@ -14,9 +14,78 @@ const merriweather = Merriweather({
 });
 
 export const metadata: Metadata = {
-  title: "Global Scholars Pathway Advisors",
+  metadataBase: new URL("https://globalscholarspathway.com"),
+
+  title: {
+    default: "Global Scholars Pathway Advisors",
+    template: "%s | Global Scholars Pathway Advisors",
+  },
+
   description:
-    "Guiding Dreams. Building Futures. International Education Consulting.",
+    "Helping students confidently navigate university admissions, credential evaluations, transfer planning, career readiness, and international education with personalized guidance.",
+
+  keywords: [
+    "Study in USA",
+    "International Students",
+    "University Admissions",
+    "College Transfer",
+    "Credential Evaluation",
+    "WES",
+    "ECE",
+    "Career Readiness",
+    "OPT",
+    "CPT",
+    "Global Scholars Pathway Advisors",
+    "Study Abroad",
+    "Education Consultant",
+  ],
+
+  authors: [
+    {
+      name: "Global Scholars Pathway Advisors",
+    },
+  ],
+
+  creator: "Global Scholars Pathway Advisors",
+
+  publisher: "Global Scholars Pathway Advisors",
+
+  openGraph: {
+    title: "Global Scholars Pathway Advisors",
+    description:
+      "Guiding Dreams. Building Futures. Personalized guidance for international students pursuing higher education in the United States.",
+
+    url: "https://globalscholarspathway.com",
+
+    siteName: "Global Scholars Pathway Advisors",
+
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Global Scholars Pathway Advisors",
+      },
+    ],
+
+    locale: "en_US",
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Global Scholars Pathway Advisors",
+    description:
+      "Helping students confidently navigate every step of their international education journey.",
+
+    images: ["/logo.png"],
+  },
+
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({
