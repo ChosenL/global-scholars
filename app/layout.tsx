@@ -1,3 +1,4 @@
+import Script from "next/script";
 import type { Metadata } from "next";
 import { Inter, Merriweather } from "next/font/google";
 import "./globals.css";
@@ -98,7 +99,24 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${merriweather.variable}`}
     >
-      <body>{children}</body>
+      <body>
+  {children}
+
+  <Script
+    src="https://www.googletagmanager.com/gtag/js?id=G-2VVH8SD99D"
+    strategy="afterInteractive"
+  />
+
+  <Script id="google-analytics" strategy="afterInteractive">
+    {`
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-2VVH8SD99D');
+    `}
+  </Script>
+</body>
     </html>
   );
 }

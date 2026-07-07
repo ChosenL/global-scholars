@@ -1,3 +1,4 @@
+import ContactForm from "@/components/home/ContactForm";
 import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/home/Hero";
 import FeatureCards from "@/components/home/FeatureCards";
@@ -26,6 +27,7 @@ export default function Home() {
       <SuccessStories />
       <FAQ />
       <ConsultationCTA />
+      <ContactForm />
       <Footer />
     </main>
   );
