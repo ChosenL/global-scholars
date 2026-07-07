@@ -1,8 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
 import FadeIn from "../ui/FadeIn";
 import {
-  ArrowRight,
   BookOpen,
   Heart,
   ShieldCheck,
@@ -10,6 +8,7 @@ import {
   Users,
   GraduationCap,
   Globe2,
+  Quote,
 } from "lucide-react";
 
 const timeline = [
@@ -57,6 +56,21 @@ const values = [
   ["Empowerment", GraduationCap],
   ["Partnership", Users],
   ["Growth", BookOpen],
+];
+
+const testimonials = [
+  {
+    name: "Britney Thompson",
+    role: "Honors Graduate, Western Connecticut State University",
+    quote:
+      "Transferring internationally can feel overwhelming, but with research, planning, and support, I was able to continue my education in the United States, transfer credits successfully, graduate with honors, and gain professional experience in Human Resources.",
+  },
+  {
+    name: "Student Testimonial",
+    role: "Student Guidance Experience",
+    quote:
+      "The guidance made the process easier to understand. Instead of feeling confused about the next step, I had more clarity, direction, and confidence about moving forward with my educational goals.",
+  },
 ];
 
 export default function About() {
@@ -132,80 +146,40 @@ export default function About() {
           </FadeIn>
         </div>
 
-        <div className="mt-24 grid gap-8 lg:grid-cols-2">
+        <div className="mt-24">
           <FadeIn>
-            <div className="overflow-hidden rounded-[2rem] shadow-xl">
-              <Image
-                src="/wedding.jpg"
-                alt="Dwayne and Britney wedding"
-                width={800}
-                height={1000}
-                className="h-full w-full object-cover"
-              />
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="text-sm font-bold uppercase tracking-[0.35em] text-[#C8A24A]">
+                Story Progression
+              </p>
+
+              <h3 className="mt-4 text-4xl font-black text-[#0F2747] md:text-5xl">
+                The Path That Shaped Our Purpose.
+              </h3>
             </div>
           </FadeIn>
 
-          <div className="space-y-5">
+          <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {timeline.map((item, index) => (
               <FadeIn key={`${item.year}-${item.title}`} delay={index * 0.05}>
-                <div className="rounded-3xl border border-slate-200 bg-[#F8F9FB] p-6">
+                <div
+                  className={`h-full rounded-3xl border border-slate-200 bg-[#F8F9FB] p-7 shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-xl ${
+                    index === 6 ? "lg:col-start-2" : ""
+                  }`}
+                >
                   <p className="text-sm font-black text-[#C8A24A]">
                     {item.year}
                   </p>
-                  <h4 className="mt-2 text-xl font-black text-[#0F2747]">
+
+                  <h4 className="mt-3 text-2xl font-black text-[#0F2747]">
                     {item.title}
                   </h4>
-                  <p className="mt-2 leading-7 text-slate-600">{item.text}</p>
+
+                  <p className="mt-4 leading-7 text-slate-600">{item.text}</p>
                 </div>
               </FadeIn>
             ))}
           </div>
-        </div>
-
-        <div className="mt-24 grid items-center gap-12 rounded-[2rem] bg-[#F8F9FB] p-8 lg:grid-cols-2 lg:p-12">
-          <FadeIn>
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.3em] text-[#C8A24A]">
-                Britney’s Journey
-              </p>
-
-              <h3 className="mt-4 text-4xl font-black text-[#0F2747]">
-                From transfer student to honors graduate.
-              </h3>
-
-              <p className="mt-6 text-lg leading-8 text-slate-600">
-                Through careful planning and persistence, Britney successfully
-                transferred the majority of her credits and completed her degree
-                in two years instead of starting over.
-              </p>
-
-              <p className="mt-6 text-lg leading-8 text-slate-600">
-                Her journey reminds future students that with preparation,
-                guidance, and perseverance, what feels overwhelming can become
-                achievable.
-              </p>
-            </div>
-          </FadeIn>
-
-          <FadeIn delay={0.15}>
-            <div className="grid gap-6 sm:grid-cols-2">
-              <Image
-                src="/campus-britney.jpg"
-                alt="Britney on campus"
-                width={500}
-                height={700}
-                className="rounded-3xl object-cover shadow-xl"
-              />
-
-              <Image
-                src="/graduation.jpg"
-                alt="Britney graduation"
-                width={500}
-                height={700}
-                className="rounded-3xl object-cover shadow-xl sm:mt-10"
-              />
-            </div>
-          </FadeIn>
         </div>
 
         <div className="mt-24 rounded-[2rem] bg-[#071526] px-8 py-16 text-center text-white">
@@ -279,16 +253,7 @@ export default function About() {
           </div>
         </div>
 
-        <div className="relative mt-24 overflow-hidden rounded-[2rem] bg-[#071526] px-8 py-20 text-center text-white">
-          <Image
-            src="/founders-stairs.jpg"
-            alt="Dwayne and Britney"
-            fill
-            className="object-cover opacity-25"
-          />
-
-          <div className="absolute inset-0 bg-[#071526]/70" />
-
+        <div className="mt-24 rounded-[2rem] bg-[#071526] px-8 py-20 text-center text-white">
           <div className="relative mx-auto max-w-3xl">
             <h3 className="text-5xl font-black leading-tight">
               Your Journey Starts Here.
@@ -299,13 +264,56 @@ export default function About() {
               pathway together.
             </p>
 
-            <Link
-              href="#contact"
-              className="mt-10 inline-flex items-center gap-3 rounded-xl bg-[#C8A24A] px-8 py-4 font-bold text-[#071526] transition hover:scale-105"
+            <a
+              href="https://calendly.com/thompsondwayne0055/free-10_minute-consultation"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-10 inline-flex items-center justify-center rounded-xl bg-[#C8A24A] px-8 py-4 font-bold text-[#071526] transition hover:scale-105"
             >
               Book Your Free Consultation
-              <ArrowRight size={18} />
-            </Link>
+            </a>
+          </div>
+        </div>
+
+        <div className="mt-24">
+          <FadeIn>
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="text-sm font-bold uppercase tracking-[0.35em] text-[#C8A24A]">
+                Testimonials
+              </p>
+
+              <h3 className="mt-4 text-4xl font-black text-[#0F2747] md:text-5xl">
+                Real Stories. Real Encouragement.
+              </h3>
+
+              <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+                These stories reflect the heart of Global Scholars — helping
+                students and families move forward with clarity and confidence.
+              </p>
+            </div>
+          </FadeIn>
+
+          <div className="mt-14 grid gap-8 lg:grid-cols-2">
+            {testimonials.map((item, index) => (
+              <FadeIn key={item.name} delay={index * 0.08}>
+                <div className="h-full rounded-3xl border border-slate-200 bg-[#F8F9FB] p-8 shadow-sm">
+                  <Quote className="text-[#C8A24A]" size={38} />
+
+                  <p className="mt-6 text-lg leading-8 text-slate-700">
+                    “{item.quote}”
+                  </p>
+
+                  <div className="mt-8 border-t border-slate-200 pt-6">
+                    <p className="text-xl font-black text-[#0F2747]">
+                      {item.name}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-[#C8A24A]">
+                      {item.role}
+                    </p>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
           </div>
         </div>
       </div>
