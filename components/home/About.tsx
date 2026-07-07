@@ -16,32 +16,37 @@ const timeline = [
   {
     year: "2015",
     title: "The Dream Began",
-    text: "Dwayne began college in Jamaica at the Vocational Training Development Institute while carrying a desire for international education.",
+    text: "Dwayne began his higher education journey at the Vocational Training Development Institute in Jamaica, pursuing a Bachelor’s Degree in Information and Communication Technology while carrying a dream of one day studying abroad.",
   },
   {
     year: "2020",
-    title: "A Degree Completed",
-    text: "He completed his Bachelor’s Degree in Information and Communication Technology.",
+    title: "A Foundation Built",
+    text: "Dwayne completed his Bachelor’s Degree in Information and Communication Technology. Although his dream of studying abroad had not yet become a reality, his passion for international education never faded.",
+  },
+  {
+    year: "2022",
+    title: "Britney Begins Her Journey",
+    text: "Britney enrolled at the University of the Commonwealth Caribbean in Jamaica. She was committed to earning her degree, but she and Dwayne believed there were greater opportunities available through an international educational experience.",
   },
   {
     year: "2024",
-    title: "A Shared Journey",
-    text: "Dwayne and Britney were married and began planning Britney’s transfer journey to the United States.",
+    title: "Marriage & A New Vision",
+    text: "After getting married, Dwayne and Britney made the life-changing decision to continue Britney’s education in the United States. Together, they researched universities, transfer requirements, accreditation, programs, documents, and deadlines.",
   },
   {
     year: "2024",
-    title: "Research, Applications & Faith",
-    text: "Together, they researched universities, transfer credits, documents, timelines, and the steps needed to move forward.",
+    title: "The Transfer",
+    text: "Britney successfully transferred from the University of the Commonwealth Caribbean to Western Connecticut State University. Because of careful planning, many of her credits transferred successfully, allowing her to continue forward instead of starting over.",
   },
   {
     year: "2026",
-    title: "Graduation With Honors",
-    text: "Britney graduated with honors after successfully transferring credits and completing her degree in the United States.",
+    title: "A Dream Realized",
+    text: "Britney graduated with honors from Western Connecticut State University with a Bachelor’s Degree in Management, concentrating in Human Resource Management, while also gaining valuable professional experience in Human Resources.",
   },
   {
     year: "Today",
     title: "Global Scholars Was Born",
-    text: "Their personal journey became the mission behind Global Scholars Pathway Advisors.",
+    text: "Our personal journey became our purpose. Global Scholars Pathway Advisors was founded to help students and families navigate international education with clarity, confidence, and genuine support.",
   },
 ];
 
@@ -65,7 +70,7 @@ export default function About() {
             </p>
 
             <h2 className="mt-4 text-5xl font-black leading-tight text-[#0F2747] md:text-6xl">
-              A Journey That Became a Mission.
+              Our Story Didn’t End at Graduation. It Began There.
             </h2>
 
             <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600">
