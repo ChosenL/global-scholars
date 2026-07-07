@@ -2,29 +2,15 @@ export default function StructuredData() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
-
     name: "Global Scholars Pathway Advisors",
-
     url: "https://globalscholarspathway.com",
-
     logo: "https://globalscholarspathway.com/logo.png",
-
     image: "https://globalscholarspathway.com/logo.png",
-
     description:
-      "Helping students confidently navigate university admissions, credential evaluations, transfer planning, career readiness, and international education.",
-
+      "Global Scholars Pathway Advisors helps students confidently navigate university admissions, credential evaluations, transfer planning, career readiness, and international education.",
     email: "info@globalscholarspathway.com",
-
     telephone: "+1-781-308-7146",
-
-    address: {
-      "@type": "PostalAddress",
-      addressCountry: "US",
-    },
-
     areaServed: "Worldwide",
-
     founder: [
       {
         "@type": "Person",

@@ -1,4 +1,4 @@
-import StructuredData from "@/components/SEO/StructuredData";
+import StructuredData from "@/components/StructuredData";
 import Script from "next/script";
 import type { Metadata } from "next";
 import { Inter, Merriweather } from "next/font/google";
@@ -100,6 +100,7 @@ export default function RootLayout({
       className={`${inter.variable} ${merriweather.variable}`}
     >
       <body>
+          <StructuredData />
         {children}
         
 
