@@ -51,15 +51,16 @@ export const metadata: Metadata = {
 
   publisher: "Global Scholars Pathway Advisors",
 
+  verification: {
+    google: "-8UqPOaoaCFXWMZea4tjVg2T59rOgoaO192Jg4pRJe0",
+  },
+
   openGraph: {
     title: "Global Scholars Pathway Advisors",
     description:
       "Guiding Dreams. Building Futures. Personalized guidance for international students pursuing higher education in the United States.",
-
     url: "https://globalscholarspathway.com",
-
     siteName: "Global Scholars Pathway Advisors",
-
     images: [
       {
         url: "/logo.png",
@@ -68,7 +69,6 @@ export const metadata: Metadata = {
         alt: "Global Scholars Pathway Advisors",
       },
     ],
-
     locale: "en_US",
     type: "website",
   },
@@ -78,7 +78,6 @@ export const metadata: Metadata = {
     title: "Global Scholars Pathway Advisors",
     description:
       "Helping students confidently navigate every step of their international education journey.",
-
     images: ["/logo.png"],
   },
 
@@ -100,23 +99,22 @@ export default function RootLayout({
       className={`${inter.variable} ${merriweather.variable}`}
     >
       <body>
-  {children}
+        {children}
 
-  <Script
-    src="https://www.googletagmanager.com/gtag/js?id=G-2VVH8SD99D"
-    strategy="afterInteractive"
-  />
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-2VVH8SD99D"
+          strategy="afterInteractive"
+        />
 
-  <Script id="google-analytics" strategy="afterInteractive">
-    {`
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-2VVH8SD99D');
-    `}
-  </Script>
-</body>
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-2VVH8SD99D');
+          `}
+        </Script>
+      </body>
     </html>
   );
 }
