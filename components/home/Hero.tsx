@@ -1,6 +1,5 @@
 import Image from "next/image";
 import FadeIn from "../ui/FadeIn";
-import Button from "../ui/Button";
 import HeroStats from "./HeroStats";
 import {
   CheckCircle2,
@@ -50,8 +49,19 @@ export default function Hero() {
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <Button>Book Consultation</Button>
-              <Button variant="secondary">Explore Your Journey</Button>
+              <a
+                href="#contact"
+                className="rounded-xl bg-[#0F2747] px-7 py-4 text-center text-sm font-bold text-white transition hover:scale-105"
+              >
+                Book Consultation
+              </a>
+
+              <a
+                href="#services"
+                className="rounded-xl border border-[#0F2747] px-7 py-4 text-center text-sm font-bold text-[#0F2747] transition hover:scale-105"
+              >
+                Explore Your Journey
+              </a>
             </div>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -66,6 +76,7 @@ export default function Hero() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0F2747]">
                       <Icon size={20} className="text-[#C8A24A]" />
                     </div>
+
                     <p className="text-sm font-bold text-[#0F2747]">
                       {item.label}
                     </p>
@@ -86,6 +97,7 @@ export default function Hero() {
                 src="/hero.png"
                 alt="Graduates looking toward a city skyline"
                 fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover"
                 priority
               />

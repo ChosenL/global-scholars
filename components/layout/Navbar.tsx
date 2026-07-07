@@ -46,7 +46,11 @@ export default function Navbar() {
           }`}
         >
           {links.map((link) => (
-            <a key={link.href} href={link.href} className="transition hover:text-[#C8A24A]">
+            <a
+              key={link.href}
+              href={link.href}
+              className="transition hover:text-[#C8A24A]"
+            >
               {link.label}
             </a>
           ))}
@@ -59,7 +63,9 @@ export default function Navbar() {
           Book Consultation
         </a>
 
-        <button className={`lg:hidden ${scrolled ? "text-[#0F2747]" : "text-white"}`}>
+        <button
+          className={`lg:hidden ${scrolled ? "text-[#0F2747]" : "text-white"}`}
+        >
           <Menu size={30} />
         </button>
       </div>
