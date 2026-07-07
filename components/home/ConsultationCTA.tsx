@@ -1,6 +1,9 @@
 import FadeIn from "../ui/FadeIn";
 import { Calendar, Phone, CheckCircle2, ArrowRight } from "lucide-react";
 
+const calendlyLink =
+  "https://calendly.com/thompsondwayne0055/free-10_minute-consultation";
+
 export default function ConsultationCTA() {
   return (
     <section id="contact" className="relative overflow-hidden py-24">
@@ -18,34 +21,36 @@ export default function ConsultationCTA() {
               </div>
 
               <h2 className="max-w-3xl text-4xl font-black leading-tight md:text-6xl">
-                Ready to begin your pathway?
+                Ready to Begin Your Pathway?
               </h2>
 
               <p className="mt-6 max-w-3xl text-lg leading-8 text-white/80">
-                Start with a short consultation where we learn your goals,
-                explain the process, and help you understand your next best
-                step.
+                Schedule a complimentary consultation where we'll learn about
+                your goals, answer your questions, explain the process, and help
+                you determine the best path toward your educational future.
               </p>
 
               <div className="mt-8 grid gap-3 text-sm font-semibold text-white/85 sm:grid-cols-3">
                 <span className="flex items-center gap-2">
                   <CheckCircle2 size={18} className="text-[#C8A24A]" />
-                  Online only
+                  100% Online
                 </span>
+
                 <span className="flex items-center gap-2">
                   <CheckCircle2 size={18} className="text-[#C8A24A]" />
-                  Jamaica → USA
+                  Personalized Guidance
                 </span>
+
                 <span className="flex items-center gap-2">
                   <CheckCircle2 size={18} className="text-[#C8A24A]" />
-                  Flexible scheduling
+                  Flexible Scheduling
                 </span>
               </div>
             </div>
 
-            <div className="rounded-3xl bg-white p-6 text-[#0F2747]">
+            <div className="rounded-3xl bg-white p-6 text-[#0F2747] shadow-lg">
               <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#C8A24A]">
-                Contact
+                Contact Us
               </p>
 
               <div className="mt-5 space-y-4">
@@ -67,12 +72,19 @@ export default function ConsultationCTA() {
               </div>
 
               <a
-                href="#"
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0F2747] px-6 py-4 font-bold text-white transition hover:scale-105"
+                href={calendlyLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0F2747] px-6 py-4 font-bold text-white transition hover:scale-105 hover:bg-[#173A68]"
               >
-                Request Consultation
+                Book Free Consultation
                 <ArrowRight size={18} />
               </a>
+
+              <p className="mt-4 text-center text-sm text-slate-500">
+                No obligation. Just honest guidance to help you move forward
+                with confidence.
+              </p>
             </div>
           </div>
         </FadeIn>

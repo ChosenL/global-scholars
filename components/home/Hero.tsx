@@ -8,6 +8,9 @@ import {
   Users,
 } from "lucide-react";
 
+const calendlyLink =
+  "https://calendly.com/thompsondwayne0055/free-10_minute-consultation";
+
 const trustPoints = [
   {
     label: "Personalized Guidance",
@@ -50,7 +53,9 @@ export default function Hero() {
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <a
-                href="#contact"
+                href={calendlyLink}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="rounded-xl bg-[#0F2747] px-7 py-4 text-center text-sm font-bold text-white transition hover:scale-105"
               >
                 Book Consultation

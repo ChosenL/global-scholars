@@ -4,6 +4,9 @@ import Image from "next/image";
 import { Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 
+const calendlyLink =
+  "https://calendly.com/thompsondwayne0055/free-10_minute-consultation";
+
 const links = [
   { label: "Home", href: "#home" },
   { label: "Services", href: "#services" },
@@ -18,7 +21,9 @@ export default function Navbar() {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
+
     window.addEventListener("scroll", onScroll);
+
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -57,7 +62,9 @@ export default function Navbar() {
         </nav>
 
         <a
-          href="#contact"
+          href={calendlyLink}
+          target="_blank"
+          rel="noopener noreferrer"
           className="hidden rounded-xl bg-[#C8A24A] px-6 py-3 font-bold text-[#0F2747] transition hover:scale-105 lg:inline-block"
         >
           Book Consultation
@@ -65,6 +72,7 @@ export default function Navbar() {
 
         <button
           className={`lg:hidden ${scrolled ? "text-[#0F2747]" : "text-white"}`}
+          aria-label="Open menu"
         >
           <Menu size={30} />
         </button>
