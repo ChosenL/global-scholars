@@ -1,3 +1,4 @@
+import StructuredData from "@/components/SEO/StructuredData";
 import Script from "next/script";
 import type { Metadata } from "next";
 import { Inter, Merriweather } from "next/font/google";
@@ -100,6 +101,7 @@ export default function RootLayout({
     >
       <body>
         {children}
+        
 
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-2VVH8SD99D"
