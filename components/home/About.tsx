@@ -8,7 +8,6 @@ import {
   Users,
   GraduationCap,
   Globe2,
-  Quote,
 } from "lucide-react";
 
 const timeline = [
@@ -56,21 +55,6 @@ const values = [
   ["Empowerment", GraduationCap],
   ["Partnership", Users],
   ["Growth", BookOpen],
-];
-
-const testimonials = [
-  {
-    name: "Britney Thompson",
-    role: "Honors Graduate, Western Connecticut State University",
-    quote:
-      "Transferring internationally can feel overwhelming, but with research, planning, and support, I was able to continue my education in the United States, transfer credits successfully, graduate with honors, and gain professional experience in Human Resources.",
-  },
-  {
-    name: "Student Testimonial",
-    role: "Student Guidance Experience",
-    quote:
-      "The guidance made the process easier to understand. Instead of feeling confused about the next step, I had more clarity, direction, and confidence about moving forward with my educational goals.",
-  },
 ];
 
 export default function About() {
@@ -272,48 +256,6 @@ export default function About() {
             >
               Book Your Free Consultation
             </a>
-          </div>
-        </div>
-
-        <div className="mt-24">
-          <FadeIn>
-            <div className="mx-auto max-w-3xl text-center">
-              <p className="text-sm font-bold uppercase tracking-[0.35em] text-[#C8A24A]">
-                Testimonials
-              </p>
-
-              <h3 className="mt-4 text-4xl font-black text-[#0F2747] md:text-5xl">
-                Real Stories. Real Encouragement.
-              </h3>
-
-              <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-                These stories reflect the heart of Global Scholars — helping
-                students and families move forward with clarity and confidence.
-              </p>
-            </div>
-          </FadeIn>
-
-          <div className="mt-14 grid gap-8 lg:grid-cols-2">
-            {testimonials.map((item, index) => (
-              <FadeIn key={item.name} delay={index * 0.08}>
-                <div className="h-full rounded-3xl border border-slate-200 bg-[#F8F9FB] p-8 shadow-sm">
-                  <Quote className="text-[#C8A24A]" size={38} />
-
-                  <p className="mt-6 text-lg leading-8 text-slate-700">
-                    “{item.quote}”
-                  </p>
-
-                  <div className="mt-8 border-t border-slate-200 pt-6">
-                    <p className="text-xl font-black text-[#0F2747]">
-                      {item.name}
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-[#C8A24A]">
-                      {item.role}
-                    </p>
-                  </div>
-                </div>
-              </FadeIn>
-            ))}
           </div>
         </div>
       </div>
