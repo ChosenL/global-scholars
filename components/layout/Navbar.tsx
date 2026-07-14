@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   BookOpen,
-  CircleHelp,
   GraduationCap,
   Home,
   Mail,
@@ -20,32 +20,32 @@ const calendlyLink =
 const links = [
   {
     label: "Home",
-    href: "#home",
+    href: "/",
     icon: Home,
   },
   {
     label: "Services",
-    href: "#services",
+    href: "/services",
     icon: GraduationCap,
   },
   {
     label: "Success Stories",
-    href: "#success-stories",
+    href: "/success-stories",
+    icon: BookOpen,
+  },
+  {
+    label: "Resources",
+    href: "/resources",
     icon: BookOpen,
   },
   {
     label: "About Us",
-    href: "#about",
+    href: "/about",
     icon: Users,
   },
   {
-    label: "FAQ",
-    href: "#faq",
-    icon: CircleHelp,
-  },
-  {
     label: "Contact",
-    href: "#contact",
+    href: "/contact",
     icon: Mail,
   },
 ];
@@ -86,8 +86,8 @@ export default function Navbar() {
         }`}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <a
-            href="#home"
+          <Link
+            href="/"
             onClick={closeMenu}
             aria-label="Go to the homepage"
           >
@@ -99,7 +99,7 @@ export default function Navbar() {
               priority
               className="h-auto w-[70px]"
             />
-          </a>
+          </Link>
 
           <nav
             className={`hidden items-center gap-8 text-sm font-semibold lg:flex ${
@@ -107,13 +107,13 @@ export default function Navbar() {
             }`}
           >
             {links.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 className="transition hover:text-[#C8A24A]"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
@@ -163,13 +163,19 @@ export default function Navbar() {
           }`}
         >
           <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
-            <Image
-              src="/logo.png"
-              alt="Global Scholars Pathway Advisors"
-              width={62}
-              height={62}
-              className="h-auto w-[62px]"
-            />
+            <Link
+              href="/"
+              onClick={closeMenu}
+              aria-label="Go to the homepage"
+            >
+              <Image
+                src="/logo.png"
+                alt="Global Scholars Pathway Advisors"
+                width={62}
+                height={62}
+                className="h-auto w-[62px]"
+              />
+            </Link>
 
             <button
               type="button"
@@ -191,7 +197,7 @@ export default function Navbar() {
                 const Icon = link.icon;
 
                 return (
-                  <a
+                  <Link
                     key={link.href}
                     href={link.href}
                     onClick={closeMenu}
@@ -202,7 +208,7 @@ export default function Navbar() {
                     </span>
 
                     {link.label}
-                  </a>
+                  </Link>
                 );
               })}
             </nav>
