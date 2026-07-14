@@ -108,7 +108,7 @@ export default function Hero() {
               />
             </div>
 
-            <HeroStats />
+    
           </div>
         </FadeIn>
       </div>
