@@ -1,3 +1,4 @@
+import GlobalScholarsAI from "@/components/GlobalScholarsAI";
 import StructuredData from "@/components/StructuredData";
 import Script from "next/script";
 import type { Metadata } from "next";
@@ -100,9 +101,11 @@ export default function RootLayout({
       className={`${inter.variable} ${merriweather.variable}`}
     >
       <body>
-          <StructuredData />
+        <StructuredData />
+
         {children}
-        
+
+        <GlobalScholarsAI />
 
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-2VVH8SD99D"
@@ -112,7 +115,11 @@ export default function RootLayout({
         <Script id="google-analytics" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
+
+            function gtag() {
+              window.dataLayer.push(arguments);
+            }
+
             gtag('js', new Date());
             gtag('config', 'G-2VVH8SD99D');
           `}
