@@ -1,3 +1,4 @@
+import { ClerkProvider } from "@clerk/nextjs";
 import GlobalScholarsAI from "@/components/GlobalScholarsAI";
 import StructuredData from "@/components/StructuredData";
 import Script from "next/script";
@@ -50,7 +51,6 @@ export const metadata: Metadata = {
   ],
 
   creator: "Global Scholars Pathway Advisors",
-
   publisher: "Global Scholars Pathway Advisors",
 
   verification: {
@@ -96,35 +96,37 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${merriweather.variable}`}
-    >
-      <body>
-        <StructuredData />
+    <ClerkProvider>
+      <html
+        lang="en"
+        className={`${inter.variable} ${merriweather.variable}`}
+      >
+        <body>
+          <StructuredData />
 
-        {children}
+          {children}
 
-        <GlobalScholarsAI />
+          <GlobalScholarsAI />
 
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-2VVH8SD99D"
-          strategy="afterInteractive"
-        />
+          <Script
+            src="https://www.googletagmanager.com/gtag/js?id=G-2VVH8SD99D"
+            strategy="afterInteractive"
+          />
 
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
+          <Script id="google-analytics" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
 
-            function gtag() {
-              window.dataLayer.push(arguments);
-            }
+              function gtag() {
+                window.dataLayer.push(arguments);
+              }
 
-            gtag('js', new Date());
-            gtag('config', 'G-2VVH8SD99D');
-          `}
-        </Script>
-      </body>
-    </html>
+              gtag('js', new Date());
+              gtag('config', 'G-2VVH8SD99D');
+            `}
+          </Script>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
