@@ -1,11 +1,14 @@
 "use client";
 
+import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import {
   BookOpen,
   GraduationCap,
   Home,
+  LayoutDashboard,
+  LogIn,
   Mail,
   Menu,
   Phone,
@@ -54,6 +57,17 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const { isLoaded, isSignedIn } = useUser();
+
+  const portalHref =
+    isLoaded && isSignedIn ? "/scholar-dashboard" : "/student-portal";
+
+  const portalLabel =
+    isLoaded && isSignedIn ? "Scholar Dashboard" : "Student Portal";
+
+  const PortalIcon =
+    isLoaded && isSignedIn ? LayoutDashboard : LogIn;
+
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -85,7 +99,7 @@ export default function Navbar() {
             : "bg-[#0F2747]"
         }`}
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 xl:px-6">
           <Link
             href="/"
             onClick={closeMenu}
@@ -102,7 +116,7 @@ export default function Navbar() {
           </Link>
 
           <nav
-            className={`hidden items-center gap-8 text-sm font-semibold lg:flex ${
+            className={`hidden items-center gap-5 text-sm font-semibold xl:flex ${
               scrolled ? "text-[#0F2747]" : "text-white"
             }`}
           >
@@ -110,26 +124,40 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="transition hover:text-[#C8A24A]"
+                className="whitespace-nowrap transition hover:text-[#C8A24A]"
               >
                 {link.label}
               </Link>
             ))}
           </nav>
 
-          <a
-            href={calendlyLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden rounded-xl bg-[#C8A24A] px-6 py-3 font-bold text-[#0F2747] transition hover:scale-105 lg:inline-block"
-          >
-            Book Consultation
-          </a>
+          <div className="hidden items-center gap-3 xl:flex">
+            <Link
+              href={portalHref}
+              className={`inline-flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-bold transition ${
+                scrolled
+                  ? "border-[#0F2747]/20 text-[#0F2747] hover:border-[#C8A24A] hover:text-[#C8A24A]"
+                  : "border-white/30 text-white hover:border-[#C8A24A] hover:text-[#C8A24A]"
+              }`}
+            >
+              <PortalIcon size={18} />
+              {portalLabel}
+            </Link>
+
+            <a
+              href={calendlyLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl bg-[#C8A24A] px-5 py-3 text-sm font-bold text-[#0F2747] transition hover:scale-105"
+            >
+              Book Consultation
+            </a>
+          </div>
 
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
-            className={`flex h-12 w-12 items-center justify-center rounded-xl border transition lg:hidden ${
+            className={`flex h-12 w-12 items-center justify-center rounded-xl border transition xl:hidden ${
               scrolled
                 ? "border-[#0F2747]/15 text-[#0F2747]"
                 : "border-white/20 text-white"
@@ -143,7 +171,7 @@ export default function Navbar() {
       </header>
 
       <div
-        className={`fixed inset-0 z-[100] transition duration-300 lg:hidden ${
+        className={`fixed inset-0 z-[100] transition duration-300 xl:hidden ${
           menuOpen
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0"
@@ -211,6 +239,18 @@ export default function Navbar() {
                   </Link>
                 );
               })}
+
+              <Link
+                href={portalHref}
+                onClick={closeMenu}
+                className="flex items-center gap-4 rounded-2xl bg-[#C8A24A]/15 px-4 py-4 text-base font-black text-[#0F2747] transition hover:bg-[#C8A24A]/25"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#C8A24A] text-[#071526]">
+                  <PortalIcon size={20} />
+                </span>
+
+                {portalLabel}
+              </Link>
             </nav>
 
             <a
@@ -243,6 +283,7 @@ export default function Navbar() {
                     size={18}
                     className="mt-0.5 shrink-0 text-[#C8A24A]"
                   />
+
                   <span className="break-all">
                     info@globalscholarspathway.com
                   </span>
@@ -252,7 +293,11 @@ export default function Navbar() {
                   href="tel:7813087146"
                   className="flex items-center gap-3 transition hover:text-white"
                 >
-                  <Phone size={18} className="shrink-0 text-[#C8A24A]" />
+                  <Phone
+                    size={18}
+                    className="shrink-0 text-[#C8A24A]"
+                  />
+
                   <span>781-308-7146</span>
                 </a>
               </div>
