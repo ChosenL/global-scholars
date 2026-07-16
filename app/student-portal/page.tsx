@@ -169,11 +169,6 @@ export default function StudentPortalPage() {
                 appearance={{
                   variables: {
                     colorPrimary: "#0F2747",
-                    colorText: "#071526",
-                    colorTextSecondary: "#64748B",
-                    colorBackground: "#FFFFFF",
-                    colorInputBackground: "#FFFFFF",
-                    colorInputText: "#071526",
                     borderRadius: "0.9rem",
                   },
                   elements: {
