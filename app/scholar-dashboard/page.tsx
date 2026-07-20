@@ -24,46 +24,12 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import DocumentsCard from "./components/DocumentsCard";
+import ProgressTracker from "./components/ProgressTracker";
 import { useDocuments } from "./hooks/useDocuments";
 import { useStudentProfile } from "./hooks/useStudentProfile";
 
 const calendlyLink =
   "https://calendly.com/thompsondwayne0055/free-10_minute-consultation";
-
-const progressSteps = [
-  {
-    label: "Consultation Completed",
-    status: "complete",
-  },
-  {
-    label: "Documents Submitted",
-    status: "complete",
-  },
-  {
-    label: "Credential Evaluation",
-    status: "complete",
-  },
-  {
-    label: "University Selection",
-    status: "current",
-  },
-  {
-    label: "Applications Submitted",
-    status: "upcoming",
-  },
-  {
-    label: "Admission Decision",
-    status: "upcoming",
-  },
-  {
-    label: "Visa Preparation",
-    status: "upcoming",
-  },
-  {
-    label: "Arrival Preparation",
-    status: "upcoming",
-  },
-];
 
 const messages = [
   {
@@ -540,69 +506,12 @@ export default function ScholarDashboardPage() {
               </div>
               {/* Progress and appointment */}
               <div className="mt-8 grid gap-8 xl:grid-cols-[1.25fr_0.75fr]">
-                <section
-                  id="progress"
-                  className="scroll-mt-28 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8"
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
-                        My Progress
-                      </p>
-
-                      <h2 className="mt-2 text-3xl font-black">
-                        Application Journey
-                      </h2>
-                    </div>
-
-                    <span className="hidden rounded-xl bg-[#F4F7FA] px-4 py-3 text-sm font-bold text-slate-600 sm:inline-flex">
-                      {currentStage}
-                    </span>
-                  </div>
-
-                  <div className="mt-8 space-y-4">
-                    {progressSteps.map((step) => (
-                      <div
-                        key={step.label}
-                        className="flex items-center gap-4 rounded-2xl border border-slate-200 p-4"
-                      >
-                        <div
-                          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                            step.status === "complete"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : step.status === "current"
-                                ? "bg-[#C8A24A]/20 text-[#8A6A1F]"
-                                : "bg-slate-100 text-slate-400"
-                          }`}
-                        >
-                          {step.status === "complete" ? (
-                            <CheckCircle2 size={22} />
-                          ) : (
-                            <Circle size={22} />
-                          )}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <p className="font-black">{step.label}</p>
-
-                          <p className="mt-1 text-sm text-slate-500">
-                            {step.status === "complete"
-                              ? "Completed"
-                              : step.status === "current"
-                                ? "Currently in progress"
-                                : "Upcoming step"}
-                          </p>
-                        </div>
-
-                        {step.status === "current" && (
-                          <span className="rounded-full bg-[#C8A24A]/20 px-3 py-1 text-xs font-black text-[#8A6A1F]">
-                            Current
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </section>
+                <ProgressTracker
+                  profile={profile}
+                  progress={progress}
+                  documents={documents}
+                  onNavigateToDocuments={() => navigateToSection("documents")}
+                />
 
                 <div className="space-y-8">
                   <section
