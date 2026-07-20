@@ -1,6 +1,5 @@
 import Image from "next/image";
 import FadeIn from "../ui/FadeIn";
-import HeroStats from "./HeroStats";
 import {
   CheckCircle2,
   GraduationCap,
@@ -107,8 +106,6 @@ export default function Hero() {
                 priority
               />
             </div>
-
-    
           </div>
         </FadeIn>
       </div>

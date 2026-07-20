@@ -9,7 +9,6 @@ import About from "@/components/home/About";
 import AudienceCards from "@/components/home/AudienceCards";
 import SuccessStories from "@/components/home/SuccessStories";
 import FAQ from "@/components/home/FAQ";
-import CTA from "@/components/home/CTA";
 import ConsultationCTA from "@/components/home/ConsultationCTA";
 import Footer from "@/components/layout/Footer";
 

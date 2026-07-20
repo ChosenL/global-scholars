@@ -3,7 +3,6 @@
 import {
   SignOutButton,
   UserButton,
-  useSession,
   useUser,
 } from "@clerk/nextjs";
 import Image from "next/image";
@@ -25,40 +24,13 @@ import {
   Menu,
   MessageCircle,
   Sparkles,
-  Upload,
   User,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { createClerkSupabaseClient } from "@/lib/supabase";
-
-
-
-type StudentProfile = {
-  user_id: string;
-  full_name: string | null;
-  email: string | null;
-  phone: string | null;
-  country: string | null;
-  current_school: string | null;
-  intended_major: string | null;
-  profile_image_url: string | null;
-  onboarding_complete: boolean;
-};
-
-type ApplicationProgress = {
-  student_id: string;
-  current_stage: string;
-  progress_percent: number;
-  consultation_completed: boolean;
-  documents_submitted: boolean;
-  credential_evaluation_completed: boolean;
-  university_selection_completed: boolean;
-  applications_submitted: boolean;
-  admission_decision_received: boolean;
-  visa_preparation_completed: boolean;
-  arrival_preparation_completed: boolean;
-};
+import { useState } from "react";
+import DocumentsCard from "./components/DocumentsCard";
+import { useDocuments } from "./hooks/useDocuments";
+import { useStudentProfile } from "./hooks/useStudentProfile";
 
 const calendlyLink =
   "https://calendly.com/thompsondwayne0055/free-10_minute-consultation";
@@ -95,21 +67,6 @@ const progressSteps = [
   {
     label: "Arrival Preparation",
     status: "upcoming",
-  },
-];
-
-const documents = [
-  {
-    name: "Academic Transcript",
-    status: "Received",
-  },
-  {
-    name: "Resume",
-    status: "Received",
-  },
-  {
-    name: "Credential Evaluation",
-    status: "Pending",
   },
 ];
 
@@ -232,111 +189,18 @@ const sidebarLinks = [
 
 export default function ScholarDashboardPage() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [profile, setProfile] = useState<StudentProfile | null>(null);
-  const [progress, setProgress] = useState<ApplicationProgress | null>(null);
-  const [databaseLoading, setDatabaseLoading] = useState(true);
-  const [databaseError, setDatabaseError] = useState("");
-
   const { isLoaded, isSignedIn, user } = useUser();
-  const { session } = useSession();
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadStudentData() {
-      if (!isLoaded || !isSignedIn || !user || !session) {
-        if (isLoaded && !isSignedIn) {
-          setDatabaseLoading(false);
-        }
-        return;
-      }
-
-      setDatabaseLoading(true);
-      setDatabaseError("");
-
-      try {
-        const supabase = createClerkSupabaseClient(() => session.getToken());
-        const email = user.primaryEmailAddress?.emailAddress ?? null;
-        const fullName =
-          user.fullName ||
-          [user.firstName, user.lastName].filter(Boolean).join(" ") ||
-          email ||
-          "Scholar";
-
-        const { data: savedProfile, error: profileError } = await supabase
-          .from("profiles")
-          .upsert(
-            {
-              user_id: user.id,
-              full_name: fullName,
-              email,
-              profile_image_url: user.imageUrl || null,
-            },
-            { onConflict: "user_id" }
-          )
-          .select()
-          .single();
-
-        if (profileError) {
-          throw profileError;
-        }
-
-        const { data: savedProgress, error: progressError } = await supabase
-          .from("application_progress")
-          .upsert(
-            {
-              student_id: user.id,
-              current_stage: "Initial Consultation",
-              progress_percent: 10,
-            },
-            { onConflict: "student_id", ignoreDuplicates: true }
-          )
-          .select()
-          .single();
-
-        if (progressError) {
-          const { data: existingProgress, error: existingProgressError } =
-            await supabase
-              .from("application_progress")
-              .select("*")
-              .eq("student_id", user.id)
-              .single();
-
-          if (existingProgressError) {
-            throw existingProgressError;
-          }
-
-          if (!cancelled) {
-            setProgress(existingProgress as ApplicationProgress);
-          }
-        } else if (!cancelled) {
-          setProgress(savedProgress as ApplicationProgress);
-        }
-
-        if (!cancelled) {
-          setProfile(savedProfile as StudentProfile);
-        }
-      } catch (error) {
-        console.error("Unable to load Scholar Dashboard data:", error);
-
-        if (!cancelled) {
-          setDatabaseError(
-            "We could not load your saved portal information. Please refresh the page or try again shortly."
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setDatabaseLoading(false);
-        }
-      }
-    }
-
-    void loadStudentData();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isLoaded, isSignedIn, session, user]);
+  const { profile, progress, isLoading: profileLoading, error: profileError } =
+    useStudentProfile();
+  const {
+    documents,
+    isLoading: documentsLoading,
+    isUploading,
+    error: documentsError,
+    uploadDocument,
+    removeDocument,
+    openDocument,
+  } = useDocuments();
 
   const studentName =
     profile?.full_name ||
@@ -362,7 +226,7 @@ export default function ScholarDashboardPage() {
     advisorButton?.click();
   }
 
-  if (!isLoaded || (isSignedIn && databaseLoading)) {
+  if (!isLoaded || (isSignedIn && profileLoading)) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#071526]">
         <div className="text-center text-white">
@@ -659,11 +523,11 @@ export default function ScholarDashboardPage() {
                   </p>
 
                   <h3 className="mt-2 text-xl font-black">
-                    2 of 3 Received
+                    {documents.filter((document) => document.status === "approved").length} Approved
                   </h3>
 
                   <p className="mt-2 text-sm text-slate-500">
-                    1 document still pending
+                    {documents.filter((document) => document.status === "pending").length} pending review
                   </p>
                 </article>
 
@@ -854,60 +718,15 @@ export default function ScholarDashboardPage() {
               {/* Documents and messages */}
 
               <div className="mt-8 grid gap-8 xl:grid-cols-2">
-                <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
-                        Documents
-                      </p>
-
-                      <h2 className="mt-2 text-3xl font-black">
-                        Required Files
-                      </h2>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 rounded-xl bg-[#0F2747] px-4 py-3 text-sm font-bold text-white"
-                    >
-                      <Upload size={17} />
-                      Upload
-                    </button>
-                  </div>
-
-                  <div className="mt-7 space-y-4">
-                    {documents.map((document) => (
-                      <div
-                        key={document.name}
-                        className="flex items-center gap-4 rounded-2xl border border-slate-200 p-4"
-                      >
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F4F7FA]">
-                          <FileText size={21} />
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <p className="font-black">
-                            {document.name}
-                          </p>
-
-                          <p className="mt-1 text-sm text-slate-500">
-                            {document.status}
-                          </p>
-                        </div>
-
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-black ${
-                            document.status === "Received"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-amber-100 text-amber-700"
-                          }`}
-                        >
-                          {document.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
+                <DocumentsCard
+                  documents={documents}
+                  isLoading={documentsLoading}
+                  isUploading={isUploading}
+                  error={documentsError}
+                  onUpload={uploadDocument}
+                  onOpen={openDocument}
+                  onRemove={removeDocument}
+                />
 
                 <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
                   <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
@@ -1091,20 +910,19 @@ export default function ScholarDashboardPage() {
                 </div>
               </section>
 
-              {databaseError ? (
+              {profileError ? (
                 <div className="mt-8 rounded-3xl border border-red-200 bg-red-50 p-5 text-sm leading-6 text-red-800">
-                  {databaseError}
+                  {profileError}
                 </div>
               ) : (
                 <div className="mt-8 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 text-sm leading-6 text-emerald-900">
-                  Your Clerk account is now connected to your Supabase student
-                  profile and application progress record. Documents,
-                  appointments, messages, notifications, and deadlines remain
-                  sample information until their individual dashboard features
-                  are connected.
+                  Your Clerk account, Supabase student profile, application
+                  progress, and document records are connected. Appointments,
+                  messages, notifications, and deadlines remain sample
+                  information until their individual dashboard features are
+                  connected.
                 </div>
-              )}
-            </div>
+              )}            </div>
           </div>
         </section>
       </div>
