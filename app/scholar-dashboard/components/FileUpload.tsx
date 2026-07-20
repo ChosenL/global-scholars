@@ -2,21 +2,46 @@
 
 import { useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
-import { Upload } from "lucide-react";
+import { FileCheck2, Upload, X } from "lucide-react";
 
 interface FileUploadProps {
   isUploading: boolean;
   onUpload: (documentName: string, file: File) => Promise<void>;
 }
 
-const acceptedFileTypes = [
+export const acceptedDocumentExtensions = ".pdf,.docx,.jpg,.jpeg,.png";
+export const maximumDocumentFileSize = 10 * 1024 * 1024;
+
+const acceptedFileTypes = new Set([
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "image/jpeg",
   "image/png",
-];
+]);
 
-const maximumFileSize = 10 * 1024 * 1024;
+export function validateDocumentFile(file: File): string {
+  if (!acceptedFileTypes.has(file.type)) {
+    return "Upload a PDF, DOCX, JPG, or PNG file.";
+  }
+
+  if (file.size === 0) {
+    return "The selected file is empty.";
+  }
+
+  if (file.size > maximumDocumentFileSize) {
+    return "The file must be 10 MB or smaller.";
+  }
+
+  return "";
+}
+
+function formatSelectedFileSize(fileSize: number): string {
+  if (fileSize < 1024 * 1024) {
+    return `${Math.max(1, Math.round(fileSize / 1024))} KB`;
+  }
+
+  return `${(fileSize / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export default function FileUpload({
   isUploading,
@@ -28,27 +53,30 @@ export default function FileUpload({
   const [validationError, setValidationError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
 
-  function validateFile(file: File): string {
-    if (!acceptedFileTypes.includes(file.type)) {
-      return "Upload a PDF, DOCX, JPG, or PNG file.";
-    }
+  function clearSelectedFile() {
+    setSelectedFile(null);
+    setValidationError("");
 
-    if (file.size > maximumFileSize) {
-      return "The file must be 10 MB or smaller.";
+    if (inputRef.current) {
+      inputRef.current.value = "";
     }
-
-    return "";
   }
 
   function selectFile(file: File) {
-    const nextError = validateFile(file);
-    setValidationError(nextError);
+    const nextError = validateDocumentFile(file);
 
     if (nextError) {
       setSelectedFile(null);
+      setValidationError(nextError);
+
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+
       return;
     }
 
+    setValidationError("");
     setSelectedFile(file);
 
     if (!documentName.trim()) {
@@ -76,26 +104,30 @@ export default function FileUpload({
   }
 
   async function handleSubmit() {
-    if (!selectedFile || !documentName.trim()) {
-      setValidationError("Enter a document name and choose a file.");
+    if (!documentName.trim()) {
+      setValidationError("Enter a clear document name.");
       return;
     }
 
-    await onUpload(documentName.trim(), selectedFile);
-    setDocumentName("");
-    setSelectedFile(null);
-    setValidationError("");
+    if (!selectedFile) {
+      setValidationError("Choose a file to upload.");
+      return;
+    }
 
-    if (inputRef.current) {
-      inputRef.current.value = "";
+    try {
+      await onUpload(documentName.trim(), selectedFile);
+      setDocumentName("");
+      clearSelectedFile();
+    } catch {
+      // The parent hook displays the upload error.
     }
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-[#F4F7FA] p-5">
+    <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-[#F4F7FA] p-4 sm:p-5">
       <label
         htmlFor="document-name"
-        className="text-sm font-black text-[#071526]"
+        className="block text-sm font-black text-[#071526]"
       >
         Document name
       </label>
@@ -103,9 +135,13 @@ export default function FileUpload({
       <input
         id="document-name"
         value={documentName}
-        onChange={(event) => setDocumentName(event.target.value)}
+        onChange={(event) => {
+          setDocumentName(event.target.value);
+          setValidationError("");
+        }}
         placeholder="Example: Academic Transcript"
-        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#C8A24A] focus:ring-2 focus:ring-[#C8A24A]/20"
+        disabled={isUploading}
+        className="mt-2 block w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#C8A24A] focus:ring-2 focus:ring-[#C8A24A]/20 disabled:opacity-60"
       />
 
       <div
@@ -113,24 +149,27 @@ export default function FileUpload({
         onDragLeave={() => setIsDragging(false)}
         onDragOver={(event) => event.preventDefault()}
         onDrop={handleDrop}
-        className={`mt-4 rounded-2xl border-2 border-dashed p-6 text-center transition ${
+        className={`mt-4 w-full min-w-0 overflow-hidden rounded-2xl border-2 border-dashed px-4 py-6 text-center transition sm:p-6 ${
           isDragging
             ? "border-[#C8A24A] bg-[#C8A24A]/10"
             : "border-slate-300 bg-white"
         }`}
       >
         <Upload className="mx-auto text-[#0F2747]" size={28} />
-        <p className="mt-3 font-black text-[#071526]">
+
+        <p className="mt-3 break-words font-black text-[#071526]">
           Drag and drop your file here
         </p>
-        <p className="mt-1 text-sm text-slate-500">
+
+        <p className="mt-1 break-words text-sm leading-6 text-slate-500">
           PDF, DOCX, JPG, or PNG. Maximum 10 MB.
         </p>
 
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="mt-4 rounded-xl bg-[#0F2747] px-5 py-3 text-sm font-black text-white"
+          disabled={isUploading}
+          className="mt-4 inline-flex min-w-[140px] items-center justify-center whitespace-nowrap rounded-xl bg-[#0F2747] px-5 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-60"
         >
           Choose File
         </button>
@@ -138,20 +177,47 @@ export default function FileUpload({
         <input
           ref={inputRef}
           type="file"
-          accept=".pdf,.docx,.jpg,.jpeg,.png"
+          accept={acceptedDocumentExtensions}
           onChange={handleInputChange}
+          disabled={isUploading}
           className="hidden"
         />
       </div>
 
       {selectedFile && (
-        <p className="mt-3 text-sm font-semibold text-slate-600">
-          Selected: {selectedFile.name}
-        </p>
+        <div className="mt-4 flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+          <FileCheck2 className="shrink-0 text-emerald-700" size={20} />
+
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <p
+              className="block w-full truncate text-sm font-black text-emerald-900"
+              title={selectedFile.name}
+            >
+              {selectedFile.name}
+            </p>
+
+            <p className="text-xs font-semibold text-emerald-700">
+              {formatSelectedFileSize(selectedFile.size)}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={clearSelectedFile}
+            disabled={isUploading}
+            className="shrink-0 rounded-lg p-2 text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+            aria-label="Remove selected file"
+          >
+            <X size={18} />
+          </button>
+        </div>
       )}
 
       {validationError && (
-        <p className="mt-3 text-sm font-semibold text-red-700">
+        <p
+          className="mt-3 break-words text-sm font-semibold text-red-700"
+          role="alert"
+        >
           {validationError}
         </p>
       )}
@@ -159,8 +225,8 @@ export default function FileUpload({
       <button
         type="button"
         onClick={() => void handleSubmit()}
-        disabled={isUploading}
-        className="mt-5 w-full rounded-xl bg-[#C8A24A] px-5 py-4 font-black text-[#071526] transition disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={isUploading || !selectedFile || !documentName.trim()}
+        className="mt-5 flex w-full min-w-0 items-center justify-center whitespace-nowrap rounded-xl bg-[#C8A24A] px-5 py-4 text-center font-black text-[#071526] transition disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isUploading ? "Uploading..." : "Upload Document"}
       </button>

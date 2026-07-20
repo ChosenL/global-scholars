@@ -39,6 +39,11 @@ export interface UploadStudentDocumentInput {
   file: File;
 }
 
+export interface ReplaceStudentDocumentInput {
+  document: StudentDocument;
+  file: File;
+}
+
 export interface UploadStudentDocumentResult {
   document: StudentDocument;
 }

@@ -131,10 +131,18 @@ export default function ScholarDashboardPage() {
     documents,
     isLoading: documentsLoading,
     isUploading,
+    deletingDocumentId,
+    replacingDocumentId,
+    downloadingDocumentId,
     error: documentsError,
+    successMessage: documentsSuccessMessage,
     uploadDocument,
+    replaceDocument,
     removeDocument,
     openDocument,
+    downloadDocument,
+    refreshDocuments,
+    clearFeedback: clearDocumentsFeedback,
   } = useDocuments();
 
   const studentName =
@@ -583,22 +591,30 @@ export default function ScholarDashboardPage() {
                 </div>
               </div>
               {/* Documents and messages */}
-              <div className="mt-8 grid gap-8 xl:grid-cols-2">
-                <div id="documents" className="scroll-mt-28">
+              <div className="mt-8 space-y-8">
+                <div id="documents" className="min-w-0 scroll-mt-28">
                   <DocumentsCard
                     documents={documents}
                     isLoading={documentsLoading}
                     isUploading={isUploading}
+                    deletingDocumentId={deletingDocumentId}
+                    replacingDocumentId={replacingDocumentId}
+                    downloadingDocumentId={downloadingDocumentId}
                     error={documentsError}
+                    successMessage={documentsSuccessMessage}
                     onUpload={uploadDocument}
+                    onReplace={replaceDocument}
                     onOpen={openDocument}
+                    onDownload={downloadDocument}
                     onRemove={removeDocument}
+                    onRefresh={refreshDocuments}
+                    onClearFeedback={clearDocumentsFeedback}
                   />
                 </div>
 
                 <section
                   id="messages"
-                  className="scroll-mt-28 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8"
+                  className="min-w-0 scroll-mt-28 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8"
                 >
                   <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
                     Messages
