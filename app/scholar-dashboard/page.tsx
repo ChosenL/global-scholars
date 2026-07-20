@@ -3,6 +3,7 @@
 import {
   SignOutButton,
   UserButton,
+  useSession,
   useUser,
 } from "@clerk/nextjs";
 import Image from "next/image";
@@ -28,7 +29,36 @@ import {
   User,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createClerkSupabaseClient } from "@/lib/supabase";
+
+
+
+type StudentProfile = {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  country: string | null;
+  current_school: string | null;
+  intended_major: string | null;
+  profile_image_url: string | null;
+  onboarding_complete: boolean;
+};
+
+type ApplicationProgress = {
+  student_id: string;
+  current_stage: string;
+  progress_percent: number;
+  consultation_completed: boolean;
+  documents_submitted: boolean;
+  credential_evaluation_completed: boolean;
+  university_selection_completed: boolean;
+  applications_submitted: boolean;
+  admission_decision_received: boolean;
+  visa_preparation_completed: boolean;
+  arrival_preparation_completed: boolean;
+};
 
 const calendlyLink =
   "https://calendly.com/thompsondwayne0055/free-10_minute-consultation";
@@ -202,18 +232,127 @@ const sidebarLinks = [
 
 export default function ScholarDashboardPage() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [progress, setProgress] = useState<ApplicationProgress | null>(null);
+  const [databaseLoading, setDatabaseLoading] = useState(true);
+  const [databaseError, setDatabaseError] = useState("");
+
   const { isLoaded, isSignedIn, user } = useUser();
+  const { session } = useSession();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadStudentData() {
+      if (!isLoaded || !isSignedIn || !user || !session) {
+        if (isLoaded && !isSignedIn) {
+          setDatabaseLoading(false);
+        }
+        return;
+      }
+
+      setDatabaseLoading(true);
+      setDatabaseError("");
+
+      try {
+        const supabase = createClerkSupabaseClient(() => session.getToken());
+        const email = user.primaryEmailAddress?.emailAddress ?? null;
+        const fullName =
+          user.fullName ||
+          [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+          email ||
+          "Scholar";
+
+        const { data: savedProfile, error: profileError } = await supabase
+          .from("profiles")
+          .upsert(
+            {
+              user_id: user.id,
+              full_name: fullName,
+              email,
+              profile_image_url: user.imageUrl || null,
+            },
+            { onConflict: "user_id" }
+          )
+          .select()
+          .single();
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        const { data: savedProgress, error: progressError } = await supabase
+          .from("application_progress")
+          .upsert(
+            {
+              student_id: user.id,
+              current_stage: "Initial Consultation",
+              progress_percent: 10,
+            },
+            { onConflict: "student_id", ignoreDuplicates: true }
+          )
+          .select()
+          .single();
+
+        if (progressError) {
+          const { data: existingProgress, error: existingProgressError } =
+            await supabase
+              .from("application_progress")
+              .select("*")
+              .eq("student_id", user.id)
+              .single();
+
+          if (existingProgressError) {
+            throw existingProgressError;
+          }
+
+          if (!cancelled) {
+            setProgress(existingProgress as ApplicationProgress);
+          }
+        } else if (!cancelled) {
+          setProgress(savedProgress as ApplicationProgress);
+        }
+
+        if (!cancelled) {
+          setProfile(savedProfile as StudentProfile);
+        }
+      } catch (error) {
+        console.error("Unable to load Scholar Dashboard data:", error);
+
+        if (!cancelled) {
+          setDatabaseError(
+            "We could not load your saved portal information. Please refresh the page or try again shortly."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setDatabaseLoading(false);
+        }
+      }
+    }
+
+    void loadStudentData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoaded, isSignedIn, session, user]);
 
   const studentName =
+    profile?.full_name ||
     user?.fullName ||
     user?.firstName ||
     user?.primaryEmailAddress?.emailAddress ||
     "Scholar";
 
   const firstName =
+    profile?.full_name?.split(" ")[0] ||
     user?.firstName ||
     user?.fullName?.split(" ")[0] ||
     "Scholar";
+
+  const progressPercent = progress?.progress_percent ?? 10;
+  const currentStage = progress?.current_stage ?? "Initial Consultation";
 
   function openAIAdvisor() {
     const advisorButton = document.querySelector<HTMLButtonElement>(
@@ -223,7 +362,7 @@ export default function ScholarDashboardPage() {
     advisorButton?.click();
   }
 
-  if (!isLoaded) {
+  if (!isLoaded || (isSignedIn && databaseLoading)) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#071526]">
         <div className="text-center text-white">
@@ -471,17 +610,19 @@ export default function ScholarDashboardPage() {
                       </p>
 
                       <p className="text-3xl font-black text-[#C8A24A]">
-                        62%
+                        {progressPercent}%
                       </p>
                     </div>
 
                     <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/15">
-                      <div className="h-full w-[62%] rounded-full bg-[#C8A24A]" />
+                      <div
+                          className="h-full rounded-full bg-[#C8A24A]"
+                          style={{ width: `${progressPercent}%` }}
+                        />
                     </div>
 
                     <p className="mt-4 text-sm leading-6 text-white/65">
-                      Your current focus is university selection and
-                      transfer planning.
+                      Your current focus is {currentStage}.
                     </p>
                   </div>
                 </div>
@@ -950,12 +1091,19 @@ export default function ScholarDashboardPage() {
                 </div>
               </section>
 
-              <div className="mt-8 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900">
-                The user name, email, profile image, and account controls
-                are connected to Clerk. Progress, files, appointments,
-                messages, notifications, and deadlines are still sample
-                information until the database is connected.
-              </div>
+              {databaseError ? (
+                <div className="mt-8 rounded-3xl border border-red-200 bg-red-50 p-5 text-sm leading-6 text-red-800">
+                  {databaseError}
+                </div>
+              ) : (
+                <div className="mt-8 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 text-sm leading-6 text-emerald-900">
+                  Your Clerk account is now connected to your Supabase student
+                  profile and application progress record. Documents,
+                  appointments, messages, notifications, and deadlines remain
+                  sample information until their individual dashboard features
+                  are connected.
+                </div>
+              )}
             </div>
           </div>
         </section>
