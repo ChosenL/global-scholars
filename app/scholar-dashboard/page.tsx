@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  SignOutButton,
-  UserButton,
-  useUser,
-} from "@clerk/nextjs";
+import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -12,7 +8,6 @@ import {
   Bot,
   CalendarDays,
   CheckCircle2,
-  ChevronRight,
   Circle,
   Clock3,
   FileCheck2,
@@ -88,15 +83,13 @@ const messages = [
 const notifications = [
   {
     title: "Transcript received",
-    description:
-      "Your academic transcript was added to your student profile.",
+    description: "Your academic transcript was added to your student profile.",
     time: "Today",
     icon: FileCheck2,
   },
   {
     title: "Appointment confirmed",
-    description:
-      "Your transfer-planning consultation has been scheduled.",
+    description: "Your transfer-planning consultation has been scheduled.",
     time: "Yesterday",
     icon: CalendarDays,
   },
@@ -142,56 +135,32 @@ const activities = [
   },
   {
     title: "University selection started",
-    description:
-      "Your pathway has advanced to the university-selection stage.",
+    description: "Your pathway has advanced to the university-selection stage.",
     time: "July 14, 2026",
     complete: false,
   },
 ];
 
 const sidebarLinks = [
-  {
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    active: true,
-  },
-  {
-    label: "My Progress",
-    icon: GraduationCap,
-    active: false,
-  },
-  {
-    label: "Documents",
-    icon: FileText,
-    active: false,
-  },
-  {
-    label: "Appointments",
-    icon: CalendarDays,
-    active: false,
-  },
-  {
-    label: "Messages",
-    icon: MessageCircle,
-    active: false,
-  },
-  {
-    label: "AI Advisor",
-    icon: Sparkles,
-    active: false,
-  },
-  {
-    label: "Profile",
-    icon: User,
-    active: false,
-  },
-];
+  { label: "Dashboard", icon: LayoutDashboard, target: "dashboard" },
+  { label: "My Progress", icon: GraduationCap, target: "progress" },
+  { label: "Documents", icon: FileText, target: "documents" },
+  { label: "Appointments", icon: CalendarDays, target: "appointments" },
+  { label: "Messages", icon: MessageCircle, target: "messages" },
+  { label: "AI Advisor", icon: Sparkles, target: "ai-advisor" },
+  { label: "Profile", icon: User, target: "profile" },
+] as const;
 
 export default function ScholarDashboardPage() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("dashboard");
   const { isLoaded, isSignedIn, user } = useUser();
-  const { profile, progress, isLoading: profileLoading, error: profileError } =
-    useStudentProfile();
+  const {
+    profile,
+    progress,
+    isLoading: profileLoading,
+    error: profileError,
+  } = useStudentProfile();
   const {
     documents,
     isLoading: documentsLoading,
@@ -220,10 +189,25 @@ export default function ScholarDashboardPage() {
 
   function openAIAdvisor() {
     const advisorButton = document.querySelector<HTMLButtonElement>(
-      'button[aria-label="Open Global Scholars AI Advisor"]'
+      'button[aria-label="Open Global Scholars AI Advisor"]',
     );
 
     advisorButton?.click();
+  }
+
+  function navigateToSection(target: string) {
+    if (target === "ai-advisor") {
+      openAIAdvisor();
+      return;
+    }
+
+    const section = document.getElementById(target);
+    if (!section) {
+      return;
+    }
+
+    setActiveSection(target);
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   if (!isLoaded || (isSignedIn && profileLoading)) {
@@ -232,9 +216,7 @@ export default function ScholarDashboardPage() {
         <div className="text-center text-white">
           <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-[#C8A24A]" />
 
-          <p className="mt-5 font-bold">
-            Loading Scholar Dashboard...
-          </p>
+          <p className="mt-5 font-bold">Loading Scholar Dashboard...</p>
         </div>
       </main>
     );
@@ -244,9 +226,7 @@ export default function ScholarDashboardPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#071526] px-6 text-center text-white">
         <div>
-          <h1 className="text-4xl font-black">
-            Please sign in to continue.
-          </h1>
+          <h1 className="text-4xl font-black">Please sign in to continue.</h1>
 
           <Link
             href="/student-portal"
@@ -280,9 +260,7 @@ export default function ScholarDashboardPage() {
                 Global Scholars
               </p>
 
-              <p className="text-xs text-white/60">
-                Scholar Dashboard
-              </p>
+              <p className="text-xs text-white/60">Scholar Dashboard</p>
             </div>
           </Link>
 
@@ -297,9 +275,7 @@ export default function ScholarDashboardPage() {
               />
 
               <div className="min-w-0">
-                <p className="truncate text-sm font-black">
-                  {studentName}
-                </p>
+                <p className="truncate text-sm font-black">{studentName}</p>
 
                 <p className="truncate text-xs text-white/55">
                   {user.primaryEmailAddress?.emailAddress}
@@ -316,13 +292,9 @@ export default function ScholarDashboardPage() {
                 <button
                   key={item.label}
                   type="button"
-                  onClick={
-                    item.label === "AI Advisor"
-                      ? openAIAdvisor
-                      : undefined
-                  }
+                  onClick={() => navigateToSection(item.target)}
                   className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left font-bold transition ${
-                    item.active
+                    activeSection === item.target
                       ? "bg-[#C8A24A] text-[#071526]"
                       : "text-white/75 hover:bg-white/10 hover:text-white"
                   }`}
@@ -336,13 +308,10 @@ export default function ScholarDashboardPage() {
 
           <div className="mt-auto">
             <div className="rounded-3xl bg-white/10 p-5">
-              <p className="text-sm font-black">
-                Need help?
-              </p>
+              <p className="text-sm font-black">Need help?</p>
 
               <p className="mt-2 text-sm leading-6 text-white/65">
-                Contact your advisor or use the Global Scholars AI
-                Advisor.
+                Contact your advisor or use the Global Scholars AI Advisor.
               </p>
 
               <a
@@ -395,6 +364,7 @@ export default function ScholarDashboardPage() {
               <div className="flex items-center gap-3">
                 <button
                   type="button"
+                  onClick={() => navigateToSection("notifications")}
                   className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#F4F7FA]"
                   aria-label="Notifications"
                 >
@@ -413,13 +383,9 @@ export default function ScholarDashboardPage() {
                   />
 
                   <div className="max-w-44 pr-2">
-                    <p className="truncate text-sm font-black">
-                      {studentName}
-                    </p>
+                    <p className="truncate text-sm font-black">{studentName}</p>
 
-                    <p className="text-xs text-slate-500">
-                      Student
-                    </p>
+                    <p className="text-xs text-slate-500">Student</p>
                   </div>
                 </div>
               </div>
@@ -429,8 +395,10 @@ export default function ScholarDashboardPage() {
           <div className="flex-1 px-5 py-7 md:px-8 md:py-10">
             <div className="mx-auto max-w-7xl">
               {/* Main welcome area */}
-
-              <section className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#071526] via-[#0F2747] to-[#173A68] p-7 text-white shadow-xl md:p-10">
+              <section
+                id="dashboard"
+                className="scroll-mt-28 overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#071526] via-[#0F2747] to-[#173A68] p-7 text-white shadow-xl md:p-10"
+              >
                 <div className="grid gap-8 lg:grid-cols-[1.4fr_0.6fr] lg:items-center">
                   <div>
                     <p className="text-sm font-black uppercase tracking-[0.25em] text-[#C8A24A]">
@@ -442,9 +410,8 @@ export default function ScholarDashboardPage() {
                     </h2>
 
                     <p className="mt-5 max-w-2xl text-lg leading-8 text-white/75">
-                      Review your progress, complete your next steps,
-                      and stay connected with your Global Scholars
-                      advisor.
+                      Review your progress, complete your next steps, and stay
+                      connected with your Global Scholars advisor.
                     </p>
 
                     <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -469,9 +436,7 @@ export default function ScholarDashboardPage() {
 
                   <div className="rounded-3xl bg-white/10 p-6 backdrop-blur">
                     <div className="flex items-center justify-between">
-                      <p className="font-bold">
-                        Overall Progress
-                      </p>
+                      <p className="font-bold">Overall Progress</p>
 
                       <p className="text-3xl font-black text-[#C8A24A]">
                         {progressPercent}%
@@ -480,9 +445,9 @@ export default function ScholarDashboardPage() {
 
                     <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/15">
                       <div
-                          className="h-full rounded-full bg-[#C8A24A]"
-                          style={{ width: `${progressPercent}%` }}
-                        />
+                        className="h-full rounded-full bg-[#C8A24A]"
+                        style={{ width: `${progressPercent}%` }}
+                      />
                     </div>
 
                     <p className="mt-4 text-sm leading-6 text-white/65">
@@ -491,9 +456,7 @@ export default function ScholarDashboardPage() {
                   </div>
                 </div>
               </section>
-
               {/* Overview cards */}
-
               <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
                 <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0F2747] text-[#C8A24A]">
@@ -504,9 +467,7 @@ export default function ScholarDashboardPage() {
                     Next Appointment
                   </p>
 
-                  <h3 className="mt-2 text-xl font-black">
-                    July 22, 3:00 PM
-                  </h3>
+                  <h3 className="mt-2 text-xl font-black">July 22, 3:00 PM</h3>
 
                   <p className="mt-2 text-sm text-slate-500">
                     With a Global Scholars Advisor
@@ -523,11 +484,21 @@ export default function ScholarDashboardPage() {
                   </p>
 
                   <h3 className="mt-2 text-xl font-black">
-                    {documents.filter((document) => document.status === "approved").length} Approved
+                    {
+                      documents.filter(
+                        (document) => document.status === "approved",
+                      ).length
+                    }{" "}
+                    Approved
                   </h3>
 
                   <p className="mt-2 text-sm text-slate-500">
-                    {documents.filter((document) => document.status === "pending").length} pending review
+                    {
+                      documents.filter(
+                        (document) => document.status === "pending",
+                      ).length
+                    }{" "}
+                    pending review
                   </p>
                 </article>
 
@@ -540,9 +511,7 @@ export default function ScholarDashboardPage() {
                     Messages
                   </p>
 
-                  <h3 className="mt-2 text-xl font-black">
-                    2 New Messages
-                  </h3>
+                  <h3 className="mt-2 text-xl font-black">2 New Messages</h3>
 
                   <p className="mt-2 text-sm text-slate-500">
                     Last update today
@@ -558,9 +527,7 @@ export default function ScholarDashboardPage() {
                     AI Advisor
                   </p>
 
-                  <h3 className="mt-2 text-xl font-black">
-                    Available Now
-                  </h3>
+                  <h3 className="mt-2 text-xl font-black">Available Now</h3>
 
                   <button
                     type="button"
@@ -571,11 +538,12 @@ export default function ScholarDashboardPage() {
                   </button>
                 </article>
               </div>
-
               {/* Progress and appointment */}
-
               <div className="mt-8 grid gap-8 xl:grid-cols-[1.25fr_0.75fr]">
-                <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+                <section
+                  id="progress"
+                  className="scroll-mt-28 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8"
+                >
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
@@ -587,13 +555,9 @@ export default function ScholarDashboardPage() {
                       </h2>
                     </div>
 
-                    <button
-                      type="button"
-                      className="hidden items-center gap-2 rounded-xl bg-[#F4F7FA] px-4 py-3 text-sm font-bold sm:flex"
-                    >
-                      View Details
-                      <ChevronRight size={17} />
-                    </button>
+                    <span className="hidden rounded-xl bg-[#F4F7FA] px-4 py-3 text-sm font-bold text-slate-600 sm:inline-flex">
+                      {currentStage}
+                    </span>
                   </div>
 
                   <div className="mt-8 space-y-4">
@@ -619,9 +583,7 @@ export default function ScholarDashboardPage() {
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <p className="font-black">
-                            {step.label}
-                          </p>
+                          <p className="font-black">{step.label}</p>
 
                           <p className="mt-1 text-sm text-slate-500">
                             {step.status === "complete"
@@ -643,7 +605,10 @@ export default function ScholarDashboardPage() {
                 </section>
 
                 <div className="space-y-8">
-                  <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+                  <section
+                    id="appointments"
+                    className="scroll-mt-28 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"
+                  >
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
@@ -655,10 +620,7 @@ export default function ScholarDashboardPage() {
                         </h2>
                       </div>
 
-                      <CalendarDays
-                        className="text-[#C8A24A]"
-                        size={30}
-                      />
+                      <CalendarDays className="text-[#C8A24A]" size={30} />
                     </div>
 
                     <div className="mt-6 space-y-3 rounded-2xl bg-[#F4F7FA] p-5">
@@ -689,19 +651,16 @@ export default function ScholarDashboardPage() {
                   </section>
 
                   <section className="rounded-[2rem] bg-[#071526] p-6 text-white shadow-xl">
-                    <Sparkles
-                      className="text-[#C8A24A]"
-                      size={30}
-                    />
+                    <Sparkles className="text-[#C8A24A]" size={30} />
 
                     <h2 className="mt-4 text-2xl font-black">
                       Need help right now?
                     </h2>
 
                     <p className="mt-3 leading-7 text-white/70">
-                      Ask the Global Scholars AI Advisor a general
-                      question about admissions, transfers,
-                      credentials, or career readiness.
+                      Ask the Global Scholars AI Advisor a general question
+                      about admissions, transfers, credentials, or career
+                      readiness.
                     </p>
 
                     <button
@@ -714,28 +673,29 @@ export default function ScholarDashboardPage() {
                   </section>
                 </div>
               </div>
-
               {/* Documents and messages */}
-
               <div className="mt-8 grid gap-8 xl:grid-cols-2">
-                <DocumentsCard
-                  documents={documents}
-                  isLoading={documentsLoading}
-                  isUploading={isUploading}
-                  error={documentsError}
-                  onUpload={uploadDocument}
-                  onOpen={openDocument}
-                  onRemove={removeDocument}
-                />
+                <div id="documents" className="scroll-mt-28">
+                  <DocumentsCard
+                    documents={documents}
+                    isLoading={documentsLoading}
+                    isUploading={isUploading}
+                    error={documentsError}
+                    onUpload={uploadDocument}
+                    onOpen={openDocument}
+                    onRemove={removeDocument}
+                  />
+                </div>
 
-                <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+                <section
+                  id="messages"
+                  className="scroll-mt-28 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8"
+                >
                   <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
                     Messages
                   </p>
 
-                  <h2 className="mt-2 text-3xl font-black">
-                    Recent Updates
-                  </h2>
+                  <h2 className="mt-2 text-3xl font-black">Recent Updates</h2>
 
                   <div className="mt-7 space-y-4">
                     {messages.map((message) => (
@@ -744,9 +704,7 @@ export default function ScholarDashboardPage() {
                         className="rounded-2xl border border-slate-200 p-5"
                       >
                         <div className="flex items-center justify-between gap-4">
-                          <p className="font-black">
-                            {message.sender}
-                          </p>
+                          <p className="font-black">{message.sender}</p>
 
                           <p className="text-xs text-slate-400">
                             {message.time}
@@ -761,11 +719,12 @@ export default function ScholarDashboardPage() {
                   </div>
                 </section>
               </div>
-
               {/* Notifications and deadlines */}
-
               <div className="mt-8 grid gap-8 xl:grid-cols-2">
-                <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+                <section
+                  id="notifications"
+                  className="scroll-mt-28 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8"
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
@@ -795,9 +754,7 @@ export default function ScholarDashboardPage() {
 
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start justify-between gap-3">
-                              <p className="font-black">
-                                {notification.title}
-                              </p>
+                              <p className="font-black">{notification.title}</p>
 
                               <span className="shrink-0 text-xs text-slate-400">
                                 {notification.time}
@@ -814,7 +771,10 @@ export default function ScholarDashboardPage() {
                   </div>
                 </section>
 
-                <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+                <section
+                  id="deadlines"
+                  className="scroll-mt-28 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8"
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
@@ -837,9 +797,7 @@ export default function ScholarDashboardPage() {
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <p className="font-black">
-                              {deadline.title}
-                            </p>
+                            <p className="font-black">{deadline.title}</p>
 
                             <p className="mt-2 flex items-center gap-2 text-sm text-slate-500">
                               <CalendarDays size={16} />
@@ -856,10 +814,11 @@ export default function ScholarDashboardPage() {
                   </div>
                 </section>
               </div>
-
               {/* Activity timeline */}
-
-              <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+              <section
+                id="activity"
+                className="scroll-mt-28 mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8"
+              >
                 <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
                   Activity
                 </p>
@@ -893,9 +852,7 @@ export default function ScholarDashboardPage() {
                       </div>
 
                       <div className="pt-1">
-                        <p className="font-black">
-                          {activity.title}
-                        </p>
+                        <p className="font-black">{activity.title}</p>
 
                         <p className="mt-2 leading-6 text-slate-500">
                           {activity.description}
@@ -909,7 +866,32 @@ export default function ScholarDashboardPage() {
                   ))}
                 </div>
               </section>
-
+              <section
+                id="profile"
+                className="scroll-mt-28 mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8"
+              >
+                <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
+                  Profile
+                </p>
+                <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-4">
+                    <UserButton
+                      appearance={{ elements: { avatarBox: "h-14 w-14" } }}
+                    />
+                    <div>
+                      <h2 className="text-2xl font-black">{studentName}</h2>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {user.primaryEmailAddress?.emailAddress}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="max-w-xl text-sm leading-6 text-slate-600">
+                    Use your profile avatar to manage your Clerk account.
+                    Additional academic and immigration profile fields will be
+                    added in the dedicated Profile module.
+                  </p>
+                </div>
+              </section>
               {profileError ? (
                 <div className="mt-8 rounded-3xl border border-red-200 bg-red-50 p-5 text-sm leading-6 text-red-800">
                   {profileError}
@@ -922,7 +904,8 @@ export default function ScholarDashboardPage() {
                   information until their individual dashboard features are
                   connected.
                 </div>
-              )}            </div>
+              )}{" "}
+            </div>
           </div>
         </section>
       </div>
@@ -967,9 +950,7 @@ export default function ScholarDashboardPage() {
                   Global Scholars
                 </p>
 
-                <p className="text-xs text-white/60">
-                  Scholar Dashboard
-                </p>
+                <p className="text-xs text-white/60">Scholar Dashboard</p>
               </div>
             </Link>
 
@@ -994,9 +975,7 @@ export default function ScholarDashboardPage() {
               />
 
               <div className="min-w-0">
-                <p className="truncate text-sm font-black">
-                  {studentName}
-                </p>
+                <p className="truncate text-sm font-black">{studentName}</p>
 
                 <p className="truncate text-xs text-white/55">
                   {user.primaryEmailAddress?.emailAddress}
@@ -1014,14 +993,11 @@ export default function ScholarDashboardPage() {
                   key={item.label}
                   type="button"
                   onClick={() => {
-                    if (item.label === "AI Advisor") {
-                      openAIAdvisor();
-                    }
-
+                    navigateToSection(item.target);
                     setMenuOpen(false);
                   }}
                   className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left font-bold ${
-                    item.active
+                    activeSection === item.target
                       ? "bg-[#C8A24A] text-[#071526]"
                       : "text-white/75"
                   }`}
