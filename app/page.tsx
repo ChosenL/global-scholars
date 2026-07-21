@@ -1,6 +1,7 @@
 import ContactForm from "@/components/home/ContactForm";
 import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/home/Hero";
+import CollegesSection from "@/components/home/CollegesSection";
 import FeatureCards from "@/components/home/FeatureCards";
 import Credibility from "@/components/home/Credibility";
 import Pathway from "@/components/home/Pathway";
@@ -16,17 +17,31 @@ export default function Home() {
   return (
     <main>
       <Navbar />
+
       <Hero />
+
+      <CollegesSection />
+
       <FeatureCards />
+
       <Credibility />
+
       <Pathway />
+
       <Services />
+
       <About />
+
       <AudienceCards />
+
       <SuccessStories />
+
       <FAQ />
+
       <ConsultationCTA />
+
       <ContactForm />
+
       <Footer />
     </main>
   );

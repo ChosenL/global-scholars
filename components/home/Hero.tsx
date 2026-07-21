@@ -20,7 +20,7 @@ const trustPoints = [
     icon: CheckCircle2,
   },
   {
-    label: "Jamaica to USA",
+    label: "Caribbean to USA",
     icon: Globe2,
   },
 ];
