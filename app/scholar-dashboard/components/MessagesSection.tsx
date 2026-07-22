@@ -10,15 +10,28 @@ import {
 } from "lucide-react";
 import {
   type FormEvent,
+  useEffect,
+  useMemo,
   useState,
 } from "react";
 import { useMessages } from "../hooks/useMessages";
+import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import ChatWindow from "./ChatWindow";
 import ConversationList from "./ConversationList";
 
 const SUBJECT_MAX_LENGTH = 120;
 
-export default function MessagesSection() {
+export interface MessagesSectionProps {
+  portalRole?: "student" | "advisor";
+  selectedStudentId?: string;
+  selectedStudentName?: string;
+}
+
+export default function MessagesSection({
+  portalRole = "student",
+  selectedStudentId,
+  selectedStudentName,
+}: MessagesSectionProps) {
   const { user } = useUser();
 
   const {
@@ -31,6 +44,8 @@ export default function MessagesSection() {
     isLoadingMessages,
     isCreatingConversation,
     isSendingMessage,
+    isSendingAttachment,
+    uploadingAttachmentName,
     editingMessageId,
     deletingMessageId,
     updatingConversationId,
@@ -40,6 +55,10 @@ export default function MessagesSection() {
     selectConversation,
     createConversation,
     sendMessage,
+    sendAttachment,
+    openAttachment,
+    downloadAttachment,
+    getAttachmentPreviewUrl,
     editMessage,
     deleteMessage,
     markActiveConversationRead,
@@ -57,11 +76,108 @@ export default function MessagesSection() {
     useState(false);
 
   const currentUserId = user?.id ?? "";
+  const isAdvisorPortal = portalRole === "advisor";
+
+  const currentUserDisplayName =
+    user?.fullName ??
+    user?.firstName ??
+    user?.primaryEmailAddress?.emailAddress ??
+    (isAdvisorPortal ? "Advisor" : "Student");
+
+  const visibleConversations = useMemo(() => {
+    if (!isAdvisorPortal || !selectedStudentId) {
+      return conversations;
+    }
+
+    return conversations.filter((conversation) =>
+      conversation.participants.some(
+        (participant) =>
+          participant.user_id === selectedStudentId &&
+          !participant.removed_at,
+      ),
+    );
+  }, [
+    conversations,
+    isAdvisorPortal,
+    selectedStudentId,
+  ]);
+
+  const visibleConversationIds = useMemo(
+    () =>
+      new Set(
+        visibleConversations.map(
+          (conversation) => conversation.id,
+        ),
+      ),
+    [visibleConversations],
+  );
+
+  const visibleActiveConversation =
+    activeConversation &&
+    visibleConversationIds.has(activeConversation.id)
+      ? activeConversation
+      : null;
+
+  const visibleActiveConversationId =
+    visibleActiveConversation?.id ?? null;
+
+  const visibleMessages = visibleActiveConversation
+    ? messages
+    : [];
+
+  const visibleUnreadCount = useMemo(
+    () =>
+      visibleConversations.reduce(
+        (total, conversation) =>
+          total + (conversation.unread_count ?? 0),
+        0,
+      ),
+    [visibleConversations],
+  );
+
+  const { typingParticipants, notifyTyping } =
+    useTypingIndicator({
+      conversationId: visibleActiveConversationId,
+      displayName: currentUserDisplayName,
+      role: isAdvisorPortal ? "advisor" : "student",
+    });
+
+  useEffect(() => {
+    if (!isAdvisorPortal) {
+      return;
+    }
+
+    notifyTyping(false);
+    // Reset advisor-only UI state when the selected student changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setShowMobileChat(false);
+    setIsComposerOpen(false);
+    setNewConversationSubject("");
+
+    if (
+      visibleConversations.length === 0 ||
+      (activeConversationId &&
+        visibleConversationIds.has(activeConversationId))
+    ) {
+      return;
+    }
+
+    void selectConversation(visibleConversations[0].id);
+  }, [
+    activeConversationId,
+    isAdvisorPortal,
+    notifyTyping,
+    selectConversation,
+    selectedStudentId,
+    visibleConversationIds,
+    visibleConversations,
+  ]);
 
   const normalizedSubject =
     newConversationSubject.trim();
 
   const canCreateConversation =
+    !isAdvisorPortal &&
     normalizedSubject.length > 0 &&
     normalizedSubject.length <= SUBJECT_MAX_LENGTH &&
     !isCreatingConversation;
@@ -73,6 +189,15 @@ export default function MessagesSection() {
 
     setIsComposerOpen(false);
     setNewConversationSubject("");
+  };
+
+  const openComposer = (): void => {
+    if (isAdvisorPortal) {
+      return;
+    }
+
+    clearFeedback();
+    setIsComposerOpen(true);
   };
 
   const handleCreateConversation = async (
@@ -96,15 +221,26 @@ export default function MessagesSection() {
   const handleSelectConversation = async (
     conversationId: string,
   ): Promise<void> => {
+    if (!visibleConversationIds.has(conversationId)) {
+      return;
+    }
+
+    notifyTyping(false);
     await selectConversation(conversationId);
     setShowMobileChat(true);
   };
 
-  const handleAttachmentRequest = (): void => {
-    window.alert(
-      "File attachments will be enabled in the Supabase Storage phase.",
-    );
-  };
+  const heading = isAdvisorPortal
+    ? selectedStudentName
+      ? `${selectedStudentName}'s Conversations`
+      : "Student Conversations"
+    : "Advisor Conversations";
+
+  const description = isAdvisorPortal
+    ? selectedStudentName
+      ? `Review messages and continue supporting ${selectedStudentName}.`
+      : "Select an assigned student to review their conversations."
+    : "Send questions, receive application updates, and stay connected with your Global Scholars advisor.";
 
   return (
     <section
@@ -118,52 +254,55 @@ export default function MessagesSection() {
           </p>
 
           <h2 className="mt-2 text-3xl font-black text-[#071526]">
-            Advisor Conversations
+            {heading}
           </h2>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-            Send questions, receive application updates, and
-            stay connected with your Global Scholars advisor.
+            {description}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          {totalUnreadCount > 0 ? (
+          {(isAdvisorPortal
+            ? visibleUnreadCount
+            : totalUnreadCount) > 0 ? (
             <span className="rounded-full bg-[#FFF4CF] px-3 py-2 text-xs font-black text-[#8A6A1F]">
-              {totalUnreadCount} unread
+              {isAdvisorPortal
+                ? visibleUnreadCount
+                : totalUnreadCount}{" "}
+              unread
             </span>
           ) : null}
 
-          <button
-            type="button"
-            onClick={() => {
-              clearFeedback();
-              setIsComposerOpen(true);
-            }}
-            disabled={isCreatingConversation}
-            className={[
-              "inline-flex items-center justify-center gap-2 rounded-xl",
-              "bg-[#0F2747] px-4 py-3 text-sm font-black text-white",
-              "shadow-sm transition hover:bg-[#173B68]",
-              "focus-visible:outline-none focus-visible:ring-2",
-              "focus-visible:ring-[#C8A24A] focus-visible:ring-offset-2",
-              "disabled:cursor-not-allowed disabled:opacity-60",
-            ].join(" ")}
-          >
-            {isCreatingConversation ? (
-              <Loader2
-                aria-hidden="true"
-                className="h-4 w-4 animate-spin"
-              />
-            ) : (
-              <MessageCirclePlus
-                aria-hidden="true"
-                className="h-4 w-4"
-              />
-            )}
+          {!isAdvisorPortal ? (
+            <button
+              type="button"
+              onClick={openComposer}
+              disabled={isCreatingConversation}
+              className={[
+                "inline-flex items-center justify-center gap-2 rounded-xl",
+                "bg-[#0F2747] px-4 py-3 text-sm font-black text-white",
+                "shadow-sm transition hover:bg-[#173B68]",
+                "focus-visible:outline-none focus-visible:ring-2",
+                "focus-visible:ring-[#C8A24A] focus-visible:ring-offset-2",
+                "disabled:cursor-not-allowed disabled:opacity-60",
+              ].join(" ")}
+            >
+              {isCreatingConversation ? (
+                <Loader2
+                  aria-hidden="true"
+                  className="h-4 w-4 animate-spin"
+                />
+              ) : (
+                <MessageCirclePlus
+                  aria-hidden="true"
+                  className="h-4 w-4"
+                />
+              )}
 
-            New conversation
-          </button>
+              New conversation
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -234,19 +373,20 @@ export default function MessagesSection() {
           }
         >
           <ConversationList
-            conversations={conversations}
-            activeConversationId={activeConversationId}
+            conversations={visibleConversations}
+            activeConversationId={
+              visibleActiveConversationId
+            }
             isLoading={isLoadingConversations}
             isCreatingConversation={
-              isCreatingConversation
+              isAdvisorPortal
+                ? false
+                : isCreatingConversation
             }
             onSelectConversation={
               handleSelectConversation
             }
-            onStartConversation={() => {
-              clearFeedback();
-              setIsComposerOpen(true);
-            }}
+            onStartConversation={openComposer}
           />
         </div>
 
@@ -258,38 +398,48 @@ export default function MessagesSection() {
           }
         >
           <ChatWindow
-            key={activeConversation?.id ?? "empty"}
-            conversation={activeConversation}
-            messages={messages}
+            key={visibleActiveConversation?.id ?? "empty"}
+            conversation={visibleActiveConversation}
+            messages={visibleMessages}
             currentUserId={currentUserId}
             isLoadingMessages={isLoadingMessages}
             isSendingMessage={isSendingMessage}
+            isSendingAttachment={
+              isSendingAttachment
+            }
+            uploadingAttachmentName={
+              uploadingAttachmentName
+            }
+            typingParticipants={typingParticipants}
             editingMessageId={editingMessageId}
             deletingMessageId={deletingMessageId}
             updatingConversationId={
               updatingConversationId
             }
-            onSendMessage={async (input) => {
-              await sendMessage(input);
-            }}
-            onEditMessage={async (input) => {
-              await editMessage(input);
-            }}
+            onSendMessage={sendMessage}
+            onSendAttachment={sendAttachment}
+            onOpenAttachment={openAttachment}
+            onDownloadAttachment={
+              downloadAttachment
+            }
+            onGetAttachmentPreviewUrl={
+              getAttachmentPreviewUrl
+            }
+            onEditMessage={editMessage}
             onDeleteMessage={deleteMessage}
             onMarkRead={markActiveConversationRead}
             onRefreshMessages={refreshMessages}
-            onUpdateStatus={async (input) => {
-              await setConversationStatus(input);
+            onUpdateStatus={setConversationStatus}
+            onBack={() => {
+              notifyTyping(false);
+              setShowMobileChat(false);
             }}
-            onBack={() => setShowMobileChat(false)}
-            onRequestAttachment={
-              handleAttachmentRequest
-            }
+            onTypingChange={notifyTyping}
           />
         </div>
       </div>
 
-      {isComposerOpen ? (
+      {!isAdvisorPortal && isComposerOpen ? (
         <div
           className="fixed inset-0 z-[150] flex items-center justify-center bg-[#071526]/70 px-4 py-8 backdrop-blur-sm"
           role="presentation"

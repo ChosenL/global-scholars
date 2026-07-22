@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { ArrowUpRight, GraduationCap } from "lucide-react";
 import FadeIn from "../ui/FadeIn";
 

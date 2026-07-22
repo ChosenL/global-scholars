@@ -3,6 +3,7 @@
 import { useSession, useUser } from "@clerk/nextjs";
 import { useEffect, useRef, useState } from "react";
 import { createClerkSupabaseClient } from "@/lib/supabase";
+import { usePlatformRole } from "@/app/hooks/usePlatformRole";
 import type {
   ApplicationProgress,
   StudentProfile,
@@ -15,183 +16,90 @@ interface UseStudentProfileResult {
   error: string;
 }
 
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message;
-  }
-
-  return "We could not load your saved portal information.";
-}
-
 export function useStudentProfile(): UseStudentProfileResult {
   const { isLoaded, isSignedIn, user } = useUser();
   const { session } = useSession();
+  const { role, isLoading: roleLoading } = usePlatformRole();
 
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [progress, setProgress] = useState<ApplicationProgress | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const requestIdRef = useRef(0);
-
-  const userId = user?.id ?? null;
-  const email = user?.primaryEmailAddress?.emailAddress ?? null;
-  const firstName = user?.firstName ?? "";
-  const lastName = user?.lastName ?? "";
-  const fullName = user?.fullName ?? "";
-  const imageUrl = user?.imageUrl ?? null;
-  const sessionId = session?.id ?? null;
+  const requestRef = useRef(0);
 
   useEffect(() => {
-    const requestId = ++requestIdRef.current;
-    let cancelled = false;
+    const requestId = ++requestRef.current;
 
-    async function loadStudentProfile() {
-      if (!isLoaded) {
-        return;
-      }
+    async function load() {
+      if (!isLoaded || roleLoading) return;
 
-      if (!isSignedIn || !userId || !session) {
-        if (!cancelled && requestId === requestIdRef.current) {
-          setProfile(null);
-          setProgress(null);
-          setError("");
-          setIsLoading(false);
-        }
-
+      if (!isSignedIn || !user || !session || role !== "student") {
+        setProfile(null);
+        setProgress(null);
+        setIsLoading(false);
         return;
       }
 
       setIsLoading(true);
-      setError("");
 
       try {
         const supabase = createClerkSupabaseClient(() => session.getToken());
 
-        const resolvedFullName =
-          fullName ||
-          [firstName, lastName].filter(Boolean).join(" ") ||
-          email ||
+        const fullName =
+          user.fullName ||
+          `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() ||
           "Scholar";
 
-        const { data: existingProfile, error: profileReadError } =
-          await supabase
-            .from("profiles")
-            .select("*")
-            .eq("user_id", userId)
-            .maybeSingle();
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .upsert(
+            {
+              user_id: user.id,
+              full_name: fullName,
+              email: user.primaryEmailAddress?.emailAddress ?? null,
+              profile_image_url: user.imageUrl,
+            },
+            { onConflict: "user_id" },
+          )
+          .select("*")
+          .single();
 
-        if (profileReadError) {
-          throw profileReadError;
-        }
+        const { data: progressData } = await supabase
+          .from("application_progress")
+          .upsert(
+            {
+              student_id: user.id,
+              current_stage: "Initial Consultation",
+              progress_percent: 10,
+            },
+            { onConflict: "student_id", ignoreDuplicates: true }
+          )
+          .select("*")
+          .single();
 
-        let savedProfile = existingProfile;
-
-        if (existingProfile) {
-          const { data: updatedProfile, error: profileUpdateError } =
-            await supabase
-              .from("profiles")
-              .update({
-                full_name: resolvedFullName,
-                email,
-                profile_image_url: imageUrl,
-              })
-              .eq("user_id", userId)
-              .select("*")
-              .single();
-
-          if (profileUpdateError) {
-            throw profileUpdateError;
-          }
-
-          savedProfile = updatedProfile;
-        } else {
-          const { data: createdProfile, error: profileInsertError } =
-            await supabase
-              .from("profiles")
-              .insert({
-                user_id: userId,
-                full_name: resolvedFullName,
-                email,
-                profile_image_url: imageUrl,
-              })
-              .select("*")
-              .single();
-
-          if (profileInsertError) {
-            throw profileInsertError;
-          }
-
-          savedProfile = createdProfile;
-        }
-
-        const { data: existingProgress, error: progressReadError } =
-          await supabase
-            .from("application_progress")
-            .select("*")
-            .eq("student_id", userId)
-            .maybeSingle();
-
-        if (progressReadError) {
-          throw progressReadError;
-        }
-
-        let savedProgress = existingProgress;
-
-        if (!existingProgress) {
-          const { data: createdProgress, error: progressInsertError } =
-            await supabase
-              .from("application_progress")
-              .insert({
-                student_id: userId,
-                current_stage: "Initial Consultation",
-                progress_percent: 10,
-              })
-              .select("*")
-              .single();
-
-          if (progressInsertError) {
-            throw progressInsertError;
-          }
-
-          savedProgress = createdProgress;
-        }
-
-        if (!cancelled && requestId === requestIdRef.current) {
-          setProfile(savedProfile as StudentProfile);
-          setProgress(savedProgress as ApplicationProgress);
+        if (requestId === requestRef.current) {
+          setProfile(profileData as StudentProfile);
+          setProgress(progressData as ApplicationProgress);
           setError("");
         }
-      } catch (loadError) {
-        console.error("Unable to load student profile:", loadError);
-
-        if (!cancelled && requestId === requestIdRef.current) {
-          setError(getErrorMessage(loadError));
+      } catch (err) {
+        if (requestId === requestRef.current) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Unable to load your profile.",
+          );
         }
       } finally {
-        if (!cancelled && requestId === requestIdRef.current) {
+        if (requestId === requestRef.current) {
           setIsLoading(false);
         }
       }
     }
 
-    void loadStudentProfile();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    email,
-    firstName,
-    fullName,
-    imageUrl,
-    isLoaded,
-    isSignedIn,
-    lastName,
-    session,
-    sessionId,
-    userId,
-  ]);
+    void load();
+  }, [isLoaded, isSignedIn, user, session, role, roleLoading]);
 
   return {
     profile,

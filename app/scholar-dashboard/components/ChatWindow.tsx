@@ -24,6 +24,7 @@ import type {
 } from "../types/dashboard";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
+import type { TypingParticipant } from "../hooks/useTypingIndicator";
 
 interface ChatWindowProps {
   conversation: ConversationWithDetails | null;
@@ -31,20 +32,37 @@ interface ChatWindowProps {
   currentUserId: string;
   isLoadingMessages: boolean;
   isSendingMessage: boolean;
+  isSendingAttachment?: boolean;
+  uploadingAttachmentName?: string | null;
+  typingParticipants?: TypingParticipant[];
   editingMessageId: string | null;
   deletingMessageId: string | null;
   updatingConversationId: string | null;
   onSendMessage: (input: {
     body: string;
     replyToMessageId?: string;
-  }) => void | Promise<void>;
+  }) => void | Promise<unknown>;
+  onSendAttachment?: (input: {
+    file: File;
+    replyToMessageId?: string;
+  }) => void | Promise<unknown>;
   onEditMessage: (input: {
     messageId: string;
     body: string;
-  }) => void | Promise<void>;
+  }) => void | Promise<unknown>;
   onDeleteMessage: (
     messageId: string,
-  ) => void | Promise<void>;
+  ) => void | Promise<unknown>;
+  onOpenAttachment?: (
+    message: Message,
+  ) => void | Promise<unknown>;
+  onDownloadAttachment?: (
+    message: Message,
+  ) => void | Promise<unknown>;
+  onGetAttachmentPreviewUrl?: (
+    message: Message,
+    forceRefresh?: boolean,
+  ) => Promise<string>;
   onMarkRead: () => void | Promise<void>;
   onRefreshMessages: (
     conversationId?: string,
@@ -52,9 +70,14 @@ interface ChatWindowProps {
   onUpdateStatus: (input: {
     conversationId: string;
     status: Conversation["status"];
-  }) => void | Promise<void>;
+  }) => void | Promise<unknown>;
   onBack?: () => void;
+  /**
+   * @deprecated Temporary compatibility prop.
+   * Replace this in the parent with onSendAttachment.
+   */
   onRequestAttachment?: () => void;
+  onTypingChange?: (isTyping: boolean) => void;
 }
 
 interface MessageGroup {
@@ -161,23 +184,52 @@ function getStatusDescription(
   }
 }
 
+function getTypingLabel(
+  participants: TypingParticipant[],
+): string {
+  const names = participants.map(
+    (participant) => participant.displayName,
+  );
+
+  if (names.length === 0) {
+    return "";
+  }
+
+  if (names.length === 1) {
+    return `${names[0]} is typing`;
+  }
+
+  if (names.length === 2) {
+    return `${names[0]} and ${names[1]} are typing`;
+  }
+
+  return `${names[0]} and ${names.length - 1} others are typing`;
+}
+
 export default function ChatWindow({
   conversation,
   messages,
   currentUserId,
   isLoadingMessages,
   isSendingMessage,
+  isSendingAttachment = false,
+  uploadingAttachmentName = null,
+  typingParticipants = [],
   editingMessageId,
   deletingMessageId,
   updatingConversationId,
   onSendMessage,
+  onSendAttachment,
   onEditMessage,
   onDeleteMessage,
+  onOpenAttachment,
+  onDownloadAttachment,
+  onGetAttachmentPreviewUrl,
   onMarkRead,
   onRefreshMessages,
   onUpdateStatus,
   onBack,
-  onRequestAttachment,
+  onTypingChange,
 }: ChatWindowProps) {
   const [replyToMessage, setReplyToMessage] =
     useState<Message | null>(null);
@@ -522,16 +574,43 @@ export default function ChatWindow({
                         isDeleting={
                           deletingMessageId === message.id
                         }
-                        onEdit={(
+                        onEdit={async (
                           messageId,
                           body,
-                        ) =>
-                          onEditMessage({
+                        ) => {
+                          await onEditMessage({
                             messageId,
                             body,
-                          })
+                          });
+                        }}
+                        onDelete={async (messageId) => {
+                          await onDeleteMessage(messageId);
+                        }}
+                        onOpenAttachment={
+                          onOpenAttachment
+                            ? async (
+                                selectedMessage,
+                              ) => {
+                                await onOpenAttachment(
+                                  selectedMessage,
+                                );
+                              }
+                            : undefined
                         }
-                        onDelete={onDeleteMessage}
+                        onDownloadAttachment={
+                          onDownloadAttachment
+                            ? async (
+                                selectedMessage,
+                              ) => {
+                                await onDownloadAttachment(
+                                  selectedMessage,
+                                );
+                              }
+                            : undefined
+                        }
+                        onGetAttachmentPreviewUrl={
+                          onGetAttachmentPreviewUrl
+                        }
                         onReply={setReplyToMessage}
                       />
                     );
@@ -546,19 +625,48 @@ export default function ChatWindow({
       </div>
 
       {conversation.status === "open" ? (
-        <MessageInput
+        <div className="border-t border-slate-200 bg-white">
+          {typingParticipants.length > 0 ? (
+            <div
+              className="flex min-h-10 items-center gap-2 px-4 pt-3 text-xs font-bold text-slate-500 md:px-6"
+              role="status"
+              aria-live="polite"
+            >
+              <span>{getTypingLabel(typingParticipants)}</span>
+              <span className="inline-flex items-end gap-1" aria-hidden="true">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#C8A24A] [animation-delay:-0.3s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#C8A24A] [animation-delay:-0.15s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#C8A24A]" />
+              </span>
+            </div>
+          ) : null}
+
+          <MessageInput
           disabled={composerDisabled}
           isSending={isSendingMessage}
+          isSendingAttachment={isSendingAttachment}
+          uploadingAttachmentName={
+            uploadingAttachmentName
+          }
           replyToMessage={replyToMessage}
           onCancelReply={() =>
             setReplyToMessage(null)
           }
-          onRequestAttachment={onRequestAttachment}
+          onSendAttachment={
+            onSendAttachment
+              ? async (input) => {
+                  await onSendAttachment(input);
+                  setReplyToMessage(null);
+                }
+              : undefined
+          }
+          onTypingChange={onTypingChange}
           onSend={async (input) => {
             await onSendMessage(input);
             setReplyToMessage(null);
           }}
-        />
+          />
+        </div>
       ) : (
         <div className="border-t border-slate-200 bg-white p-4 md:p-5">
           <div className="flex items-center justify-between gap-4 rounded-xl bg-[#F4F7FA] px-4 py-3">

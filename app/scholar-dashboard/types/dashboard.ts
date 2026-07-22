@@ -1,4 +1,7 @@
-export type DocumentStatus = "pending" | "approved" | "rejected";
+export type DocumentStatus =
+  | "pending"
+  | "approved"
+  | "rejected";
 
 export type AppointmentStatus =
   | "requested"
@@ -7,13 +10,25 @@ export type AppointmentStatus =
   | "cancelled"
   | "rescheduled";
 
-export type MeetingType = "video" | "phone" | "in_person";
+export type MeetingType =
+  | "video"
+  | "phone"
+  | "in_person";
 
-export type ConversationStatus = "open" | "resolved" | "archived";
+export type ConversationStatus =
+  | "open"
+  | "resolved"
+  | "archived";
 
-export type ConversationParticipantRole = "student" | "advisor" | "admin";
+export type ConversationParticipantRole =
+  | "student"
+  | "advisor"
+  | "admin";
 
-export type MessageType = "text" | "file" | "system";
+export type MessageType =
+  | "text"
+  | "file"
+  | "system";
 
 export interface StudentProfile {
   id?: string;
@@ -186,7 +201,8 @@ export interface MessageReadReceipt {
   read_at: string;
 }
 
-export interface ConversationWithDetails extends Conversation {
+export interface ConversationWithDetails
+  extends Conversation {
   participants: ConversationParticipant[];
   latest_message: Message | null;
   unread_count: number;
@@ -208,6 +224,24 @@ export interface SendFileMessageInput {
   replyToMessageId?: string;
 }
 
+export interface UploadMessageAttachmentInput {
+  conversationId: string;
+  senderId: string;
+  file: File;
+}
+
+export interface UploadedMessageAttachment {
+  name: string;
+  path: string;
+  type: string;
+  size: number;
+}
+
+export interface SendFileMessageResult {
+  message: Message;
+  attachment: UploadedMessageAttachment;
+}
+
 export interface UpdateMessageInput {
   messageId: string;
   body: string;
@@ -222,10 +256,15 @@ export interface MessagingState {
   conversations: ConversationWithDetails[];
   activeConversation: ConversationWithDetails | null;
   messages: Message[];
+
   isLoadingConversations: boolean;
   isLoadingMessages: boolean;
   isSendingMessage: boolean;
+  isSendingAttachment: boolean;
   isCreatingConversation: boolean;
+
+  uploadingAttachmentName: string | null;
+
   error: string | null;
   successMessage: string | null;
 }

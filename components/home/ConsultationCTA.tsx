@@ -34,7 +34,7 @@ export default function ConsultationCTA() {
                 </span>
                 <span className="flex items-center gap-2">
                   <CheckCircle2 size={18} className="text-[#C8A24A]" />
-                  Jamaica → USA
+                  Caribbean → USA
                 </span>
                 <span className="flex items-center gap-2">
                   <CheckCircle2 size={18} className="text-[#C8A24A]" />

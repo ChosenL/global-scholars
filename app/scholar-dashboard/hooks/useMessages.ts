@@ -14,6 +14,7 @@ import type {
   ConversationWithDetails,
   CreateConversationInput,
   Message,
+  SendFileMessageInput,
   SendMessageInput,
 } from "../types/dashboard";
 import {
@@ -21,8 +22,10 @@ import {
   deleteConversationMessage,
   getConversation,
   listConversationMessages,
+  getMessageAttachmentUrl,
   listStudentConversations,
   markConversationAsRead,
+  sendConversationFileMessage,
   sendConversationMessage,
   updateConversationMessage,
   updateConversationStatus,
@@ -50,6 +53,8 @@ interface UseMessagesResult {
   isLoadingMessages: boolean;
   isCreatingConversation: boolean;
   isSendingMessage: boolean;
+  isSendingAttachment: boolean;
+  uploadingAttachmentName: string | null;
   editingMessageId: string | null;
   deletingMessageId: string | null;
   updatingConversationId: string | null;
@@ -73,6 +78,23 @@ interface UseMessagesResult {
   sendMessage: (
     input: Omit<SendMessageInput, "conversationId">,
   ) => Promise<Message>;
+
+  sendAttachment: (
+    input: Omit<SendFileMessageInput, "conversationId">,
+  ) => Promise<Message>;
+
+  openAttachment: (
+    message: Message,
+  ) => Promise<void>;
+
+  downloadAttachment: (
+    message: Message,
+  ) => Promise<void>;
+
+  getAttachmentPreviewUrl: (
+    message: Message,
+    forceRefresh?: boolean,
+  ) => Promise<string>;
 
   editMessage: (
     request: EditMessageRequest,
@@ -246,6 +268,14 @@ export function useMessages(): UseMessagesResult {
   const [isSendingMessage, setIsSendingMessage] =
     useState(false);
 
+  const [isSendingAttachment, setIsSendingAttachment] =
+    useState(false);
+
+  const [
+    uploadingAttachmentName,
+    setUploadingAttachmentName,
+  ] = useState<string | null>(null);
+
   const [editingMessageId, setEditingMessageId] =
     useState<string | null>(null);
 
@@ -265,6 +295,16 @@ export function useMessages(): UseMessagesResult {
   );
   const activeConversationIdRef = useRef<string | null>(
     null,
+  );
+
+  const attachmentPreviewCacheRef = useRef(
+    new Map<
+      string,
+      {
+        url: string;
+        expiresAt: number;
+      }
+    >(),
   );
 
   const userId = user?.id ?? null;
@@ -851,6 +891,247 @@ export function useMessages(): UseMessagesResult {
     ],
   );
 
+  const sendAttachment = useCallback(
+    async (
+      input: Omit<
+        SendFileMessageInput,
+        "conversationId"
+      >,
+    ): Promise<Message> => {
+      const conversationId =
+        activeConversationIdRef.current;
+
+      if (!userId) {
+        throw new Error(
+          "You must be signed in before sending an attachment.",
+        );
+      }
+
+      if (!conversationId) {
+        throw new Error(
+          "Please select a conversation before sending an attachment.",
+        );
+      }
+
+      const optimisticMessage: Message = {
+        id: `temporary-${crypto.randomUUID()}`,
+        conversation_id: conversationId,
+        sender_id: userId,
+        message_type: "file",
+        body: null,
+        attachment_name: input.file.name,
+        attachment_path: null,
+        attachment_type: input.file.type,
+        attachment_size: input.file.size,
+        reply_to_message_id:
+          input.replyToMessageId ?? null,
+        edited_at: null,
+        deleted_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      setIsSendingAttachment(true);
+      setUploadingAttachmentName(input.file.name);
+      clearFeedback();
+
+      setMessages((currentMessages) =>
+        sortMessages([
+          ...currentMessages,
+          optimisticMessage,
+        ]),
+      );
+
+      try {
+        const { message } =
+          await sendConversationFileMessage(
+            getSupabase(),
+            userId,
+            {
+              conversationId,
+              file: input.file,
+              replyToMessageId:
+                input.replyToMessageId,
+            },
+          );
+
+        setMessages((currentMessages) =>
+          sortMessages(
+            currentMessages
+              .filter(
+                (currentMessage) =>
+                  currentMessage.id !==
+                  optimisticMessage.id,
+              )
+              .concat(message),
+          ),
+        );
+
+        setConversations(
+          (currentConversations) =>
+            sortConversations(
+              currentConversations.map(
+                (conversation) =>
+                  conversation.id ===
+                  conversationId
+                    ? {
+                        ...conversation,
+                        latest_message: message,
+                        last_message_at:
+                          message.created_at,
+                      }
+                    : conversation,
+              ),
+            ),
+        );
+
+        setSuccessMessage(
+          "Your attachment was sent successfully.",
+        );
+
+        return message;
+      } catch (sendError) {
+        setMessages((currentMessages) =>
+          currentMessages.filter(
+            (message) =>
+              message.id !==
+              optimisticMessage.id,
+          ),
+        );
+
+        const message = getErrorMessage(
+          sendError,
+          "Your attachment could not be sent. Please try again.",
+        );
+
+        setError(message);
+        throw new Error(message);
+      } finally {
+        setIsSendingAttachment(false);
+        setUploadingAttachmentName(null);
+      }
+    },
+    [
+      clearFeedback,
+      getSupabase,
+      userId,
+    ],
+  );
+
+  const getAttachmentPreviewUrl = useCallback(
+    async (
+      message: Message,
+      forceRefresh = false,
+    ): Promise<string> => {
+      const attachmentPath =
+        message.attachment_path?.trim();
+
+      if (!attachmentPath) {
+        throw new Error(
+          "This message does not contain a previewable attachment.",
+        );
+      }
+
+      const cacheKey = `${message.id}:${attachmentPath}`;
+      const cachedPreview =
+        attachmentPreviewCacheRef.current.get(cacheKey);
+      const now = Date.now();
+
+      if (
+        !forceRefresh &&
+        cachedPreview &&
+        cachedPreview.expiresAt > now
+      ) {
+        return cachedPreview.url;
+      }
+
+      const url = await getMessageAttachmentUrl(
+        getSupabase(),
+        message,
+      );
+
+      attachmentPreviewCacheRef.current.set(cacheKey, {
+        url,
+        expiresAt: now + 8 * 60 * 1_000,
+      });
+
+      return url;
+    },
+    [getSupabase],
+  );
+
+  const openAttachment = useCallback(
+    async (message: Message): Promise<void> => {
+      clearFeedback();
+
+      try {
+        const url = await getMessageAttachmentUrl(
+          getSupabase(),
+          message,
+        );
+
+        const openedWindow = window.open(
+          url,
+          "_blank",
+          "noopener,noreferrer",
+        );
+
+        if (!openedWindow) {
+          window.location.assign(url);
+        }
+      } catch (openError) {
+        const errorMessage = getErrorMessage(
+          openError,
+          "The attachment could not be opened. Please try again.",
+        );
+
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      }
+    },
+    [
+      clearFeedback,
+      getSupabase,
+    ],
+  );
+
+  const downloadAttachment = useCallback(
+    async (message: Message): Promise<void> => {
+      clearFeedback();
+
+      try {
+        const url = await getMessageAttachmentUrl(
+          getSupabase(),
+          message,
+          {
+            download: true,
+          },
+        );
+
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download =
+          message.attachment_name ?? "attachment";
+        anchor.rel = "noopener noreferrer";
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+      } catch (downloadError) {
+        const errorMessage = getErrorMessage(
+          downloadError,
+          "The attachment could not be downloaded. Please try again.",
+        );
+
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      }
+    },
+    [
+      clearFeedback,
+      getSupabase,
+    ],
+  );
+
   const editMessage = useCallback(
     async ({
       messageId,
@@ -1130,6 +1411,8 @@ export function useMessages(): UseMessagesResult {
     isLoadingMessages,
     isCreatingConversation,
     isSendingMessage,
+    isSendingAttachment,
+    uploadingAttachmentName,
     editingMessageId,
     deletingMessageId,
     updatingConversationId,
@@ -1142,6 +1425,10 @@ export function useMessages(): UseMessagesResult {
     selectConversation,
     createConversation,
     sendMessage,
+    sendAttachment,
+    openAttachment,
+    downloadAttachment,
+    getAttachmentPreviewUrl,
     editMessage,
     deleteMessage,
     markActiveConversationRead,

@@ -24,27 +24,13 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import DocumentsCard from "./components/DocumentsCard";
+import MessagesSection from "./components/MessagesSection";
 import ProgressTracker from "./components/ProgressTracker";
 import { useDocuments } from "./hooks/useDocuments";
 import { useStudentProfile } from "./hooks/useStudentProfile";
 
 const calendlyLink =
   "https://calendly.com/thompsondwayne0055/free-10_minute-consultation";
-
-const messages = [
-  {
-    sender: "Global Scholars Advisor",
-    message:
-      "Your transcript has been received. We are now reviewing your transfer options.",
-    time: "Today, 10:30 AM",
-  },
-  {
-    sender: "Global Scholars",
-    message:
-      "Your next consultation is scheduled. Please prepare your university shortlist.",
-    time: "Yesterday, 4:15 PM",
-  },
-];
 
 const notifications = [
   {
@@ -614,34 +600,9 @@ export default function ScholarDashboardPage() {
 
                 <section
                   id="messages"
-                  className="min-w-0 scroll-mt-28 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8"
+                  className="min-w-0 scroll-mt-28"
                 >
-                  <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
-                    Messages
-                  </p>
-
-                  <h2 className="mt-2 text-3xl font-black">Recent Updates</h2>
-
-                  <div className="mt-7 space-y-4">
-                    {messages.map((message) => (
-                      <article
-                        key={`${message.sender}-${message.time}`}
-                        className="rounded-2xl border border-slate-200 p-5"
-                      >
-                        <div className="flex items-center justify-between gap-4">
-                          <p className="font-black">{message.sender}</p>
-
-                          <p className="text-xs text-slate-400">
-                            {message.time}
-                          </p>
-                        </div>
-
-                        <p className="mt-3 leading-7 text-slate-600">
-                          {message.message}
-                        </p>
-                      </article>
-                    ))}
-                  </div>
+                  <MessagesSection />
                 </section>
               </div>
               {/* Notifications and deadlines */}
@@ -824,10 +785,10 @@ export default function ScholarDashboardPage() {
               ) : (
                 <div className="mt-8 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 text-sm leading-6 text-emerald-900">
                   Your Clerk account, Supabase student profile, application
-                  progress, and document records are connected. Appointments,
-                  messages, notifications, and deadlines remain sample
-                  information until their individual dashboard features are
-                  connected.
+                  progress, document records, and realtime messaging are
+                  connected. Appointments, notifications, and deadlines remain
+                  sample information until their individual dashboard features
+                  are connected.
                 </div>
               )}{" "}
             </div>
