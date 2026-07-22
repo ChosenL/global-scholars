@@ -71,7 +71,7 @@ export default function ConversationList({
   );
 
   return (
-    <aside className="flex min-h-0 flex-col rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+    <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 p-5 md:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>

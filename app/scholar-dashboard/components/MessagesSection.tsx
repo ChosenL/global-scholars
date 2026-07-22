@@ -147,13 +147,6 @@ export default function MessagesSection({
       return;
     }
 
-    notifyTyping(false);
-    // Reset advisor-only UI state when the selected student changes.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setShowMobileChat(false);
-    setIsComposerOpen(false);
-    setNewConversationSubject("");
-
     if (
       visibleConversations.length === 0 ||
       (activeConversationId &&
@@ -166,7 +159,6 @@ export default function MessagesSection({
   }, [
     activeConversationId,
     isAdvisorPortal,
-    notifyTyping,
     selectConversation,
     selectedStudentId,
     visibleConversationIds,
@@ -364,12 +356,12 @@ export default function MessagesSection({
         </div>
       ) : null}
 
-      <div className="grid min-h-[42rem] gap-6 xl:grid-cols-[23rem_minmax(0,1fr)]">
+      <div className="grid h-[calc(100dvh-8rem)] min-h-[36rem] max-h-[52rem] min-w-0 gap-6 overflow-hidden xl:grid-cols-[23rem_minmax(0,1fr)]">
         <div
           className={
             showMobileChat
-              ? "hidden xl:block"
-              : "block"
+              ? "hidden h-full min-h-0 overflow-hidden xl:block"
+              : "block h-full min-h-0 overflow-hidden"
           }
         >
           <ConversationList
@@ -393,12 +385,11 @@ export default function MessagesSection({
         <div
           className={
             showMobileChat
-              ? "block"
-              : "hidden xl:block"
+              ? "block h-full min-h-0 overflow-hidden"
+              : "hidden h-full min-h-0 overflow-hidden xl:block"
           }
         >
           <ChatWindow
-            key={visibleActiveConversation?.id ?? "empty"}
             conversation={visibleActiveConversation}
             messages={visibleMessages}
             currentUserId={currentUserId}

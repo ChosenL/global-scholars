@@ -6,6 +6,7 @@ import ChatHeader from "./ChatHeader";
 import ConversationSidebar from "./ConversationSidebar";
 import MessageComposer from "./MessageComposer";
 import MessageList from "./MessageList";
+import { useTypingIndicator } from "./hooks/useTypingIndicator";
 
 import {
   getAttachmentKind,
@@ -35,7 +36,7 @@ function getCurrentUserName(
 ): string {
   switch (portalRole) {
     case "advisor":
-      return "Advisor";
+      return "Global Scholars Advisor";
     case "admin":
       return "Administrator";
     case "student":
@@ -108,6 +109,9 @@ function CRMChatWorkspaceSession({
   className = "",
   fixedHeightClassName = "",
 }: WorkspaceSessionProps) {
+  const sessionIdentity = `${portalRole}:${currentUserId}:${participantId}:${participantName}`;
+  const [initializedSessionIdentity, setInitializedSessionIdentity] =
+    useState(sessionIdentity);
   const [initialState] = useState<InitialWorkspaceState>(() =>
     createInitialWorkspaceState({
       currentUserId,
@@ -126,6 +130,21 @@ function CRMChatWorkspaceSession({
     initialState.activeConversationId,
   );
   const [isSending, setIsSending] = useState(false);
+
+  if (initializedSessionIdentity !== sessionIdentity) {
+    const nextState = createInitialWorkspaceState({
+      currentUserId,
+      participantId,
+      participantName,
+      portalRole,
+    });
+
+    setInitializedSessionIdentity(sessionIdentity);
+    setMessages(nextState.messages);
+    setConversations(nextState.conversations);
+    setActiveConversationId(nextState.activeConversationId);
+    setIsSending(false);
+  }
 
   const activeConversation = useMemo(
     () =>
@@ -159,7 +178,15 @@ function CRMChatWorkspaceSession({
     [activeConversation?.title, participantId, participantName, portalRole],
   );
 
+  const { notifyTyping, typingIndicators } = useTypingIndicator({
+    conversationId: activeConversationId,
+    userId: currentUserId,
+    displayName: getCurrentUserName(portalRole),
+    role: portalRole,
+  });
+
   function handleSelectConversation(selectedConversationId: string): void {
+    notifyTyping(false);
     setActiveConversationId(selectedConversationId);
     setConversations((previous) =>
       previous.map((conversation) =>
@@ -176,6 +203,7 @@ function CRMChatWorkspaceSession({
     }
 
     setIsSending(true);
+    notifyTyping(false);
 
     try {
       const createdAt = new Date().toISOString();
@@ -226,12 +254,12 @@ function CRMChatWorkspaceSession({
   return (
     <section
       className={[
-        "flex min-h-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm",
+        "flex h-full min-h-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm",
         workspaceHeight,
         className,
       ].join(" ")}
     >
-      <div className="hidden h-full w-[320px] shrink-0 lg:block xl:w-[360px]">
+      <div className="hidden h-full min-h-0 w-[320px] shrink-0 overflow-hidden lg:block xl:w-[360px]">
         <ConversationSidebar
           conversations={conversations}
           activeConversationId={activeConversationId}
@@ -239,14 +267,14 @@ function CRMChatWorkspaceSession({
         />
       </div>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {activeConversation ? (
           <>
             <ChatHeader participant={activeParticipant} />
             <MessageList
               messages={activeMessages}
               currentUserId={currentUserId}
-              typingIndicators={[]}
+              typingIndicators={typingIndicators}
               isLoading={false}
               isLoadingOlder={false}
               hasMore={false}
@@ -256,6 +284,7 @@ function CRMChatWorkspaceSession({
               isSending={isSending}
               disabled={!activeConversation}
               placeholder={`Message ${activeParticipant.displayName}...`}
+              onTypingChange={notifyTyping}
             />
           </>
         ) : (
@@ -280,16 +309,8 @@ export default function CRMChatWorkspace(props: CRMChatWorkspaceProps) {
     props.selectedParticipantId?.trim() || "student-placeholder";
   const participantName =
     props.selectedParticipantName?.trim() || "Selected Student";
-  const sessionKey = JSON.stringify([
-    props.portalRole,
-    props.currentUserId,
-    participantId,
-    participantName,
-  ]);
-
   return (
     <CRMChatWorkspaceSession
-      key={sessionKey}
       {...props}
       participantId={participantId}
       participantName={participantName}

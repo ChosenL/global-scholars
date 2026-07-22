@@ -85,7 +85,7 @@ export default function ConversationSidebar({
   return (
     <aside
       className={[
-        "flex h-full w-full flex-col border-r border-slate-200 bg-white",
+        "flex h-full min-h-0 w-full flex-col overflow-hidden border-r border-slate-200 bg-white",
         className,
       ].join(" ")}
     >

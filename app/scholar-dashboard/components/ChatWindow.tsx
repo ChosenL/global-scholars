@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -196,14 +197,14 @@ function getTypingLabel(
   }
 
   if (names.length === 1) {
-    return `${names[0]} is typing`;
+    return `${names[0]} is typing...`;
   }
 
   if (names.length === 2) {
-    return `${names[0]} and ${names[1]} are typing`;
+    return `${names[0]} and ${names[1]} are typing...`;
   }
 
-  return `${names[0]} and ${names.length - 1} others are typing`;
+  return `${names[0]} and ${names.length - 1} others are typing...`;
 }
 
 export default function ChatWindow({
@@ -239,6 +240,11 @@ export default function ChatWindow({
 
   const messagesEndRef =
     useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef =
+    useRef<HTMLDivElement | null>(null);
+  const isNearBottomRef = useRef(true);
+  const previousConversationIdRef = useRef<string | null>(null);
+  const previousMessageCountRef = useRef(0);
 
   const messageGroups = useMemo(
     () => groupMessagesByDate(messages),
@@ -295,16 +301,29 @@ export default function ChatWindow({
     onMarkRead,
   ]);
 
-  useEffect(() => {
-    if (messages.length === 0) {
-      return;
+  useLayoutEffect(() => {
+    const conversationChanged =
+      previousConversationIdRef.current !== (conversation?.id ?? null);
+    const messageAdded = messages.length > previousMessageCountRef.current;
+    const newestMessage = messages.at(-1);
+    const currentUserSentNewestMessage =
+      newestMessage?.sender_id === currentUserId;
+
+    if (
+      messages.length > 0 &&
+      (conversationChanged ||
+        currentUserSentNewestMessage ||
+        (messageAdded && isNearBottomRef.current))
+    ) {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: conversationChanged ? "auto" : "smooth",
+        block: "end",
+      });
     }
 
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
-  }, [messages.length]);
+    previousConversationIdRef.current = conversation?.id ?? null;
+    previousMessageCountRef.current = messages.length;
+  }, [conversation?.id, currentUserId, messages]);
 
   const handleStatusUpdate = async (
     status: Conversation["status"],
@@ -323,7 +342,7 @@ export default function ChatWindow({
 
   if (!conversation) {
     return (
-      <section className="flex min-h-[38rem] flex-col items-center justify-center rounded-[2rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
+      <section className="flex h-full min-h-0 flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F4F7FA] text-[#0F2747]">
           <Inbox
             aria-hidden="true"
@@ -344,8 +363,8 @@ export default function ChatWindow({
   }
 
   return (
-    <section className="flex min-h-[38rem] min-w-0 flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-      <header className="relative flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-4 md:px-6">
+    <section className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+      <header className="relative flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 px-4 py-4 md:px-6">
         <div className="flex min-w-0 items-center gap-3">
           {onBack ? (
             <button
@@ -499,7 +518,20 @@ export default function ChatWindow({
         </div>
       </header>
 
-      <div className="relative min-h-0 flex-1 overflow-y-auto bg-[#F8FAFC] px-4 py-5 md:px-6">
+      <div
+        ref={scrollContainerRef}
+        onScroll={() => {
+          const container = scrollContainerRef.current;
+
+          if (!container) {
+            return;
+          }
+
+          isNearBottomRef.current =
+            container.scrollHeight - container.scrollTop - container.clientHeight < 160;
+        }}
+        className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#F8FAFC] px-4 py-5 md:px-6"
+      >
         {isLoadingMessages && messages.length === 0 ? (
           <div className="flex min-h-80 flex-col items-center justify-center text-center">
             <Loader2
@@ -625,7 +657,7 @@ export default function ChatWindow({
       </div>
 
       {conversation.status === "open" ? (
-        <div className="border-t border-slate-200 bg-white">
+        <div className="shrink-0 border-t border-slate-200 bg-white">
           {typingParticipants.length > 0 ? (
             <div
               className="flex min-h-10 items-center gap-2 px-4 pt-3 text-xs font-bold text-slate-500 md:px-6"
@@ -668,7 +700,7 @@ export default function ChatWindow({
           />
         </div>
       ) : (
-        <div className="border-t border-slate-200 bg-white p-4 md:p-5">
+        <div className="shrink-0 border-t border-slate-200 bg-white p-4 md:p-5">
           <div className="flex items-center justify-between gap-4 rounded-xl bg-[#F4F7FA] px-4 py-3">
             <div>
               <p className="text-sm font-black text-[#071526]">

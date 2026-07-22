@@ -240,6 +240,7 @@ export default function MessageList({
   const previousScrollHeightRef = useRef(0);
   const loadingOlderRef = useRef(false);
   const initialScrollCompleteRef = useRef(false);
+  const isNearBottomRef = useRef(true);
 
   const scrollToBottom = useCallback(
     (behavior: ScrollBehavior = "auto") => {
@@ -307,6 +308,12 @@ export default function MessageList({
       return;
     }
 
+    isNearBottomRef.current =
+      container.scrollHeight -
+        container.scrollTop -
+        container.clientHeight <
+      160;
+
     if (container.scrollTop <= 80) {
       void loadOlderMessages();
     }
@@ -338,7 +345,11 @@ export default function MessageList({
     } else if (!initialScrollCompleteRef.current) {
       scrollToBottom();
       initialScrollCompleteRef.current = true;
-    } else if (isNearBottom()) {
+    } else if (
+      messages.at(-1)?.senderId === currentUserId ||
+      isNearBottomRef.current ||
+      isNearBottom()
+    ) {
       scrollToBottom("smooth");
     }
 
@@ -346,6 +357,7 @@ export default function MessageList({
       messages.length;
   }, [
     isNearBottom,
+    currentUserId,
     messages,
     scrollToBottom,
   ]);
@@ -539,8 +551,8 @@ export default function MessageList({
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-500">
                 {typingIndicators.length === 1
-                  ? `${typingIndicators[0].displayName} is typing`
-                  : "Several people are typing"}
+                  ? `${typingIndicators[0].displayName} is typing...`
+                  : "Several people are typing..."}
               </span>
 
               <span className="flex items-center gap-1">

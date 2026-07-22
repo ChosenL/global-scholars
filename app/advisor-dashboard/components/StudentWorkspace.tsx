@@ -1,6 +1,6 @@
 "use client";
 
-import CRMChatWorkspace from "@/app/shared/chat/CRMChatWorkspace";
+import MessagesSection from "@/app/scholar-dashboard/components/MessagesSection";
 
 import type { AdvisorStudent } from "../hooks/useAdvisorStudents";
 
@@ -37,14 +37,10 @@ export default function StudentWorkspace({
         </aside>
 
         <main className="min-w-0 space-y-6">
-          <CRMChatWorkspace
+          <MessagesSection
             portalRole="advisor"
-            currentUserId="advisor-user"
-            selectedParticipantId={student.userId}
-            selectedParticipantName={
-              student.displayName
-            }
-            fixedHeightClassName="h-[calc(100vh-190px)] min-h-[680px] max-h-[900px]"
+            selectedStudentId={student.userId}
+            selectedStudentName={student.displayName}
           />
 
           <StudentDocumentsCard />

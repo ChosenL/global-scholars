@@ -78,6 +78,7 @@ export interface TypingIndicator {
   conversationId: string;
   userId: string;
   displayName: string;
+  role: PortalRole;
   isTyping: boolean;
   updatedAt: string;
 }
@@ -221,4 +222,13 @@ export function formatFileSize(
   return `${value >= 10 || unitIndex === 0 ? value.toFixed(0) : value.toFixed(1)} ${
     units[unitIndex]
   }`;
+}
+
+export interface TypingEvent {
+  conversationId: string;
+  userId: string;
+  displayName: string;
+  role: PortalRole;
+  isTyping: boolean;
+  sentAt: string;
 }

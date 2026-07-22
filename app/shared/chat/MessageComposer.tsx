@@ -3,8 +3,9 @@
 import { Paperclip, Send, X } from "lucide-react";
 import Image from "next/image";
 import {
-  ChangeEvent,
-  KeyboardEvent,
+  type ChangeEvent,
+  type KeyboardEvent,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -22,6 +23,7 @@ interface MessageComposerProps {
     message: string,
     attachments: File[],
   ) => void | Promise<void>;
+  onTypingChange?: (isTyping: boolean) => void;
 }
 
 export default function MessageComposer({
@@ -29,6 +31,7 @@ export default function MessageComposer({
   isSending = false,
   placeholder = "Type a message...",
   onSend,
+  onTypingChange,
 }: MessageComposerProps) {
   const [message, setMessage] = useState("");
 
@@ -39,7 +42,15 @@ export default function MessageComposer({
   const fileInputRef =
     useRef<HTMLInputElement>(null);
 
+  useEffect(
+    () => () => {
+      onTypingChange?.(false);
+    },
+    [onTypingChange],
+  );
+
   const resetComposer = () => {
+    onTypingChange?.(false);
     setMessage("");
 
     attachments.forEach((attachment) => {
@@ -216,11 +227,11 @@ export default function MessageComposer({
           disabled={disabled}
           placeholder={placeholder}
           onKeyDown={handleKeyDown}
-          onChange={(e) =>
-            setMessage(
-              e.target.value,
-            )
-          }
+          onChange={(event) => {
+            const nextMessage = event.target.value;
+            setMessage(nextMessage);
+            onTypingChange?.(nextMessage.trim().length > 0);
+          }}
           className="max-h-40 min-h-[48px] flex-1 resize-none rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-[#C8A24A]"
         />
 

@@ -290,6 +290,7 @@ export function useMessages(): UseMessagesResult {
 
   const conversationRequestIdRef = useRef(0);
   const messageRequestIdRef = useRef(0);
+  const hasLoadedConversationsRef = useRef(false);
   const realtimeRefreshTimerRef = useRef<number | null>(
     null,
   );
@@ -309,6 +310,11 @@ export function useMessages(): UseMessagesResult {
 
   const userId = user?.id ?? null;
   const sessionId = session?.id ?? null;
+  const sessionRef = useRef(session);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
 
   useEffect(() => {
     activeConversationIdRef.current =
@@ -321,16 +327,18 @@ export function useMessages(): UseMessagesResult {
   }, []);
 
   const getSupabase = useCallback(() => {
-    if (!session) {
+    const currentSession = sessionRef.current;
+
+    if (!currentSession) {
       throw new Error(
         "Your session is unavailable. Please sign in again.",
       );
     }
 
     return createClerkSupabaseClient(
-      () => session.getToken(),
+      () => currentSession.getToken(),
     );
-  }, [session]);
+  }, []);
 
   const refreshConversations =
     useCallback(async (): Promise<void> => {
@@ -341,16 +349,21 @@ export function useMessages(): UseMessagesResult {
         !isLoaded ||
         !isSignedIn ||
         !userId ||
-        !session
+        !sessionId
       ) {
-        setConversations([]);
-        setActiveConversationId(null);
-        setMessages([]);
+        if (isLoaded && !isSignedIn) {
+          setConversations([]);
+          setActiveConversationId(null);
+          setMessages([]);
+          hasLoadedConversationsRef.current = true;
+        }
         setIsLoadingConversations(false);
         return;
       }
 
-      setIsLoadingConversations(true);
+      if (!hasLoadedConversationsRef.current) {
+        setIsLoadingConversations(true);
+      }
 
       try {
         const nextConversations =
@@ -370,6 +383,7 @@ export function useMessages(): UseMessagesResult {
           sortConversations(nextConversations);
 
         setConversations(sortedConversations);
+        hasLoadedConversationsRef.current = true;
         setError("");
 
         setActiveConversationId(
@@ -414,7 +428,7 @@ export function useMessages(): UseMessagesResult {
       getSupabase,
       isLoaded,
       isSignedIn,
-      session,
+      sessionId,
       userId,
     ]);
 
@@ -434,7 +448,7 @@ export function useMessages(): UseMessagesResult {
         !isLoaded ||
         !isSignedIn ||
         !userId ||
-        !session
+        !sessionId
       ) {
         setMessages([]);
         setIsLoadingMessages(false);
@@ -540,7 +554,7 @@ export function useMessages(): UseMessagesResult {
       getSupabase,
       isLoaded,
       isSignedIn,
-      session,
+      sessionId,
       userId,
     ],
   );
@@ -601,7 +615,7 @@ export function useMessages(): UseMessagesResult {
       !isLoaded ||
       !isSignedIn ||
       !userId ||
-      !session
+      !sessionId
     ) {
       return;
     }
@@ -693,7 +707,7 @@ export function useMessages(): UseMessagesResult {
     isSignedIn,
     refreshConversations,
     refreshMessages,
-    session,
+    sessionId,
     userId,
   ]);
 
