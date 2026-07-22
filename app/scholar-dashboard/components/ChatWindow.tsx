@@ -12,7 +12,6 @@ import {
   RotateCcw,
 } from "lucide-react";
 import {
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -64,7 +63,6 @@ interface ChatWindowProps {
     message: Message,
     forceRefresh?: boolean,
   ) => Promise<string>;
-  onMarkRead: () => void | Promise<void>;
   onRefreshMessages: (
     conversationId?: string,
   ) => void | Promise<void>;
@@ -226,7 +224,6 @@ export default function ChatWindow({
   onOpenAttachment,
   onDownloadAttachment,
   onGetAttachmentPreviewUrl,
-  onMarkRead,
   onRefreshMessages,
   onUpdateStatus,
   onBack,
@@ -282,24 +279,6 @@ export default function ChatWindow({
     !conversation ||
     conversation.status !== "open" ||
     isLoadingMessages;
-
-  useEffect(() => {
-    if (!conversation || messages.length === 0) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      void onMarkRead();
-    }, 0);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [
-    conversation,
-    messages.length,
-    onMarkRead,
-  ]);
 
   useLayoutEffect(() => {
     const conversationChanged =

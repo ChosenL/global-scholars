@@ -104,8 +104,6 @@ interface UseMessagesResult {
     messageId: string,
   ) => Promise<void>;
 
-  markActiveConversationRead: () => Promise<void>;
-
   setConversationStatus: (
     request: UpdateConversationStatusRequest,
   ) => Promise<Conversation>;
@@ -291,6 +289,7 @@ export function useMessages(): UseMessagesResult {
   const conversationRequestIdRef = useRef(0);
   const messageRequestIdRef = useRef(0);
   const hasLoadedConversationsRef = useRef(false);
+  const loadedMessageConversationIdsRef = useRef(new Set<string>());
   const realtimeRefreshTimerRef = useRef<number | null>(
     null,
   );
@@ -455,7 +454,14 @@ export function useMessages(): UseMessagesResult {
         return;
       }
 
-      setIsLoadingMessages(true);
+      const isInitialConversationLoad =
+        !loadedMessageConversationIdsRef.current.has(
+          targetConversationId,
+        );
+
+      if (isInitialConversationLoad) {
+        setIsLoadingMessages(true);
+      }
 
       try {
         const supabase = getSupabase();
@@ -486,6 +492,10 @@ export function useMessages(): UseMessagesResult {
         const sortedMessages =
           sortMessages(nextMessages);
 
+        loadedMessageConversationIdsRef.current.add(
+          targetConversationId,
+        );
+
         setMessages(sortedMessages);
         setConversations(
           (currentConversations) =>
@@ -495,14 +505,7 @@ export function useMessages(): UseMessagesResult {
             ),
         );
 
-        const unreadMessages =
-          sortedMessages.filter(
-            (message) =>
-              message.sender_id !== userId &&
-              !message.deleted_at,
-          );
-
-        if (unreadMessages.length > 0) {
+        if (nextConversation.unread_count > 0) {
           await markConversationAsRead(
             supabase,
             userId,
@@ -564,10 +567,14 @@ export function useMessages(): UseMessagesResult {
       conversationId: string | null,
     ): Promise<void> => {
       messageRequestIdRef.current += 1;
+      const conversationChanged =
+        activeConversationIdRef.current !== conversationId;
       setActiveConversationId(conversationId);
       activeConversationIdRef.current =
         conversationId;
-      setMessages([]);
+      if (conversationChanged) {
+        setMessages([]);
+      }
       clearFeedback();
 
       if (conversationId) {
@@ -1275,54 +1282,6 @@ export function useMessages(): UseMessagesResult {
     ],
   );
 
-  const markActiveConversationRead =
-    useCallback(async (): Promise<void> => {
-      const conversationId =
-        activeConversationIdRef.current;
-
-      if (
-        !userId ||
-        !conversationId ||
-        messages.length === 0
-      ) {
-        return;
-      }
-
-      try {
-        await markConversationAsRead(
-          getSupabase(),
-          userId,
-          conversationId,
-          messages,
-        );
-
-        setConversations(
-          (currentConversations) =>
-            currentConversations.map(
-              (conversation) =>
-                conversation.id ===
-                conversationId
-                  ? {
-                      ...conversation,
-                      unread_count: 0,
-                    }
-                  : conversation,
-            ),
-        );
-      } catch (readError) {
-        setError(
-          getErrorMessage(
-            readError,
-            "We could not update the message read status.",
-          ),
-        );
-      }
-    }, [
-      getSupabase,
-      messages,
-      userId,
-    ]);
-
   const setConversationStatus = useCallback(
     async ({
       conversationId,
@@ -1445,7 +1404,6 @@ export function useMessages(): UseMessagesResult {
     getAttachmentPreviewUrl,
     editMessage,
     deleteMessage,
-    markActiveConversationRead,
     setConversationStatus,
 
     clearFeedback,

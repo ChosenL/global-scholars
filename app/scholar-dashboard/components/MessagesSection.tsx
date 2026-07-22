@@ -63,7 +63,6 @@ export default function MessagesSection({
     getAttachmentPreviewUrl,
     editMessage,
     deleteMessage,
-    markActiveConversationRead,
     setConversationStatus,
     clearFeedback,
   } = useMessages();
@@ -431,7 +430,6 @@ export default function MessagesSection({
             }
             onEditMessage={editMessage}
             onDeleteMessage={deleteMessage}
-            onMarkRead={markActiveConversationRead}
             onRefreshMessages={refreshMessages}
             onUpdateStatus={setConversationStatus}
             onBack={
