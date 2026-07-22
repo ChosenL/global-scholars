@@ -72,7 +72,7 @@ export default function StudentProgressCard({
   );
 
   return (
-    <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+    <article className="w-full min-w-0 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-black uppercase tracking-[0.18em] text-[#C8A24A]">

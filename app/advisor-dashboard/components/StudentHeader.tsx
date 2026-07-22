@@ -40,7 +40,7 @@ export default function StudentHeader({
   const safeProgress = Math.min(Math.max(progress, 0), 100);
 
   return (
-    <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+    <section className="w-full min-w-0 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
       <div className="bg-gradient-to-r from-[#071526] via-[#0F2747] to-[#173B68] px-8 py-8 text-white">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-5">

@@ -141,7 +141,7 @@ export default function StudentDocumentsCard({
   ).length;
 
   return (
-    <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="w-full min-w-0 overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-sm font-black uppercase tracking-[0.18em] text-[#C8A24A]">
@@ -167,8 +167,8 @@ export default function StudentDocumentsCard({
         </button>
       </div>
 
-      <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200">
-        <table className="min-w-full">
+      <div className="mt-8 w-full overflow-x-auto rounded-2xl border border-slate-200">
+        <table className="min-w-full whitespace-nowrap">
           <thead className="bg-slate-50">
             <tr>
               <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-500">

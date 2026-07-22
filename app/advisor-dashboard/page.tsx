@@ -477,7 +477,7 @@ export default function AdvisorDashboardPage() {
             </div>
           </header>
 
-          <div className="flex-1 px-5 py-7 md:px-8 md:py-9">
+          <div className="w-full min-w-0 max-w-none flex-1 px-5 py-7 md:px-8 md:py-9">
             {roleError ? (
               <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                 <AlertCircle

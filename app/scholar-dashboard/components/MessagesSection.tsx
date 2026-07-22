@@ -25,12 +25,14 @@ export interface MessagesSectionProps {
   portalRole?: "student" | "advisor";
   selectedStudentId?: string;
   selectedStudentName?: string;
+  layout?: "split" | "stacked";
 }
 
 export default function MessagesSection({
   portalRole = "student",
   selectedStudentId,
   selectedStudentName,
+  layout = "split",
 }: MessagesSectionProps) {
   const { user } = useUser();
 
@@ -77,6 +79,7 @@ export default function MessagesSection({
 
   const currentUserId = user?.id ?? "";
   const isAdvisorPortal = portalRole === "advisor";
+  const isStacked = layout === "stacked";
 
   const currentUserDisplayName =
     user?.fullName ??
@@ -237,7 +240,7 @@ export default function MessagesSection({
   return (
     <section
       id="messages"
-      className="min-w-0 scroll-mt-28"
+      className="w-full min-w-0 max-w-none scroll-mt-28"
     >
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
@@ -356,10 +359,18 @@ export default function MessagesSection({
         </div>
       ) : null}
 
-      <div className="grid h-[calc(100dvh-8rem)] min-h-[36rem] max-h-[52rem] min-w-0 gap-6 overflow-hidden xl:grid-cols-[23rem_minmax(0,1fr)]">
+      <div
+        className={
+          isStacked
+            ? "flex w-full min-w-0 flex-col gap-6"
+            : "grid h-[calc(100dvh-8rem)] min-h-[36rem] max-h-[52rem] min-w-0 gap-6 overflow-hidden xl:grid-cols-[23rem_minmax(0,1fr)]"
+        }
+      >
         <div
           className={
-            showMobileChat
+            isStacked
+              ? "h-[28rem] w-full min-w-0 overflow-hidden"
+              : showMobileChat
               ? "hidden h-full min-h-0 overflow-hidden xl:block"
               : "block h-full min-h-0 overflow-hidden"
           }
@@ -384,7 +395,9 @@ export default function MessagesSection({
 
         <div
           className={
-            showMobileChat
+            isStacked
+              ? "h-[calc(100dvh-8rem)] min-h-[36rem] max-h-[52rem] w-full min-w-0 overflow-hidden"
+              : showMobileChat
               ? "block h-full min-h-0 overflow-hidden"
               : "hidden h-full min-h-0 overflow-hidden xl:block"
           }
@@ -421,10 +434,14 @@ export default function MessagesSection({
             onMarkRead={markActiveConversationRead}
             onRefreshMessages={refreshMessages}
             onUpdateStatus={setConversationStatus}
-            onBack={() => {
-              notifyTyping(false);
-              setShowMobileChat(false);
-            }}
+            onBack={
+              isStacked
+                ? undefined
+                : () => {
+                    notifyTyping(false);
+                    setShowMobileChat(false);
+                  }
+            }
             onTypingChange={notifyTyping}
           />
         </div>

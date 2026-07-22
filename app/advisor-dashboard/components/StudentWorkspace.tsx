@@ -19,14 +19,9 @@ export default function StudentWorkspace({
   student,
 }: StudentWorkspaceProps) {
   return (
-    <div className="space-y-6">
-      <StudentHeader
-        student={student}
-        progress={18}
-      />
-
-      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="space-y-6">
+    <div className="w-full min-w-0 max-w-none">
+      <div className="grid w-full min-w-0 items-start gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <aside className="w-full min-w-0 space-y-6">
           <StudentNotesCard />
 
           <StudentTasksCard />
@@ -36,11 +31,17 @@ export default function StudentWorkspace({
           <StudentProgressCard progress={18} />
         </aside>
 
-        <main className="min-w-0 space-y-6">
+        <main className="w-full min-w-0 max-w-none space-y-6">
+          <StudentHeader
+            student={student}
+            progress={18}
+          />
+
           <MessagesSection
             portalRole="advisor"
             selectedStudentId={student.userId}
             selectedStudentName={student.displayName}
+            layout="stacked"
           />
 
           <StudentDocumentsCard />
