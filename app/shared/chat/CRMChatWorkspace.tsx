@@ -305,10 +305,14 @@ function CRMChatWorkspaceSession({
 }
 
 export default function CRMChatWorkspace(props: CRMChatWorkspaceProps) {
-  const participantId =
-    props.selectedParticipantId?.trim() || "student-placeholder";
-  const participantName =
-    props.selectedParticipantName?.trim() || "Selected Student";
+  const participantId = props.selectedParticipantId.trim();
+  const participantName = props.selectedParticipantName.trim();
+
+  if (!participantId || !participantName) {
+    throw new Error(
+      "Mock CRM chat requires stable participant ID and display name values.",
+    );
+  }
   return (
     <CRMChatWorkspaceSession
       {...props}

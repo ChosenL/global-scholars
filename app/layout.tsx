@@ -2,7 +2,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import GlobalScholarsAI from "@/components/GlobalScholarsAI";
 import StructuredData from "@/components/StructuredData";
 import Script from "next/script";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Merriweather } from "next/font/google";
 import "./globals.css";
 
@@ -88,6 +88,12 @@ export const metadata: Metadata = {
     shortcut: "/icon.png",
     apple: "/icon.png",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

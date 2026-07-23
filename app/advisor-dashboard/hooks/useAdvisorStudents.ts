@@ -53,6 +53,12 @@ export function useAdvisorStudents(): UseAdvisorStudentsResult {
   const requestIdRef = useRef(0);
 
   const userId = user?.id ?? null;
+  const sessionId = session?.id ?? null;
+  const sessionRef = useRef(session);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
 
   const loadStudents = useCallback(async (): Promise<void> => {
     const requestId = ++requestIdRef.current;
@@ -61,7 +67,9 @@ export function useAdvisorStudents(): UseAdvisorStudentsResult {
       return;
     }
 
-    if (!isSignedIn || !userId || !session) {
+    const currentSession = sessionRef.current;
+
+    if (!isSignedIn || !userId || !sessionId || !currentSession) {
       if (requestId === requestIdRef.current) {
         setStudents([]);
         setError("");
@@ -76,7 +84,7 @@ export function useAdvisorStudents(): UseAdvisorStudentsResult {
 
     try {
       const supabase = createClerkSupabaseClient(
-        () => session.getToken(),
+        () => currentSession.getToken(),
       );
 
       const {
@@ -169,16 +177,17 @@ export function useAdvisorStudents(): UseAdvisorStudentsResult {
   }, [
     isLoaded,
     isSignedIn,
-    session,
+    sessionId,
     userId,
   ]);
 
   useEffect(() => {
-    // The effect intentionally triggers the async data synchronization.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadStudents();
+    const timeoutId = window.setTimeout(() => {
+      void loadStudents();
+    }, 0);
 
     return () => {
+      window.clearTimeout(timeoutId);
       requestIdRef.current += 1;
     };
   }, [loadStudents]);

@@ -392,7 +392,7 @@ export default function MessageList({
       ref={scrollContainerRef}
       onScroll={handleScroll}
       className={[
-        "min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#F8FAFC] px-4 py-5 sm:px-6",
+        "min-h-0 min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-[#F8FAFC] px-3 py-5 sm:px-6",
         className,
       ].join(" ")}
     >
@@ -483,7 +483,7 @@ export default function MessageList({
                 >
                   <article
                     className={[
-                      "max-w-[88%] overflow-hidden rounded-2xl px-4 py-3 shadow-sm sm:max-w-[72%]",
+                      "min-w-0 max-w-[88%] overflow-hidden rounded-2xl px-4 py-3 shadow-sm sm:max-w-[72%]",
                       isOwnMessage
                         ? "rounded-br-md bg-[#0F2747] text-white"
                         : "rounded-bl-md border border-slate-200 bg-white text-[#071526]",

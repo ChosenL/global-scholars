@@ -122,10 +122,11 @@ export interface ChatWorkspaceState {
 }
 
 export interface CRMChatWorkspaceProps {
+  dataSource: "mock";
   portalRole: PortalRole;
   currentUserId: string;
-  selectedParticipantId?: string | null;
-  selectedParticipantName?: string | null;
+  selectedParticipantId: string;
+  selectedParticipantName: string;
   className?: string;
   fixedHeightClassName?: string;
 }

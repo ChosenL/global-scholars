@@ -378,7 +378,7 @@ export default function MessageInput({
 
   return (
     <div
-      className="relative border-t border-slate-200 bg-white p-4 md:p-5"
+      className="relative w-full min-w-0 max-w-full overflow-hidden border-t border-slate-200 bg-white p-3 sm:p-4 md:p-5"
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -622,8 +622,8 @@ export default function MessageInput({
           disabled={disabled || composerIsBusy}
           aria-label="Message"
           className={[
-            "min-h-24 w-full resize-none bg-transparent px-1 py-1",
-            "text-sm leading-6 text-[#071526] outline-none",
+            "min-h-24 min-w-0 w-full resize-none bg-transparent px-1 py-1",
+            "text-base leading-6 text-[#071526] outline-none md:text-sm",
             "placeholder:text-slate-400",
             "disabled:cursor-not-allowed disabled:opacity-60",
           ].join(" ")}

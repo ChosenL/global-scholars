@@ -509,7 +509,7 @@ export default function ChatWindow({
           isNearBottomRef.current =
             container.scrollHeight - container.scrollTop - container.clientHeight < 160;
         }}
-        className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#F8FAFC] px-4 py-5 md:px-6"
+        className="relative min-h-0 min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-[#F8FAFC] px-3 py-5 sm:px-4 md:px-6"
       >
         {isLoadingMessages && messages.length === 0 ? (
           <div className="flex min-h-80 flex-col items-center justify-center text-center">

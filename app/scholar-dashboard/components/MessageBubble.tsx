@@ -446,7 +446,7 @@ export default function MessageBubble({
     >
       <div
         className={[
-          "flex max-w-[88%] flex-col md:max-w-[75%]",
+          "flex min-w-0 max-w-[88%] flex-col overflow-hidden md:max-w-[75%]",
           isOwnMessage ? "items-end" : "items-start",
         ].join(" ")}
       >

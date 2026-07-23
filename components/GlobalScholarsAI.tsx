@@ -156,7 +156,7 @@ export default function GlobalScholarsAI() {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-5 right-5 z-[80] flex items-center gap-3 rounded-full bg-[#C8A24A] px-5 py-4 font-black text-[#071526] shadow-2xl transition duration-300 hover:scale-105 ${
+        className={`fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] z-[80] flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-full bg-[#C8A24A] px-4 py-4 font-black text-[#071526] shadow-2xl transition duration-300 hover:scale-105 sm:px-5 ${
           isOpen
             ? "pointer-events-none translate-y-5 opacity-0"
             : "translate-y-0 opacity-100"
@@ -168,7 +168,7 @@ export default function GlobalScholarsAI() {
       </button>
 
       <div
-        className={`fixed inset-0 z-[120] bg-[#071526]/65 p-3 backdrop-blur-sm transition duration-300 sm:flex sm:items-end sm:justify-end sm:p-6 ${
+        className={`fixed inset-0 z-[120] overflow-hidden bg-[#071526]/65 p-3 backdrop-blur-sm transition duration-300 sm:flex sm:items-end sm:justify-end sm:p-6 ${
           isOpen
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0"
@@ -176,7 +176,7 @@ export default function GlobalScholarsAI() {
         onClick={() => setIsOpen(false)}
       >
         <section
-          className={`flex h-full w-full flex-col overflow-hidden rounded-[1.75rem] bg-white shadow-2xl transition duration-300 sm:h-[720px] sm:max-h-[calc(100vh-3rem)] sm:w-[420px] ${
+          className={`flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[1.75rem] bg-white shadow-2xl transition duration-300 sm:h-[720px] sm:max-h-[calc(100vh-3rem)] sm:w-[420px] ${
             isOpen
               ? "translate-y-0 scale-100"
               : "translate-y-8 scale-95"
@@ -238,7 +238,7 @@ export default function GlobalScholarsAI() {
                         : "rounded-bl-md border border-slate-200 bg-white text-slate-700 shadow-sm"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">
+                    <p className="whitespace-pre-wrap break-words">
                       {message.content}
                     </p>
                   </div>
@@ -289,7 +289,7 @@ export default function GlobalScholarsAI() {
                 rows={1}
                 maxLength={2000}
                 placeholder="Ask a question..."
-                className="max-h-28 min-h-12 flex-1 resize-none rounded-2xl border border-slate-300 px-4 py-3 text-sm text-[#071526] outline-none transition focus:border-[#C8A24A] focus:ring-2 focus:ring-[#C8A24A]/20"
+                className="max-h-28 min-h-12 min-w-0 flex-1 resize-none rounded-2xl border border-slate-300 px-3 py-3 text-base text-[#071526] outline-none transition focus:border-[#C8A24A] focus:ring-2 focus:ring-[#C8A24A]/20 sm:px-4 sm:text-sm"
               />
 
               <button

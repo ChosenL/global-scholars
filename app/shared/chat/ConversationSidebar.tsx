@@ -104,7 +104,7 @@ export default function ConversationSidebar({
             onChange={(e) =>
               setSearch(e.target.value)
             }
-            className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 text-sm outline-none focus:border-[#C8A24A]"
+            className="w-full min-w-0 rounded-xl border border-slate-300 py-3 pl-10 pr-4 text-base outline-none focus:border-[#C8A24A] md:text-sm"
           />
         </div>
       </div>

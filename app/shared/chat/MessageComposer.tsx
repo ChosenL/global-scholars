@@ -153,9 +153,9 @@ export default function MessageComposer({
   };
 
   return (
-    <footer className="shrink-0 border-t border-slate-200 bg-white p-4">
+    <footer className="w-full min-w-0 max-w-full shrink-0 overflow-hidden border-t border-slate-200 bg-white p-3 sm:p-4">
       {attachments.length > 0 && (
-        <div className="mb-4 flex gap-3 overflow-x-auto pb-2">
+        <div className="mb-4 flex max-w-full gap-3 overflow-x-auto pb-2">
           {attachments.map(
             (attachment) => (
               <div
@@ -201,7 +201,7 @@ export default function MessageComposer({
         </div>
       )}
 
-      <div className="flex items-end gap-3">
+      <div className="flex min-w-0 max-w-full items-end gap-2 sm:gap-3">
         <input
           ref={fileInputRef}
           hidden
@@ -232,7 +232,7 @@ export default function MessageComposer({
             setMessage(nextMessage);
             onTypingChange?.(nextMessage.trim().length > 0);
           }}
-          className="max-h-40 min-h-[48px] flex-1 resize-none rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-[#C8A24A]"
+          className="max-h-40 min-h-[48px] min-w-0 flex-1 resize-none rounded-xl border border-slate-300 px-3 py-3 text-base outline-none focus:border-[#C8A24A] sm:px-4 md:text-sm"
         />
 
         <button
