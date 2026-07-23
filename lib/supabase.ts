@@ -1,27 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabasePublishableKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-if (!supabaseUrl) {
-  throw new Error("NEXT_PUBLIC_SUPABASE_URL is missing.");
-}
-
-if (!supabasePublishableKey) {
-  throw new Error("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is missing.");
-}
+import { supabaseEnv } from "./supabase/env";
 
 export function createClerkSupabaseClient(
-  getToken: () => Promise<string | null>
+  getToken: () => Promise<string | null>,
 ) {
   return createClient(
-    supabaseUrl as string,
-    supabasePublishableKey as string,
+    supabaseEnv.url,
+    supabaseEnv.publishableKey,
     {
       async accessToken() {
         return getToken();
       },
-    }
+    },
   );
 }
