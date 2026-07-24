@@ -829,7 +829,6 @@ export function useMessages(): UseMessagesResult {
         const conversation =
           await createStudentConversation(
             getSupabase(),
-            await getCurrentProfile(),
             input,
           );
 

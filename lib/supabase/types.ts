@@ -312,6 +312,10 @@ export interface Database {
         Args: { target_profile_id: string };
         Returns: boolean;
       };
+      create_student_conversation: {
+        Args: { conversation_subject?: string };
+        Returns: Database["crm"]["Tables"]["conversations"]["Row"];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
