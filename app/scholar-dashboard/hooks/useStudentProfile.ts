@@ -51,7 +51,7 @@ export function useStudentProfile(): UseStudentProfileResult {
           `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() ||
           "Scholar";
 
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .upsert(
             {
@@ -65,7 +65,11 @@ export function useStudentProfile(): UseStudentProfileResult {
           .select("*")
           .single();
 
-        const { data: progressData } = await supabase
+        if (profileError) {
+          throw profileError;
+        }
+
+        const { error: progressInitializationError } = await supabase
           .from("application_progress")
           .upsert(
             {
@@ -73,10 +77,28 @@ export function useStudentProfile(): UseStudentProfileResult {
               current_stage: "Initial Consultation",
               progress_percent: 10,
             },
-            { onConflict: "student_id", ignoreDuplicates: true }
-          )
+            {
+              onConflict: "student_id",
+              ignoreDuplicates: true,
+            },
+          );
+
+        if (progressInitializationError) {
+          throw progressInitializationError;
+        }
+
+        const {
+          data: progressData,
+          error: progressLoadError,
+        } = await supabase
+          .from("application_progress")
           .select("*")
+          .eq("student_id", user.id)
           .single();
+
+        if (progressLoadError) {
+          throw progressLoadError;
+        }
 
         if (requestId === requestRef.current) {
           setProfile(profileData as StudentProfile);

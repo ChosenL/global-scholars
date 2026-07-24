@@ -439,97 +439,29 @@ export async function getConversation(
   };
 }
 
-async function findAssignedAdvisorProfile(
-  supabase: SupabaseClient,
-  studentClerkUserId: string,
-): Promise<CrmProfile | null> {
-  const assignmentResult = await supabase
-    .from("advisor_student_assignments")
-    .select("advisor_id")
-    .eq("student_id", studentClerkUserId)
-    .is("ended_at", null)
-    .order("assigned_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  if (assignmentResult.error) {
-    throw assignmentResult.error;
-  }
-
-  if (!assignmentResult.data?.advisor_id) {
-    return null;
-  }
-
-  const profileResult = await supabase
-    .schema("crm")
-    .from("profiles")
-    .select("*")
-    .eq("clerk_user_id", assignmentResult.data.advisor_id)
-    .is("deleted_at", null)
-    .maybeSingle();
-
-  if (profileResult.error) {
-    throw profileResult.error;
-  }
-
-  return (profileResult.data as CrmProfile | null) ?? null;
-}
-
 export async function createStudentConversation(
   supabase: SupabaseClient,
-  currentProfile: CrmProfile,
   input: CreateConversationInput,
 ): Promise<Conversation> {
   const crm = supabase.schema("crm");
-  const advisorProfile = await findAssignedAdvisorProfile(
-    supabase,
-    currentProfile.clerk_user_id,
+  const conversationResult = await crm.rpc(
+    "create_student_conversation",
+    {
+      conversation_subject: normalizeSubject(input.subject),
+    },
   );
-
-  if (!advisorProfile) {
-    throw new Error(
-      "Your assigned advisor has not activated CRM messaging yet. Please try again shortly.",
-    );
-  }
-
-  const conversationResult = await crm
-    .from("conversations")
-    .insert({
-      created_by_profile_id: currentProfile.id,
-      subject: normalizeSubject(input.subject),
-    })
-    .select("*")
-    .single();
 
   if (conversationResult.error) {
     throw conversationResult.error;
   }
 
-  const conversation = conversationResult.data as RawConversation;
-  const participantResult = await crm
-    .from("conversation_participants")
-    .insert([
-      {
-        conversation_id: conversation.id,
-        profile_id: currentProfile.id,
-        participant_role: currentProfile.role,
-      },
-      {
-        conversation_id: conversation.id,
-        profile_id: advisorProfile.id,
-        participant_role: advisorProfile.role,
-      },
-    ]);
-
-  if (participantResult.error) {
-    await crm
-      .from("conversations")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", conversation.id);
-    throw participantResult.error;
+  if (!conversationResult.data) {
+    throw new Error("The conversation could not be created.");
   }
 
-  return mapConversation(conversation);
+  return mapConversation(
+    conversationResult.data as unknown as RawConversation,
+  );
 }
 
 export async function listConversationMessages(
