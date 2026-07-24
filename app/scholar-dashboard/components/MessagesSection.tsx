@@ -44,16 +44,20 @@ export default function MessagesSection({
     totalUnreadCount,
     isLoadingConversations,
     isLoadingMessages,
+    isLoadingOlderMessages,
+    hasMoreMessages,
     isCreatingConversation,
     isSendingMessage,
     isSendingAttachment,
     uploadingAttachmentName,
+    attachmentUploadProgress,
     editingMessageId,
     deletingMessageId,
     updatingConversationId,
     error,
     successMessage,
     refreshMessages,
+    loadOlderMessages,
     selectConversation,
     createConversation,
     sendMessage,
@@ -406,12 +410,17 @@ export default function MessagesSection({
             messages={visibleMessages}
             currentUserId={currentUserId}
             isLoadingMessages={isLoadingMessages}
+            isLoadingOlderMessages={isLoadingOlderMessages}
+            hasMoreMessages={hasMoreMessages}
             isSendingMessage={isSendingMessage}
             isSendingAttachment={
               isSendingAttachment
             }
             uploadingAttachmentName={
               uploadingAttachmentName
+            }
+            attachmentUploadProgress={
+              attachmentUploadProgress
             }
             typingParticipants={typingParticipants}
             editingMessageId={editingMessageId}
@@ -431,6 +440,7 @@ export default function MessagesSection({
             onEditMessage={editMessage}
             onDeleteMessage={deleteMessage}
             onRefreshMessages={refreshMessages}
+            onLoadOlderMessages={loadOlderMessages}
             onUpdateStatus={setConversationStatus}
             onBack={
               isStacked

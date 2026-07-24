@@ -31,9 +31,12 @@ interface ChatWindowProps {
   messages: Message[];
   currentUserId: string;
   isLoadingMessages: boolean;
+  isLoadingOlderMessages: boolean;
+  hasMoreMessages: boolean;
   isSendingMessage: boolean;
   isSendingAttachment?: boolean;
   uploadingAttachmentName?: string | null;
+  attachmentUploadProgress?: number;
   typingParticipants?: TypingParticipant[];
   editingMessageId: string | null;
   deletingMessageId: string | null;
@@ -66,16 +69,12 @@ interface ChatWindowProps {
   onRefreshMessages: (
     conversationId?: string,
   ) => void | Promise<void>;
+  onLoadOlderMessages: () => void | Promise<void>;
   onUpdateStatus: (input: {
     conversationId: string;
     status: Conversation["status"];
   }) => void | Promise<unknown>;
   onBack?: () => void;
-  /**
-   * @deprecated Temporary compatibility prop.
-   * Replace this in the parent with onSendAttachment.
-   */
-  onRequestAttachment?: () => void;
   onTypingChange?: (isTyping: boolean) => void;
 }
 
@@ -210,9 +209,12 @@ export default function ChatWindow({
   messages,
   currentUserId,
   isLoadingMessages,
+  isLoadingOlderMessages,
+  hasMoreMessages,
   isSendingMessage,
   isSendingAttachment = false,
   uploadingAttachmentName = null,
+  attachmentUploadProgress = 0,
   typingParticipants = [],
   editingMessageId,
   deletingMessageId,
@@ -225,6 +227,7 @@ export default function ChatWindow({
   onDownloadAttachment,
   onGetAttachmentPreviewUrl,
   onRefreshMessages,
+  onLoadOlderMessages,
   onUpdateStatus,
   onBack,
   onTypingChange,
@@ -547,6 +550,29 @@ export default function ChatWindow({
           </div>
         ) : (
           <div className="space-y-7">
+            {hasMoreMessages ? (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void onLoadOlderMessages();
+                  }}
+                  disabled={isLoadingOlderMessages}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-[#0F2747] shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isLoadingOlderMessages ? (
+                    <Loader2
+                      aria-hidden="true"
+                      className="h-4 w-4 animate-spin"
+                    />
+                  ) : null}
+                  {isLoadingOlderMessages
+                    ? "Loading"
+                    : "Load earlier messages"}
+                </button>
+              </div>
+            ) : null}
+
             {messageGroups.map((group) => (
               <div key={group.key}>
                 <div className="mb-5 flex items-center gap-3">
@@ -577,7 +603,7 @@ export default function ChatWindow({
                         key={message.id}
                         message={message}
                         currentUserId={currentUserId}
-                        senderName="Global Scholars Advisor"
+                        senderName={message.sender_name}
                         isRead={isRead}
                         isEditing={
                           editingMessageId === message.id
@@ -658,6 +684,9 @@ export default function ChatWindow({
           isSendingAttachment={isSendingAttachment}
           uploadingAttachmentName={
             uploadingAttachmentName
+          }
+          attachmentUploadProgress={
+            attachmentUploadProgress
           }
           replyToMessage={replyToMessage}
           onCancelReply={() =>

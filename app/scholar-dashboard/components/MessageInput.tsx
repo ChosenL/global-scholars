@@ -33,6 +33,7 @@ interface MessageInputProps {
   isSending?: boolean;
   isSendingAttachment?: boolean;
   uploadingAttachmentName?: string | null;
+  attachmentUploadProgress?: number;
   replyToMessage?: Message | null;
   placeholder?: string;
   maxLength?: number;
@@ -71,6 +72,7 @@ export default function MessageInput({
   isSending = false,
   isSendingAttachment = false,
   uploadingAttachmentName = null,
+  attachmentUploadProgress = 0,
   replyToMessage = null,
   placeholder = "Type your message...",
   maxLength = 5_000,
@@ -600,6 +602,20 @@ export default function MessageInput({
               {uploadingAttachmentName ??
                 "Preparing your file..."}
             </p>
+            <div
+              className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#C8A24A]/20"
+              aria-label={`Upload ${attachmentUploadProgress}% complete`}
+            >
+              <div
+                className="h-full rounded-full bg-[#C8A24A] transition-[width]"
+                style={{
+                  width: `${Math.max(
+                    0,
+                    Math.min(100, attachmentUploadProgress),
+                  )}%`,
+                }}
+              />
+            </div>
           </div>
         </div>
       ) : null}

@@ -167,7 +167,10 @@ export interface Conversation {
 export interface ConversationParticipant {
   id: string;
   conversation_id: string;
+  profile_id: string;
   user_id: string;
+  display_name: string;
+  avatar_url: string | null;
   role: ConversationParticipantRole;
   joined_at: string;
   last_read_at: string | null;
@@ -180,7 +183,10 @@ export interface ConversationParticipant {
 export interface Message {
   id: string;
   conversation_id: string;
+  sender_profile_id: string;
   sender_id: string;
+  sender_name: string;
+  sender_role: ConversationParticipantRole;
   message_type: MessageType;
   body: string | null;
   attachment_name: string | null;
@@ -194,18 +200,23 @@ export interface Message {
   updated_at: string;
 }
 
-export interface MessageReadReceipt {
-  id: string;
-  message_id: string;
-  user_id: string;
-  read_at: string;
-}
-
 export interface ConversationWithDetails
   extends Conversation {
   participants: ConversationParticipant[];
   latest_message: Message | null;
   unread_count: number;
+}
+
+export interface CrmProfile {
+  id: string;
+  clerk_user_id: string;
+  email: string | null;
+  display_name: string;
+  role: ConversationParticipantRole;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
 }
 
 export interface CreateConversationInput {
@@ -224,13 +235,8 @@ export interface SendFileMessageInput {
   replyToMessageId?: string;
 }
 
-export interface UploadMessageAttachmentInput {
-  conversationId: string;
-  senderId: string;
-  file: File;
-}
-
 export interface UploadedMessageAttachment {
+  id: string;
   name: string;
   path: string;
   type: string;
@@ -245,26 +251,4 @@ export interface SendFileMessageResult {
 export interface UpdateMessageInput {
   messageId: string;
   body: string;
-}
-
-export interface MarkConversationReadInput {
-  conversationId: string;
-  messageIds: string[];
-}
-
-export interface MessagingState {
-  conversations: ConversationWithDetails[];
-  activeConversation: ConversationWithDetails | null;
-  messages: Message[];
-
-  isLoadingConversations: boolean;
-  isLoadingMessages: boolean;
-  isSendingMessage: boolean;
-  isSendingAttachment: boolean;
-  isCreatingConversation: boolean;
-
-  uploadingAttachmentName: string | null;
-
-  error: string | null;
-  successMessage: string | null;
 }

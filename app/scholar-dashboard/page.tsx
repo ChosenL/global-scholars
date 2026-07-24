@@ -23,6 +23,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { useCrmProfile } from "@/app/hooks/useCrmProfile";
 import DocumentsCard from "./components/DocumentsCard";
 import MessagesSection from "./components/MessagesSection";
 import ProgressTracker from "./components/ProgressTracker";
@@ -104,6 +105,7 @@ const sidebarLinks = [
 ] as const;
 
 export default function ScholarDashboardPage() {
+  useCrmProfile();
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("dashboard");
   const { isLoaded, isSignedIn, user } = useUser();

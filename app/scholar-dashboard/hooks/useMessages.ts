@@ -13,10 +13,12 @@ import type {
   Conversation,
   ConversationWithDetails,
   CreateConversationInput,
+  CrmProfile,
   Message,
   SendFileMessageInput,
   SendMessageInput,
 } from "../types/dashboard";
+import { ensureCrmProfile } from "../services/crmProfile";
 import {
   createStudentConversation,
   deleteConversationMessage,
@@ -51,10 +53,13 @@ interface UseMessagesResult {
 
   isLoadingConversations: boolean;
   isLoadingMessages: boolean;
+  isLoadingOlderMessages: boolean;
+  hasMoreMessages: boolean;
   isCreatingConversation: boolean;
   isSendingMessage: boolean;
   isSendingAttachment: boolean;
   uploadingAttachmentName: string | null;
+  attachmentUploadProgress: number;
   editingMessageId: string | null;
   deletingMessageId: string | null;
   updatingConversationId: string | null;
@@ -66,6 +71,7 @@ interface UseMessagesResult {
   refreshMessages: (
     conversationId?: string,
   ) => Promise<void>;
+  loadOlderMessages: () => Promise<void>;
 
   selectConversation: (
     conversationId: string | null,
@@ -259,6 +265,10 @@ export function useMessages(): UseMessagesResult {
 
   const [isLoadingMessages, setIsLoadingMessages] =
     useState(false);
+  const [isLoadingOlderMessages, setIsLoadingOlderMessages] =
+    useState(false);
+  const [hasMoreMessages, setHasMoreMessages] =
+    useState(false);
 
   const [isCreatingConversation, setIsCreatingConversation] =
     useState(false);
@@ -273,6 +283,8 @@ export function useMessages(): UseMessagesResult {
     uploadingAttachmentName,
     setUploadingAttachmentName,
   ] = useState<string | null>(null);
+  const [attachmentUploadProgress, setAttachmentUploadProgress] =
+    useState(0);
 
   const [editingMessageId, setEditingMessageId] =
     useState<string | null>(null);
@@ -296,6 +308,8 @@ export function useMessages(): UseMessagesResult {
   const activeConversationIdRef = useRef<string | null>(
     null,
   );
+  const currentProfileRef = useRef<CrmProfile | null>(null);
+  const messageCursorRef = useRef<string | null>(null);
 
   const attachmentPreviewCacheRef = useRef(
     new Map<
@@ -320,6 +334,10 @@ export function useMessages(): UseMessagesResult {
       activeConversationId;
   }, [activeConversationId]);
 
+  useEffect(() => {
+    currentProfileRef.current = null;
+  }, [sessionId, userId]);
+
   const clearFeedback = useCallback((): void => {
     setError("");
     setSuccessMessage("");
@@ -338,6 +356,41 @@ export function useMessages(): UseMessagesResult {
       () => currentSession.getToken(),
     );
   }, []);
+
+  const getCurrentProfile = useCallback(async (): Promise<CrmProfile> => {
+    if (!userId || !sessionId || !user) {
+      throw new Error("Your CRM profile is unavailable.");
+    }
+
+    if (currentProfileRef.current) {
+      return currentProfileRef.current;
+    }
+
+    const metadataRole = user.publicMetadata.role;
+    const role =
+      metadataRole === "advisor" || metadataRole === "admin"
+        ? metadataRole
+        : "student";
+    const profile = await ensureCrmProfile(
+      getSupabase(),
+      sessionId,
+      {
+        clerkUserId: userId,
+        email:
+          user.primaryEmailAddress?.emailAddress ?? null,
+        displayName:
+          user.fullName ??
+          user.firstName ??
+          user.primaryEmailAddress?.emailAddress ??
+          "",
+        avatarUrl: user.imageUrl || null,
+        role,
+      },
+    );
+
+    currentProfileRef.current = profile;
+    return profile;
+  }, [getSupabase, sessionId, user, userId]);
 
   const refreshConversations =
     useCallback(async (): Promise<void> => {
@@ -368,7 +421,7 @@ export function useMessages(): UseMessagesResult {
         const nextConversations =
           await listStudentConversations(
             getSupabase(),
-            userId,
+            await getCurrentProfile(),
           );
 
         if (
@@ -425,6 +478,7 @@ export function useMessages(): UseMessagesResult {
       }
     }, [
       getSupabase,
+      getCurrentProfile,
       isLoaded,
       isSignedIn,
       sessionId,
@@ -466,8 +520,9 @@ export function useMessages(): UseMessagesResult {
       try {
         const supabase = getSupabase();
 
+        const currentProfile = await getCurrentProfile();
         const [
-          nextMessages,
+          messagePage,
           nextConversation,
         ] = await Promise.all([
           listConversationMessages(
@@ -477,7 +532,7 @@ export function useMessages(): UseMessagesResult {
           getConversation(
             supabase,
             targetConversationId,
-            userId,
+            currentProfile,
           ),
         ]);
 
@@ -490,7 +545,9 @@ export function useMessages(): UseMessagesResult {
         }
 
         const sortedMessages =
-          sortMessages(nextMessages);
+          sortMessages(messagePage.messages);
+        messageCursorRef.current = messagePage.nextCursor;
+        setHasMoreMessages(messagePage.hasMore);
 
         loadedMessageConversationIdsRef.current.add(
           targetConversationId,
@@ -508,9 +565,8 @@ export function useMessages(): UseMessagesResult {
         if (nextConversation.unread_count > 0) {
           await markConversationAsRead(
             supabase,
-            userId,
+            currentProfile,
             targetConversationId,
-            sortedMessages,
           );
 
           if (
@@ -555,12 +611,66 @@ export function useMessages(): UseMessagesResult {
     },
     [
       getSupabase,
+      getCurrentProfile,
       isLoaded,
       isSignedIn,
       sessionId,
       userId,
     ],
   );
+
+  const loadOlderMessages = useCallback(async (): Promise<void> => {
+    const conversationId = activeConversationIdRef.current;
+    const cursor = messageCursorRef.current;
+
+    if (
+      !conversationId ||
+      !cursor ||
+      !hasMoreMessages ||
+      isLoadingOlderMessages
+    ) {
+      return;
+    }
+
+    setIsLoadingOlderMessages(true);
+
+    try {
+      const page = await listConversationMessages(
+        getSupabase(),
+        conversationId,
+        cursor,
+      );
+
+      if (conversationId !== activeConversationIdRef.current) {
+        return;
+      }
+
+      messageCursorRef.current = page.nextCursor;
+      setHasMoreMessages(page.hasMore);
+      setMessages((current) => {
+        const byId = new Map(
+          [...page.messages, ...current].map((message) => [
+            message.id,
+            message,
+          ]),
+        );
+        return sortMessages([...byId.values()]);
+      });
+    } catch (loadError) {
+      setError(
+        getErrorMessage(
+          loadError,
+          "Older messages could not be loaded.",
+        ),
+      );
+    } finally {
+      setIsLoadingOlderMessages(false);
+    }
+  }, [
+    getSupabase,
+    hasMoreMessages,
+    isLoadingOlderMessages,
+  ]);
 
   const selectConversation = useCallback(
     async (
@@ -574,6 +684,8 @@ export function useMessages(): UseMessagesResult {
         conversationId;
       if (conversationChanged) {
         setMessages([]);
+        setHasMoreMessages(false);
+        messageCursorRef.current = null;
       }
       clearFeedback();
 
@@ -652,12 +764,12 @@ export function useMessages(): UseMessagesResult {
     };
 
     const channel = supabase
-      .channel(`student-messaging:${userId}`)
+      .channel(`crm-messaging:${userId}`)
       .on(
         "postgres_changes",
         {
           event: "*",
-          schema: "public",
+          schema: "crm",
           table: "messages",
         },
         scheduleRealtimeRefresh,
@@ -666,26 +778,8 @@ export function useMessages(): UseMessagesResult {
         "postgres_changes",
         {
           event: "*",
-          schema: "public",
+          schema: "crm",
           table: "conversations",
-        },
-        scheduleRealtimeRefresh,
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "conversation_participants",
-        },
-        scheduleRealtimeRefresh,
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "message_read_receipts",
         },
         scheduleRealtimeRefresh,
       )
@@ -735,6 +829,7 @@ export function useMessages(): UseMessagesResult {
         const conversation =
           await createStudentConversation(
             getSupabase(),
+            await getCurrentProfile(),
             input,
           );
 
@@ -742,7 +837,7 @@ export function useMessages(): UseMessagesResult {
           await getConversation(
             getSupabase(),
             conversation.id,
-            userId,
+            await getCurrentProfile(),
           );
 
         setConversations(
@@ -780,6 +875,7 @@ export function useMessages(): UseMessagesResult {
     [
       clearFeedback,
       getSupabase,
+      getCurrentProfile,
       userId,
     ],
   );
@@ -809,7 +905,11 @@ export function useMessages(): UseMessagesResult {
       const optimisticMessage: Message = {
         id: `temporary-${crypto.randomUUID()}`,
         conversation_id: conversationId,
+        sender_profile_id: (await getCurrentProfile()).id,
         sender_id: userId,
+        sender_name:
+          user?.fullName ?? user?.firstName ?? "You",
+        sender_role: (await getCurrentProfile()).role,
         message_type: "text",
         body: input.body.trim(),
         attachment_name: null,
@@ -844,7 +944,7 @@ export function useMessages(): UseMessagesResult {
         const message =
           await sendConversationMessage(
             getSupabase(),
-            userId,
+            await getCurrentProfile(),
             {
               conversationId,
               body: input.body,
@@ -908,6 +1008,8 @@ export function useMessages(): UseMessagesResult {
     [
       clearFeedback,
       getSupabase,
+      getCurrentProfile,
+      user,
       userId,
     ],
   );
@@ -937,7 +1039,11 @@ export function useMessages(): UseMessagesResult {
       const optimisticMessage: Message = {
         id: `temporary-${crypto.randomUUID()}`,
         conversation_id: conversationId,
+        sender_profile_id: (await getCurrentProfile()).id,
         sender_id: userId,
+        sender_name:
+          user?.fullName ?? user?.firstName ?? "You",
+        sender_role: (await getCurrentProfile()).role,
         message_type: "file",
         body: null,
         attachment_name: input.file.name,
@@ -954,6 +1060,7 @@ export function useMessages(): UseMessagesResult {
 
       setIsSendingAttachment(true);
       setUploadingAttachmentName(input.file.name);
+      setAttachmentUploadProgress(5);
       clearFeedback();
 
       setMessages((currentMessages) =>
@@ -967,13 +1074,14 @@ export function useMessages(): UseMessagesResult {
         const { message } =
           await sendConversationFileMessage(
             getSupabase(),
-            userId,
+            await getCurrentProfile(),
             {
               conversationId,
               file: input.file,
               replyToMessageId:
                 input.replyToMessageId,
             },
+            setAttachmentUploadProgress,
           );
 
         setMessages((currentMessages) =>
@@ -1030,11 +1138,14 @@ export function useMessages(): UseMessagesResult {
       } finally {
         setIsSendingAttachment(false);
         setUploadingAttachmentName(null);
+        setAttachmentUploadProgress(0);
       }
     },
     [
       clearFeedback,
       getSupabase,
+      getCurrentProfile,
+      user,
       userId,
     ],
   );
@@ -1166,12 +1277,29 @@ export function useMessages(): UseMessagesResult {
 
       setEditingMessageId(messageId);
       clearFeedback();
+      const previousMessage = messages.find(
+        (message) => message.id === messageId,
+      );
+      const optimisticEditedAt = new Date().toISOString();
+
+      setMessages((currentMessages) =>
+        currentMessages.map((message) =>
+          message.id === messageId
+            ? {
+                ...message,
+                body: body.trim(),
+                edited_at: optimisticEditedAt,
+                updated_at: optimisticEditedAt,
+              }
+            : message,
+        ),
+      );
 
       try {
         const message =
           await updateConversationMessage(
             getSupabase(),
-            userId,
+            await getCurrentProfile(),
             {
               messageId,
               body,
@@ -1205,6 +1333,11 @@ export function useMessages(): UseMessagesResult {
 
         return message;
       } catch (editError) {
+        if (previousMessage) {
+          setMessages((currentMessages) =>
+            upsertMessage(currentMessages, previousMessage),
+          );
+        }
         const message = getErrorMessage(
           editError,
           "Your message could not be updated. Please try again.",
@@ -1219,6 +1352,8 @@ export function useMessages(): UseMessagesResult {
     [
       clearFeedback,
       getSupabase,
+      getCurrentProfile,
+      messages,
       userId,
     ],
   );
@@ -1233,19 +1368,28 @@ export function useMessages(): UseMessagesResult {
 
       setDeletingMessageId(messageId);
       clearFeedback();
+      const previousMessage = messages.find(
+        (message) => message.id === messageId,
+      );
+      const optimisticDeletedAt = new Date().toISOString();
+
+      setMessages((currentMessages) =>
+        currentMessages.map((message) =>
+          message.id === messageId
+            ? {
+                ...message,
+                deleted_at: optimisticDeletedAt,
+                updated_at: optimisticDeletedAt,
+              }
+            : message,
+        ),
+      );
 
       try {
         await deleteConversationMessage(
           getSupabase(),
-          userId,
+          await getCurrentProfile(),
           messageId,
-        );
-
-        setMessages((currentMessages) =>
-          currentMessages.filter(
-            (message) =>
-              message.id !== messageId,
-          ),
         );
 
         const conversationId =
@@ -1262,6 +1406,11 @@ export function useMessages(): UseMessagesResult {
           "The message was deleted.",
         );
       } catch (deleteError) {
+        if (previousMessage) {
+          setMessages((currentMessages) =>
+            upsertMessage(currentMessages, previousMessage),
+          );
+        }
         const message = getErrorMessage(
           deleteError,
           "The message could not be deleted. Please try again.",
@@ -1276,6 +1425,8 @@ export function useMessages(): UseMessagesResult {
     [
       clearFeedback,
       getSupabase,
+      getCurrentProfile,
+      messages,
       refreshConversations,
       refreshMessages,
       userId,
@@ -1297,6 +1448,30 @@ export function useMessages(): UseMessagesResult {
         conversationId,
       );
       clearFeedback();
+      const previousConversation = conversations.find(
+        (conversation) => conversation.id === conversationId,
+      );
+      const optimisticUpdatedAt = new Date().toISOString();
+
+      setConversations((currentConversations) =>
+        currentConversations.map((conversation) =>
+          conversation.id === conversationId
+            ? {
+                ...conversation,
+                status,
+                resolved_at:
+                  status === "resolved"
+                    ? optimisticUpdatedAt
+                    : null,
+                archived_at:
+                  status === "archived"
+                    ? optimisticUpdatedAt
+                    : null,
+                updated_at: optimisticUpdatedAt,
+              }
+            : conversation,
+        ),
+      );
 
       try {
         const conversation =
@@ -1310,7 +1485,7 @@ export function useMessages(): UseMessagesResult {
           await getConversation(
             getSupabase(),
             conversation.id,
-            userId,
+            await getCurrentProfile(),
           );
 
         setConversations(
@@ -1331,6 +1506,14 @@ export function useMessages(): UseMessagesResult {
 
         return conversation;
       } catch (updateError) {
+        if (previousConversation) {
+          setConversations((currentConversations) =>
+            replaceConversation(
+              currentConversations,
+              previousConversation,
+            ),
+          );
+        }
         const message = getErrorMessage(
           updateError,
           "The conversation could not be updated. Please try again.",
@@ -1344,7 +1527,9 @@ export function useMessages(): UseMessagesResult {
     },
     [
       clearFeedback,
+      conversations,
       getSupabase,
+      getCurrentProfile,
       userId,
     ],
   );
@@ -1382,10 +1567,13 @@ export function useMessages(): UseMessagesResult {
 
     isLoadingConversations,
     isLoadingMessages,
+    isLoadingOlderMessages,
+    hasMoreMessages,
     isCreatingConversation,
     isSendingMessage,
     isSendingAttachment,
     uploadingAttachmentName,
+    attachmentUploadProgress,
     editingMessageId,
     deletingMessageId,
     updatingConversationId,
@@ -1395,6 +1583,7 @@ export function useMessages(): UseMessagesResult {
 
     refreshConversations,
     refreshMessages,
+    loadOlderMessages,
     selectConversation,
     createConversation,
     sendMessage,

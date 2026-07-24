@@ -27,6 +27,7 @@ import {
   useState,
 } from "react";
 
+import { useCrmProfile } from "@/app/hooks/useCrmProfile";
 import { usePlatformRole } from "@/app/hooks/usePlatformRole";
 import StudentWorkspace from "./components/StudentWorkspace";
 import {
@@ -86,6 +87,7 @@ function getInitials(name: string): string {
 export default function AdvisorDashboardPage() {
   const router = useRouter();
   const { isLoaded, isSignedIn, user } = useUser();
+  useCrmProfile();
 
   const {
     role,
