@@ -23,14 +23,14 @@ const SUBJECT_MAX_LENGTH = 120;
 
 export interface MessagesSectionProps {
   portalRole?: "student" | "advisor";
-  selectedStudentId?: string;
+  selectedStudentProfileId?: string;
   selectedStudentName?: string;
   layout?: "split" | "stacked";
 }
 
 export default function MessagesSection({
   portalRole = "student",
-  selectedStudentId,
+  selectedStudentProfileId,
   selectedStudentName,
   layout = "split",
 }: MessagesSectionProps) {
@@ -91,21 +91,21 @@ export default function MessagesSection({
     (isAdvisorPortal ? "Advisor" : "Student");
 
   const visibleConversations = useMemo(() => {
-    if (!isAdvisorPortal || !selectedStudentId) {
+    if (!isAdvisorPortal || !selectedStudentProfileId) {
       return conversations;
     }
 
     return conversations.filter((conversation) =>
       conversation.participants.some(
         (participant) =>
-          participant.user_id === selectedStudentId &&
+          participant.profile_id === selectedStudentProfileId &&
           !participant.removed_at,
       ),
     );
   }, [
     conversations,
     isAdvisorPortal,
-    selectedStudentId,
+    selectedStudentProfileId,
   ]);
 
   const visibleConversationIds = useMemo(
@@ -166,7 +166,7 @@ export default function MessagesSection({
     activeConversationId,
     isAdvisorPortal,
     selectConversation,
-    selectedStudentId,
+    selectedStudentProfileId,
     visibleConversationIds,
     visibleConversations,
   ]);

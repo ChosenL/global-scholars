@@ -135,7 +135,7 @@ export default function AdvisorDashboardPage() {
     if (
       selectedStudentId &&
       students.some(
-        (student) => student.userId === selectedStudentId,
+        (student) => student.profileId === selectedStudentId,
       )
     ) {
       return;
@@ -143,7 +143,7 @@ export default function AdvisorDashboardPage() {
 
     // Keep the selected student valid when assignments change.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSelectedStudentId(students[0]?.userId ?? null);
+    setSelectedStudentId(students[0]?.profileId ?? null);
   }, [selectedStudentId, students]);
 
   const filteredStudents = useMemo(() => {
@@ -168,7 +168,7 @@ export default function AdvisorDashboardPage() {
   const selectedStudent = useMemo(
     () =>
       students.find(
-        (student) => student.userId === selectedStudentId,
+        (student) => student.profileId === selectedStudentId,
       ) ?? null,
     [selectedStudentId, students],
   );
@@ -188,7 +188,7 @@ export default function AdvisorDashboardPage() {
   }
 
   function openStudentWorkspace(student: AdvisorStudent): void {
-    setSelectedStudentId(student.userId);
+    setSelectedStudentId(student.profileId);
     setActiveSection("messages");
     setMenuOpen(false);
   }
@@ -642,7 +642,7 @@ export default function AdvisorDashboardPage() {
                     ) : (
                       students.slice(0, 4).map((student) => (
                         <button
-                          key={student.userId}
+                          key={student.profileId}
                           type="button"
                           onClick={() => openStudentWorkspace(student)}
                           className="flex items-center gap-4 rounded-2xl border border-slate-200 p-4 text-left transition hover:border-[#C8A24A] hover:bg-[#FFFCF2]"
@@ -745,10 +745,10 @@ export default function AdvisorDashboardPage() {
                     ) : (
                       filteredStudents.map((student) => (
                         <article
-                          key={student.userId}
+                          key={student.profileId}
                           className={[
                             "flex flex-col gap-4 rounded-2xl border p-4 transition sm:flex-row sm:items-center sm:justify-between",
-                            selectedStudentId === student.userId
+                            selectedStudentId === student.profileId
                               ? "border-[#C8A24A] bg-[#FFFCF2]"
                               : "border-slate-200",
                           ].join(" ")}
@@ -834,8 +834,8 @@ export default function AdvisorDashboardPage() {
 
                         {students.map((student) => (
                           <option
-                            key={student.userId}
-                            value={student.userId}
+                            key={student.profileId}
+                            value={student.profileId}
                           >
                             {student.displayName}
                           </option>

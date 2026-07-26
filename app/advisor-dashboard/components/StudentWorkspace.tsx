@@ -39,7 +39,7 @@ export default function StudentWorkspace({
 
           <MessagesSection
             portalRole="advisor"
-            selectedStudentId={student.userId}
+            selectedStudentProfileId={student.profileId}
             selectedStudentName={student.displayName}
             layout="stacked"
           />

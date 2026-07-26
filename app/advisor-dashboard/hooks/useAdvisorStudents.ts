@@ -10,6 +10,7 @@ import {
 import { createClerkSupabaseClient } from "@/lib/supabase";
 
 export interface AdvisorStudent {
+  profileId: string;
   userId: string;
   displayName: string;
   email: string | null;
@@ -23,13 +24,19 @@ interface UseAdvisorStudentsResult {
   refreshStudents: () => Promise<void>;
 }
 
-interface AssignmentRow {
-  student_id: string;
-  assigned_at: string;
+interface AdvisorMembershipRow {
+  conversation_id: string;
 }
 
-interface PlatformUserRow {
-  user_id: string;
+interface StudentParticipantRow {
+  conversation_id: string;
+  joined_at: string;
+  profile: StudentProfileRow | StudentProfileRow[] | null;
+}
+
+interface StudentProfileRow {
+  id: string;
+  clerk_user_id: string;
   display_name: string | null;
   email: string | null;
 }
@@ -87,24 +94,40 @@ export function useAdvisorStudents(): UseAdvisorStudentsResult {
         () => currentSession.getToken(),
       );
 
+      const crm = supabase.schema("crm");
       const {
-        data: assignments,
-        error: assignmentsError,
-      } = await supabase
-        .from("advisor_student_assignments")
-        .select("student_id, assigned_at")
-        .eq("advisor_id", userId)
-        .is("ended_at", null)
-        .order("assigned_at", { ascending: true });
+        data: advisorProfileId,
+        error: advisorProfileIdError,
+      } = await crm.rpc("current_profile_id");
 
-      if (assignmentsError) {
-        throw assignmentsError;
+      if (advisorProfileIdError) {
+        throw advisorProfileIdError;
       }
 
-      const assignmentRows =
-        (assignments ?? []) as AssignmentRow[];
+      if (typeof advisorProfileId !== "string") {
+        throw new Error(
+          "Your authenticated CRM advisor profile is unavailable.",
+        );
+      }
 
-      if (assignmentRows.length === 0) {
+      const {
+        data: memberships,
+        error: membershipsError,
+      } = await crm
+        .from("conversation_participants")
+        .select("conversation_id")
+        .eq("profile_id", advisorProfileId)
+        .is("deleted_at", null);
+
+      if (membershipsError) {
+        throw membershipsError;
+      }
+
+      const conversationIds = (
+        (memberships ?? []) as AdvisorMembershipRow[]
+      ).map((membership) => membership.conversation_id);
+
+      if (conversationIds.length === 0) {
         if (requestId === requestIdRef.current) {
           setStudents([]);
           setError("");
@@ -113,47 +136,51 @@ export function useAdvisorStudents(): UseAdvisorStudentsResult {
         return;
       }
 
-      const studentIds = assignmentRows.map(
-        (assignment) => assignment.student_id,
-      );
-
       const {
-        data: platformUsers,
-        error: platformUsersError,
-      } = await supabase
-        .from("platform_users")
-        .select("user_id, display_name, email")
-        .in("user_id", studentIds);
+        data: studentParticipants,
+        error: studentParticipantsError,
+      } = await crm
+        .from("conversation_participants")
+        .select(
+          "conversation_id,joined_at,profile:profiles!conversation_participants_profile_id_fkey(id,clerk_user_id,display_name,email)",
+        )
+        .in("conversation_id", conversationIds)
+        .eq("participant_role", "student")
+        .is("deleted_at", null)
+        .order("joined_at", { ascending: true });
 
-      if (platformUsersError) {
-        throw platformUsersError;
+      if (studentParticipantsError) {
+        throw studentParticipantsError;
       }
 
-      const usersById = new Map(
-        ((platformUsers ?? []) as PlatformUserRow[]).map(
-          (platformUser) => [
-            platformUser.user_id,
-            platformUser,
-          ],
-        ),
-      );
+      const studentsByUserId = new Map<string, AdvisorStudent>();
 
-      const resolvedStudents: AdvisorStudent[] =
-        assignmentRows.map((assignment) => {
-          const platformUser = usersById.get(
-            assignment.student_id,
-          );
+      for (const participant of (
+        studentParticipants ?? []
+      ) as StudentParticipantRow[]) {
+        const profile = Array.isArray(participant.profile)
+          ? participant.profile[0]
+          : participant.profile;
 
-          return {
-            userId: assignment.student_id,
-            displayName:
-              platformUser?.display_name?.trim() ||
-              platformUser?.email ||
-              "Assigned Student",
-            email: platformUser?.email ?? null,
-            assignedAt: assignment.assigned_at,
-          };
+        if (!profile || studentsByUserId.has(profile.clerk_user_id)) {
+          continue;
+        }
+
+        studentsByUserId.set(profile.clerk_user_id, {
+          profileId: profile.id,
+          userId: profile.clerk_user_id,
+          displayName:
+            profile.display_name?.trim() ||
+            profile.email ||
+            "Student",
+          email: profile.email,
+          assignedAt: participant.joined_at,
         });
+      }
+
+      const resolvedStudents = Array.from(
+        studentsByUserId.values(),
+      );
 
       if (requestId === requestIdRef.current) {
         setStudents(resolvedStudents);
