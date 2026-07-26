@@ -1,6 +1,7 @@
 "use client";
 
 import MessagesSection from "@/app/scholar-dashboard/components/MessagesSection";
+import PlatformJourneyPanel from "@/app/shared/PlatformJourneyPanel";
 
 import type { AdvisorStudent } from "../hooks/useAdvisorStudents";
 import { useStudentReadiness } from "../hooks/useStudentReadiness";
@@ -57,6 +58,11 @@ export default function StudentWorkspace({
           <StudentDocumentsCard
             studentProfileId={student.profileId}
             studentName={student.displayName}
+          />
+
+          <PlatformJourneyPanel
+            studentProfileId={student.profileId}
+            advisorMode
           />
         </main>
       </div>

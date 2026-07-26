@@ -36,5 +36,6 @@ test("AI gateway moderates, structures, validates, and audits responses", async 
   assert.match(source, /beginAiInvocation/);
   assert.match(source, /completeAiInvocation/);
   assert.match(source, /safety_identifier: safetyIdentifier/);
+  assert.doesNotMatch(source, /OPENAI_SAFETY_SALT \|\|/);
   assert.match(source, /Cache-Control.*no-store/);
 });

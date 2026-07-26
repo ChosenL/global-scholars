@@ -35,6 +35,7 @@ import { useStudentTasks } from "./hooks/useStudentTasks";
 import { useNotifications } from "./hooks/useNotifications";
 import { summarizeStudentDocuments } from "./services/studentDocuments";
 import { getReadinessStage } from "@/lib/crm/readiness";
+import PlatformJourneyPanel from "@/app/shared/PlatformJourneyPanel";
 
 const calendlyLink =
   "https://calendly.com/thompsondwayne0055/free-10_minute-consultation";
@@ -592,6 +593,7 @@ export default function ScholarDashboardPage() {
                   onStatusChange={updateTaskStatus}
                   onOpenRelatedDocument={openRelatedDocument}
                 />
+                <PlatformJourneyPanel studentProfileId={crmProfile?.id ?? null} />
                 <div id="documents" className="min-w-0 scroll-mt-28">
                   <DocumentsCard
                     documents={documents}

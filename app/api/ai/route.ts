@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     if (!clerkAuth.userId) {
       return Response.json({ error: "Authentication required." }, { status: 401, headers: noStoreHeaders });
     }
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY || !process.env.OPENAI_SAFETY_SALT) {
       return Response.json({ error: "The CRM AI assistant is not configured." }, { status: 503, headers: noStoreHeaders });
     }
 
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     const context = await buildAuthorizedContext(supabase, input.studentProfileId, input.applicationId);
     const allowedCitations = new Set(context.records.map((record) => `${record.sourceType}:${record.sourceId}`));
     const safetyIdentifier = createHash("sha256")
-      .update(`${process.env.OPENAI_SAFETY_SALT || "global-scholars"}:${clerkAuth.userId}`)
+      .update(`${process.env.OPENAI_SAFETY_SALT}:${clerkAuth.userId}`)
       .digest("hex");
     const response = await openai.responses.create({
       model,
