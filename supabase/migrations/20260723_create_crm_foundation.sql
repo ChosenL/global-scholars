@@ -471,6 +471,53 @@ as $$
   );
 $$;
 
+-- Base student authorization primitives. Later module migrations extend these
+-- with resource-specific helpers once their tables exist.
+create or replace function crm.can_access_student(target_student_profile_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from crm.profiles as student
+    where student.id = target_student_profile_id
+      and student.role = 'student'
+      and student.deleted_at is null
+      and (
+        student.id = crm.current_profile_id()
+        or crm.is_current_admin()
+        or (
+          crm.current_profile_role() = 'advisor'
+          and crm.shares_conversation_with(student.id)
+        )
+      )
+  );
+$$;
+
+create or replace function crm.can_manage_student(target_student_profile_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from crm.profiles as student
+    where student.id = target_student_profile_id
+      and student.role = 'student'
+      and student.deleted_at is null
+      and (
+        crm.is_current_admin()
+        or (
+          crm.current_profile_role() = 'advisor'
+          and crm.shares_conversation_with(student.id)
+        )
+      )
+  );
+$$;
+
 comment on function crm.current_profile_id() is
   'Resolves the active CRM profile for the current Clerk JWT subject.';
 comment on function crm.current_profile_role() is
@@ -488,6 +535,8 @@ comment on function crm.shares_conversation_with(uuid) is
 
 revoke all on function crm.current_profile_id() from public;
 revoke all on function crm.current_profile_role() from public;
+revoke all on function crm.can_access_student(uuid) from public;
+revoke all on function crm.can_manage_student(uuid) from public;
 revoke all on function crm.is_current_admin() from public;
 revoke all on function crm.is_conversation_participant(uuid) from public;
 revoke all on function crm.is_conversation_creator(uuid) from public;
@@ -496,6 +545,8 @@ revoke all on function crm.shares_conversation_with(uuid) from public;
 
 grant execute on function crm.current_profile_id() to authenticated;
 grant execute on function crm.current_profile_role() to authenticated;
+grant execute on function crm.can_access_student(uuid) to authenticated;
+grant execute on function crm.can_manage_student(uuid) to authenticated;
 grant execute on function crm.is_current_admin() to authenticated;
 grant execute on function crm.is_conversation_participant(uuid) to authenticated;
 grant execute on function crm.is_conversation_creator(uuid) to authenticated;

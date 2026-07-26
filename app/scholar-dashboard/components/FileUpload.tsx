@@ -1,234 +1,170 @@
 "use client";
 
-import { useRef, useState } from "react";
-import type { ChangeEvent, DragEvent } from "react";
 import { FileCheck2, Upload, X } from "lucide-react";
+import { type ChangeEvent, useRef, useState } from "react";
+
+import {
+  DOCUMENT_TYPE_LABELS,
+  STUDENT_DOCUMENT_ACCEPT,
+  validateStudentDocumentFile,
+} from "../services/studentDocuments";
+import type { StudentDocumentType } from "../types/dashboard";
 
 interface FileUploadProps {
   isUploading: boolean;
-  onUpload: (documentName: string, file: File) => Promise<void>;
+  onUpload: (
+    documentType: StudentDocumentType,
+    customDocumentName: string | null,
+    expiresAt: string | null,
+    file: File,
+  ) => Promise<boolean>;
 }
 
-export const acceptedDocumentExtensions = ".pdf,.docx,.jpg,.jpeg,.png";
-export const maximumDocumentFileSize = 10 * 1024 * 1024;
-
-const acceptedFileTypes = new Set([
-  "application/pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "image/jpeg",
-  "image/png",
-]);
-
-export function validateDocumentFile(file: File): string {
-  if (!acceptedFileTypes.has(file.type)) {
-    return "Upload a PDF, DOCX, JPG, or PNG file.";
-  }
-
-  if (file.size === 0) {
-    return "The selected file is empty.";
-  }
-
-  if (file.size > maximumDocumentFileSize) {
-    return "The file must be 10 MB or smaller.";
-  }
-
-  return "";
-}
-
-function formatSelectedFileSize(fileSize: number): string {
-  if (fileSize < 1024 * 1024) {
-    return `${Math.max(1, Math.round(fileSize / 1024))} KB`;
-  }
-
-  return `${(fileSize / (1024 * 1024)).toFixed(1)} MB`;
-}
+export const acceptedDocumentExtensions = STUDENT_DOCUMENT_ACCEPT;
+export { validateStudentDocumentFile as validateDocumentFile };
 
 export default function FileUpload({
   isUploading,
   onUpload,
 }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [documentName, setDocumentName] = useState("");
+  const [documentType, setDocumentType] =
+    useState<StudentDocumentType>("passport");
+  const [customName, setCustomName] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [validationError, setValidationError] = useState("");
-  const [isDragging, setIsDragging] = useState(false);
-
-  function clearSelectedFile() {
-    setSelectedFile(null);
-    setValidationError("");
-
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
-  }
 
   function selectFile(file: File) {
-    const nextError = validateDocumentFile(file);
+    const nextError = validateStudentDocumentFile(file);
+    setValidationError(nextError);
+    setSelectedFile(nextError ? null : file);
+  }
 
-    if (nextError) {
-      setSelectedFile(null);
-      setValidationError(nextError);
-
-      if (inputRef.current) {
-        inputRef.current.value = "";
-      }
-
+  async function submit() {
+    if (documentType === "other" && !customName.trim()) {
+      setValidationError("Enter a custom document name.");
       return;
     }
-
-    setValidationError("");
-    setSelectedFile(file);
-
-    if (!documentName.trim()) {
-      setDocumentName(file.name.replace(/\.[^/.]+$/, ""));
-    }
-  }
-
-  function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-
-    if (file) {
-      selectFile(file);
-    }
-  }
-
-  function handleDrop(event: DragEvent<HTMLDivElement>) {
-    event.preventDefault();
-    setIsDragging(false);
-
-    const file = event.dataTransfer.files?.[0];
-
-    if (file) {
-      selectFile(file);
-    }
-  }
-
-  async function handleSubmit() {
-    if (!documentName.trim()) {
-      setValidationError("Enter a clear document name.");
-      return;
-    }
-
     if (!selectedFile) {
       setValidationError("Choose a file to upload.");
       return;
     }
 
-    try {
-      await onUpload(documentName.trim(), selectedFile);
-      setDocumentName("");
-      clearSelectedFile();
-    } catch {
-      // The parent hook displays the upload error.
+    const succeeded = await onUpload(
+      documentType,
+      documentType === "other" ? customName.trim() : null,
+      expiresAt || null,
+      selectedFile,
+    );
+    if (succeeded) {
+      setCustomName("");
+      setExpiresAt("");
+      setSelectedFile(null);
+      setValidationError("");
+      if (inputRef.current) inputRef.current.value = "";
     }
   }
 
   return (
-    <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-[#F4F7FA] p-4 sm:p-5">
-      <label
-        htmlFor="document-name"
-        className="block text-sm font-black text-[#071526]"
-      >
-        Document name
+    <div className="rounded-2xl border border-slate-200 bg-[#F4F7FA] p-5">
+      <label className="block text-sm font-black text-[#071526]">
+        Document type
+        <select
+          value={documentType}
+          onChange={(event) =>
+            setDocumentType(event.target.value as StudentDocumentType)
+          }
+          disabled={isUploading}
+          className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold outline-none focus:border-[#C8A24A]"
+        >
+          {Object.entries(DOCUMENT_TYPE_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
       </label>
 
-      <input
-        id="document-name"
-        value={documentName}
-        onChange={(event) => {
-          setDocumentName(event.target.value);
-          setValidationError("");
-        }}
-        placeholder="Example: Academic Transcript"
-        disabled={isUploading}
-        className="mt-2 block w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#C8A24A] focus:ring-2 focus:ring-[#C8A24A]/20 disabled:opacity-60"
-      />
+      {documentType === "other" ? (
+        <label className="mt-4 block text-sm font-black text-[#071526]">
+          Custom document name
+          <input
+            value={customName}
+            onChange={(event) => setCustomName(event.target.value)}
+            maxLength={150}
+            disabled={isUploading}
+            className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-[#C8A24A]"
+          />
+        </label>
+      ) : null}
 
-      <div
-        onDragEnter={() => setIsDragging(true)}
-        onDragLeave={() => setIsDragging(false)}
-        onDragOver={(event) => event.preventDefault()}
-        onDrop={handleDrop}
-        className={`mt-4 w-full min-w-0 overflow-hidden rounded-2xl border-2 border-dashed px-4 py-6 text-center transition sm:p-6 ${
-          isDragging
-            ? "border-[#C8A24A] bg-[#C8A24A]/10"
-            : "border-slate-300 bg-white"
-        }`}
-      >
+      <label className="mt-4 block text-sm font-black text-[#071526]">
+        Expiration date <span className="font-normal text-slate-500">(optional)</span>
+        <input
+          type="date"
+          value={expiresAt}
+          min={new Date().toISOString().slice(0, 10)}
+          onChange={(event) => setExpiresAt(event.target.value)}
+          disabled={isUploading}
+          className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-[#C8A24A]"
+        />
+      </label>
+
+      <div className="mt-4 rounded-2xl border-2 border-dashed border-slate-300 bg-white p-6 text-center">
         <Upload className="mx-auto text-[#0F2747]" size={28} />
-
-        <p className="mt-3 break-words font-black text-[#071526]">
-          Drag and drop your file here
-        </p>
-
-        <p className="mt-1 break-words text-sm leading-6 text-slate-500">
-          PDF, DOCX, JPG, or PNG. Maximum 10 MB.
-        </p>
-
+        <p className="mt-3 font-black">PDF, JPG, JPEG, or PNG</p>
+        <p className="mt-1 text-sm text-slate-500">Maximum file size: 10 MB</p>
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={isUploading}
-          className="mt-4 inline-flex min-w-[140px] items-center justify-center whitespace-nowrap rounded-xl bg-[#0F2747] px-5 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-4 rounded-xl bg-[#0F2747] px-5 py-3 text-sm font-black text-white disabled:opacity-60"
         >
           Choose File
         </button>
-
         <input
           ref={inputRef}
           type="file"
-          accept={acceptedDocumentExtensions}
-          onChange={handleInputChange}
+          accept={STUDENT_DOCUMENT_ACCEPT}
+          onChange={(event: ChangeEvent<HTMLInputElement>) => {
+            const file = event.target.files?.[0];
+            if (file) selectFile(file);
+          }}
           disabled={isUploading}
           className="hidden"
         />
       </div>
 
-      {selectedFile && (
-        <div className="mt-4 flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-          <FileCheck2 className="shrink-0 text-emerald-700" size={20} />
-
-          <div className="min-w-0 flex-1 overflow-hidden">
-            <p
-              className="block w-full truncate text-sm font-black text-emerald-900"
-              title={selectedFile.name}
-            >
-              {selectedFile.name}
-            </p>
-
-            <p className="text-xs font-semibold text-emerald-700">
-              {formatSelectedFileSize(selectedFile.size)}
-            </p>
-          </div>
-
+      {selectedFile ? (
+        <div className="mt-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+          <FileCheck2 className="text-emerald-700" size={20} />
+          <p className="min-w-0 flex-1 truncate text-sm font-black">
+            {selectedFile.name}
+          </p>
           <button
             type="button"
-            onClick={clearSelectedFile}
-            disabled={isUploading}
-            className="shrink-0 rounded-lg p-2 text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
             aria-label="Remove selected file"
+            onClick={() => setSelectedFile(null)}
           >
             <X size={18} />
           </button>
         </div>
-      )}
+      ) : null}
 
-      {validationError && (
-        <p
-          className="mt-3 break-words text-sm font-semibold text-red-700"
-          role="alert"
-        >
+      {validationError ? (
+        <p role="alert" className="mt-3 text-sm font-semibold text-red-700">
           {validationError}
         </p>
-      )}
+      ) : null}
 
       <button
         type="button"
-        onClick={() => void handleSubmit()}
-        disabled={isUploading || !selectedFile || !documentName.trim()}
-        className="mt-5 flex w-full min-w-0 items-center justify-center whitespace-nowrap rounded-xl bg-[#C8A24A] px-5 py-4 text-center font-black text-[#071526] transition disabled:cursor-not-allowed disabled:opacity-60"
+        onClick={() => void submit()}
+        disabled={isUploading || !selectedFile}
+        className="mt-5 w-full rounded-xl bg-[#C8A24A] px-5 py-4 font-black text-[#071526] disabled:opacity-60"
       >
-        {isUploading ? "Uploading..." : "Upload Document"}
+        {isUploading ? "Uploading securely..." : "Upload Document"}
       </button>
     </div>
   );

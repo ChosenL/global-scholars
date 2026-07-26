@@ -10,10 +10,14 @@ import {
   Lightbulb,
 } from "lucide-react";
 import type {
-  ApplicationProgress,
+  CompleteStudentProfile,
   StudentDocument,
-  StudentProfile,
 } from "../types/dashboard";
+import { summarizeStudentDocuments } from "../services/studentDocuments";
+import {
+  getReadinessStage,
+  type StudentReadiness,
+} from "@/lib/crm/readiness";
 
 type StepStatus = "complete" | "current" | "upcoming";
 
@@ -23,8 +27,8 @@ interface JourneyStep {
 }
 
 interface ProgressTrackerProps {
-  profile: StudentProfile | null;
-  progress: ApplicationProgress | null;
+  profile: CompleteStudentProfile | null;
+  progress: StudentReadiness | null;
   documents: StudentDocument[];
   onNavigateToDocuments?: () => void;
 }
@@ -111,19 +115,16 @@ export default function ProgressTracker({
   documents,
   onNavigateToDocuments,
 }: ProgressTrackerProps) {
-  const progressPercent = clampPercent(progress?.progress_percent ?? 10);
-  const currentStage = progress?.current_stage ?? "Initial Consultation";
+  const progressPercent = clampPercent(progress?.total_score ?? 0);
+  const currentStage = getReadinessStage(progressPercent);
   const currentStepIndex = resolveCurrentStepIndex(
     currentStage,
     progressPercent,
   );
-  const approvedDocuments = documents.filter(
-    (document) => document.status === "approved",
-  ).length;
-  const pendingDocuments = documents.filter(
-    (document) => document.status === "pending",
-  ).length;
-  const hasDocuments = documents.length > 0;
+  const documentSummary = summarizeStudentDocuments(documents);
+  const approvedDocuments = documentSummary.approvedDocuments;
+  const pendingDocuments = documentSummary.pendingReviewDocuments;
+  const hasDocuments = documentSummary.totalDocuments > 0;
 
   const steps = journeySteps.map((step, index) => {
     let status: StepStatus =
@@ -150,7 +151,8 @@ export default function ProgressTracker({
     (step) => step.status !== "complete",
   );
 
-  const nextAction = !profile?.full_name || !profile?.email
+  const nextAction =
+    !profile?.identity.display_name || !profile.identity.email
     ? "Complete your student profile"
     : !hasDocuments
       ? "Upload your first required document"
@@ -315,7 +317,7 @@ export default function ProgressTracker({
           <div>
             <p className="text-sm font-black">Last updated</p>
             <p className="mt-1 text-sm text-slate-500">
-              {formatUpdatedAt(progress?.updated_at ?? progress?.created_at)}
+              {formatUpdatedAt(progress?.calculated_at ?? progress?.updated_at)}
             </p>
           </div>
         </div>

@@ -1,132 +1,184 @@
 "use client";
 
 import { useSession, useUser } from "@clerk/nextjs";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import { createClerkSupabaseClient } from "@/lib/supabase";
-import { usePlatformRole } from "@/app/hooks/usePlatformRole";
+import {
+  calculateStudentReadiness,
+  type StudentReadiness,
+} from "@/lib/crm/readiness";
+
+import {
+  createStudentProfile,
+  fetchStudentProfile,
+  updateStudentProfile,
+} from "../services/studentProfile";
 import type {
-  ApplicationProgress,
-  StudentProfile,
+  CompleteStudentProfile,
+  CrmProfile,
+  StudentProfileInput,
 } from "../types/dashboard";
 
 interface UseStudentProfileResult {
-  profile: StudentProfile | null;
-  progress: ApplicationProgress | null;
+  profile: CompleteStudentProfile | null;
+  progress: StudentReadiness | null;
   isLoading: boolean;
+  isSaving: boolean;
   error: string;
+  successMessage: string;
+  saveProfile: (input: StudentProfileInput) => Promise<void>;
+  refreshProfile: () => Promise<void>;
+  clearFeedback: () => void;
 }
 
-export function useStudentProfile(): UseStudentProfileResult {
+export function useStudentProfile(
+  crmProfile: CrmProfile | null,
+): UseStudentProfileResult {
   const { isLoaded, isSignedIn, user } = useUser();
   const { session } = useSession();
-  const { role, isLoading: roleLoading } = usePlatformRole();
-
-  const [profile, setProfile] = useState<StudentProfile | null>(null);
-  const [progress, setProgress] = useState<ApplicationProgress | null>(null);
+  const [profile, setProfile] =
+    useState<CompleteStudentProfile | null>(null);
+  const [progress, setProgress] =
+    useState<StudentReadiness | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
-
-  const requestRef = useRef(0);
+  const [successMessage, setSuccessMessage] = useState("");
+  const requestIdRef = useRef(0);
+  const sessionRef = useRef(session);
 
   useEffect(() => {
-    const requestId = ++requestRef.current;
+    sessionRef.current = session;
+  }, [session]);
 
-    async function load() {
-      if (!isLoaded || roleLoading) return;
+  const getSupabase = useCallback(() => {
+    const currentSession = sessionRef.current;
 
-      if (!isSignedIn || !user || !session || role !== "student") {
-        setProfile(null);
-        setProgress(null);
+    if (!currentSession) {
+      throw new Error("Your session is unavailable. Please sign in again.");
+    }
+
+    return createClerkSupabaseClient(() => currentSession.getToken());
+  }, []);
+
+  const loadProfile = useCallback(async (): Promise<void> => {
+    const requestId = ++requestIdRef.current;
+
+    if (!isLoaded || !crmProfile) {
+      return;
+    }
+
+    if (
+      !isSignedIn ||
+      !user ||
+      crmProfile.role !== "student"
+    ) {
+      setProfile(null);
+      setProgress(null);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const supabase = getSupabase();
+      const [nextProfile, nextReadiness] = await Promise.all([
+        fetchStudentProfile(supabase, crmProfile.id),
+        calculateStudentReadiness(supabase, crmProfile.id),
+      ]);
+
+      if (requestId === requestIdRef.current) {
+        setProfile(nextProfile);
+        setProgress(nextReadiness);
+        setError("");
+      }
+    } catch (loadError) {
+      if (requestId === requestIdRef.current) {
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Unable to load your student profile.",
+        );
+      }
+    } finally {
+      if (requestId === requestIdRef.current) {
         setIsLoading(false);
+      }
+    }
+  }, [
+    crmProfile,
+    getSupabase,
+    isLoaded,
+    isSignedIn,
+    user,
+  ]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadProfile();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      requestIdRef.current += 1;
+    };
+  }, [loadProfile]);
+
+  const saveProfile = useCallback(
+    async (input: StudentProfileInput): Promise<void> => {
+      if (!crmProfile || crmProfile.role !== "student") {
+        setError("Your student CRM profile is unavailable.");
         return;
       }
 
-      setIsLoading(true);
+      setIsSaving(true);
+      setError("");
+      setSuccessMessage("");
 
       try {
-        const supabase = createClerkSupabaseClient(() => session.getToken());
+        const nextProfile = profile?.student
+          ? await updateStudentProfile(
+              getSupabase(),
+              crmProfile.id,
+              input,
+            )
+          : await createStudentProfile(
+              getSupabase(),
+              crmProfile.id,
+              input,
+            );
 
-        const fullName =
-          user.fullName ||
-          `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() ||
-          "Scholar";
-
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .upsert(
-            {
-              user_id: user.id,
-              full_name: fullName,
-              email: user.primaryEmailAddress?.emailAddress ?? null,
-              profile_image_url: user.imageUrl,
-            },
-            { onConflict: "user_id" },
-          )
-          .select("*")
-          .single();
-
-        if (profileError) {
-          throw profileError;
-        }
-
-        const { error: progressInitializationError } = await supabase
-          .from("application_progress")
-          .upsert(
-            {
-              student_id: user.id,
-              current_stage: "Initial Consultation",
-              progress_percent: 10,
-            },
-            {
-              onConflict: "student_id",
-              ignoreDuplicates: true,
-            },
-          );
-
-        if (progressInitializationError) {
-          throw progressInitializationError;
-        }
-
-        const {
-          data: progressData,
-          error: progressLoadError,
-        } = await supabase
-          .from("application_progress")
-          .select("*")
-          .eq("student_id", user.id)
-          .single();
-
-        if (progressLoadError) {
-          throw progressLoadError;
-        }
-
-        if (requestId === requestRef.current) {
-          setProfile(profileData as StudentProfile);
-          setProgress(progressData as ApplicationProgress);
-          setError("");
-        }
-      } catch (err) {
-        if (requestId === requestRef.current) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : "Unable to load your profile.",
-          );
-        }
+        setProfile(nextProfile);
+        setSuccessMessage("Your student profile has been saved.");
+      } catch (saveError) {
+        setError(
+          saveError instanceof Error
+            ? saveError.message
+            : "Unable to save your student profile.",
+        );
       } finally {
-        if (requestId === requestRef.current) {
-          setIsLoading(false);
-        }
+        setIsSaving(false);
       }
-    }
+    },
+    [crmProfile, getSupabase, profile],
+  );
 
-    void load();
-  }, [isLoaded, isSignedIn, user, session, role, roleLoading]);
+  const clearFeedback = useCallback(() => {
+    setError("");
+    setSuccessMessage("");
+  }, []);
 
   return {
     profile,
     progress,
     isLoading,
+    isSaving,
     error,
+    successMessage,
+    saveProfile,
+    refreshProfile: loadProfile,
+    clearFeedback,
   };
 }

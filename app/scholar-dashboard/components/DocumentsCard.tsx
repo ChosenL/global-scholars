@@ -18,9 +18,14 @@ import FileUpload, {
   validateDocumentFile,
 } from "./FileUpload";
 import StatusBadge from "./StatusBadge";
-import type { DocumentStatus, StudentDocument } from "../types/dashboard";
+import { DOCUMENT_TYPE_LABELS } from "../services/studentDocuments";
+import type {
+  StudentDocument,
+  StudentDocumentStatus,
+  StudentDocumentType,
+} from "../types/dashboard";
 
-type DocumentFilter = "all" | DocumentStatus;
+type DocumentFilter = "all" | StudentDocumentStatus;
 
 interface DocumentsCardProps {
   documents: StudentDocument[];
@@ -31,8 +36,13 @@ interface DocumentsCardProps {
   downloadingDocumentId: string | null;
   error: string;
   successMessage: string;
-  onUpload: (documentName: string, file: File) => Promise<void>;
-  onReplace: (document: StudentDocument, file: File) => Promise<void>;
+  onUpload: (
+    documentType: StudentDocumentType,
+    customDocumentName: string | null,
+    expiresAt: string | null,
+    file: File,
+  ) => Promise<boolean>;
+  onReplace: (document: StudentDocument, file: File) => Promise<boolean>;
   onOpen: (document: StudentDocument) => Promise<void>;
   onDownload: (document: StudentDocument) => Promise<void>;
   onRemove: (document: StudentDocument) => Promise<void>;
@@ -42,9 +52,12 @@ interface DocumentsCardProps {
 
 const filterOptions: Array<{ value: DocumentFilter; label: string }> = [
   { value: "all", label: "All" },
-  { value: "pending", label: "Pending" },
+  { value: "uploaded", label: "Uploaded" },
+  { value: "under_review", label: "Under Review" },
   { value: "approved", label: "Approved" },
+  { value: "needs_revision", label: "Needs Revision" },
   { value: "rejected", label: "Rejected" },
+  { value: "expired", label: "Expired" },
 ];
 
 function formatFileSize(fileSize: number | null): string {
@@ -99,9 +112,16 @@ export default function DocumentsCard({
   const counts = useMemo(
     () => ({
       all: documents.length,
-      pending: documents.filter((item) => item.status === "pending").length,
+      uploaded: documents.filter((item) => item.status === "uploaded").length,
+      under_review: documents.filter(
+        (item) => item.status === "under_review",
+      ).length,
       approved: documents.filter((item) => item.status === "approved").length,
+      needs_revision: documents.filter(
+        (item) => item.status === "needs_revision",
+      ).length,
       rejected: documents.filter((item) => item.status === "rejected").length,
+      expired: documents.filter((item) => item.status === "expired").length,
     }),
     [documents],
   );
@@ -112,6 +132,17 @@ export default function DocumentsCard({
         ? documents
         : documents.filter((document) => document.status === activeFilter),
     [activeFilter, documents],
+  );
+  const supersededDocumentIds = useMemo(
+    () =>
+      new Set(
+        documents.flatMap((document) =>
+          document.replaces_document_id
+            ? [document.replaces_document_id]
+            : [],
+        ),
+      ),
+    [documents],
   );
 
   function startReplacement(document: StudentDocument) {
@@ -148,7 +179,7 @@ export default function DocumentsCard({
 
   async function confirmRemoval(document: StudentDocument) {
     const confirmed = window.confirm(
-      `Delete “${document.name}”? This action cannot be undone.`,
+      `Remove “${DOCUMENT_TYPE_LABELS[document.document_type]}” from active documents? Its audit metadata will be retained.`,
     );
 
     if (!confirmed) {
@@ -200,7 +231,7 @@ export default function DocumentsCard({
             Pending review
           </p>
           <p className="mt-1 text-2xl font-black text-amber-950">
-            {counts.pending}
+            {counts.uploaded + counts.under_review}
           </p>
         </div>
 
@@ -343,17 +374,27 @@ export default function DocumentsCard({
                           <div className="min-w-0 flex-1 overflow-hidden">
                             <p
                               className="block w-full truncate font-black text-[#071526]"
-                              title={document.name}
+                              title={
+                                document.custom_document_name ??
+                                DOCUMENT_TYPE_LABELS[document.document_type]
+                              }
                             >
-                              {document.name}
+                              {document.custom_document_name ??
+                                DOCUMENT_TYPE_LABELS[document.document_type]}
+                              {document.revision_number > 1
+                                ? ` · Revision ${document.revision_number}`
+                                : ""}
+                              {supersededDocumentIds.has(document.id)
+                                ? " · Superseded"
+                                : ""}
                             </p>
 
                             <p
                               className="mt-1 block w-full truncate text-sm text-slate-500"
-                              title={document.file_name}
+                              title={document.original_filename}
                             >
-                              {document.file_name} ·{" "}
-                              {formatFileSize(document.file_size)}
+                              {document.original_filename} ·{" "}
+                              {formatFileSize(document.file_size_bytes)}
                             </p>
 
                             <p className="mt-1 break-words text-xs font-semibold text-slate-400">
@@ -369,13 +410,18 @@ export default function DocumentsCard({
                           </div>
                         </div>
 
-                        {document.status === "rejected" && (
+                        {document.expires_at ? (
+                          <p className="mt-2 text-xs font-semibold text-slate-500">
+                            Expires {formatDate(document.expires_at)}
+                          </p>
+                        ) : null}
+
+                        {document.review_notes && (
                           <div className="mt-3 min-w-0 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800">
                             <p className="font-black">Advisor feedback</p>
 
                             <p className="mt-1 break-words">
-                              {document.rejection_reason ||
-                                "This file needs to be replaced. Contact your advisor for details."}
+                              {document.review_notes}
                             </p>
                           </div>
                         )}

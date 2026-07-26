@@ -1,19 +1,25 @@
 "use client";
 
-import { useSession, useUser } from "@clerk/nextjs";
+import { useSession } from "@clerk/nextjs";
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import { createClerkSupabaseClient } from "@/lib/supabase";
+
 import {
-  createStudentDocumentUrl,
-  deleteStudentDocument,
-  listStudentDocuments,
+  fetchStudentDocuments,
+  getStudentDocumentDownloadUrl,
   replaceStudentDocument,
+  softDeleteStudentDocument,
   uploadStudentDocument,
-} from "../services/documents";
-import type { StudentDocument } from "../types/dashboard";
+} from "../services/studentDocuments";
+import type {
+  StudentDocument,
+  StudentDocumentType,
+  StudentDocumentWithUploader,
+} from "../types/dashboard";
 
 interface UseDocumentsResult {
-  documents: StudentDocument[];
+  documents: StudentDocumentWithUploader[];
   isLoading: boolean;
   isUploading: boolean;
   deletingDocumentId: string | null;
@@ -22,401 +28,203 @@ interface UseDocumentsResult {
   error: string;
   successMessage: string;
   uploadDocument: (
-    documentName: string,
+    documentType: StudentDocumentType,
+    customDocumentName: string | null,
+    expiresAt: string | null,
     file: File,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   replaceDocument: (
     document: StudentDocument,
     file: File,
-  ) => Promise<void>;
-  removeDocument: (
-    document: StudentDocument,
-  ) => Promise<void>;
-  openDocument: (
-    document: StudentDocument,
-  ) => Promise<void>;
-  downloadDocument: (
-    document: StudentDocument,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
+  removeDocument: (document: StudentDocument) => Promise<void>;
+  openDocument: (document: StudentDocument) => Promise<void>;
+  downloadDocument: (document: StudentDocument) => Promise<void>;
   refreshDocuments: () => Promise<void>;
   clearFeedback: () => void;
 }
 
-interface SupabaseErrorLike {
-  message?: unknown;
-  details?: unknown;
-  hint?: unknown;
-  code?: unknown;
-  statusCode?: unknown;
-  error?: unknown;
-}
-
-function readText(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function getErrorMessage(
-  error: unknown,
-  fallback: string,
-): string {
-  if (error instanceof Error) {
-    return error.message.trim() || fallback;
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
   }
-
-  if (typeof error === "string") {
-    return error.trim() || fallback;
-  }
-
-  if (error && typeof error === "object") {
-    const candidate = error as SupabaseErrorLike;
-
-    const message =
-      readText(candidate.message) ||
-      readText(candidate.error);
-
-    const details = readText(candidate.details);
-    const hint = readText(candidate.hint);
-    const code = readText(candidate.code);
-
-    const sections = [
-      message,
-      details,
-      hint ? `Hint: ${hint}` : "",
-      code ? `Code: ${code}` : "",
-    ].filter(Boolean);
-
-    if (sections.length > 0) {
-      return sections.join(" ");
-    }
-
-    try {
-      const serialized = JSON.stringify(error);
-
-      if (serialized && serialized !== "{}") {
-        return serialized;
-      }
-    } catch {
-      return fallback;
-    }
-  }
-
   return fallback;
 }
 
-export function useDocuments(): UseDocumentsResult {
-  const { isLoaded, isSignedIn, user } = useUser();
+export function useDocuments(
+  profileId: string | null,
+): UseDocumentsResult {
   const { session } = useSession();
-
-  const [documents, setDocuments] = useState<StudentDocument[]>([]);
+  const [documents, setDocuments] = useState<StudentDocumentWithUploader[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
-
   const [deletingDocumentId, setDeletingDocumentId] =
     useState<string | null>(null);
-
   const [replacingDocumentId, setReplacingDocumentId] =
     useState<string | null>(null);
-
   const [downloadingDocumentId, setDownloadingDocumentId] =
     useState<string | null>(null);
-
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
   const requestIdRef = useRef(0);
+  const sessionRef = useRef(session);
 
-  const userId = user?.id ?? null;
-  const sessionId = session?.id ?? null;
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
+  const getSupabase = useCallback(() => {
+    const currentSession = sessionRef.current;
+    if (!currentSession) throw new Error("Your session is unavailable.");
+    return createClerkSupabaseClient(() => currentSession.getToken());
+  }, []);
 
   const clearFeedback = useCallback(() => {
     setError("");
     setSuccessMessage("");
   }, []);
 
-  const getSupabase = useCallback(() => {
-    if (!session) {
-      throw new Error(
-        "Your session is unavailable. Please sign in again.",
-      );
-    }
-
-    return createClerkSupabaseClient(
-      () => session.getToken(),
-    );
-  }, [session]);
-
   const refreshDocuments = useCallback(async () => {
     const requestId = ++requestIdRef.current;
-
-    if (
-      !isLoaded ||
-      !isSignedIn ||
-      !userId ||
-      !session
-    ) {
+    if (!profileId || !sessionRef.current) {
       setDocuments([]);
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
-
     try {
-      const nextDocuments =
-        await listStudentDocuments(
-          getSupabase(),
-          userId,
-        );
-
+      const next = await fetchStudentDocuments(getSupabase(), profileId);
       if (requestId === requestIdRef.current) {
-        setDocuments(nextDocuments);
+        setDocuments(next);
         setError("");
       }
     } catch (loadError) {
       if (requestId === requestIdRef.current) {
-        setError(
-          getErrorMessage(
-            loadError,
-            "We could not load your documents. Please try again.",
-          ),
-        );
+        setError(getErrorMessage(loadError, "Unable to load documents."));
       }
     } finally {
-      if (requestId === requestIdRef.current) {
-        setIsLoading(false);
-      }
+      if (requestId === requestIdRef.current) setIsLoading(false);
     }
-  }, [
-    getSupabase,
-    isLoaded,
-    isSignedIn,
-    session,
-    userId,
-  ]);
+  }, [getSupabase, profileId]);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      void refreshDocuments();
-    }, 0);
-
+    const timeoutId = window.setTimeout(() => void refreshDocuments(), 0);
     return () => {
       window.clearTimeout(timeoutId);
       requestIdRef.current += 1;
     };
-  }, [refreshDocuments, sessionId]);
+  }, [refreshDocuments]);
 
   const uploadDocument = useCallback(
     async (
-      documentName: string,
+      documentType: StudentDocumentType,
+      customDocumentName: string | null,
+      expiresAt: string | null,
       file: File,
-    ) => {
-      if (!userId) {
-        setError(
-          "You must be signed in to upload a document.",
-        );
-        return;
-      }
-
+    ): Promise<boolean> => {
+      if (!profileId) return false;
       setIsUploading(true);
       clearFeedback();
-
       try {
-        const { document } =
-          await uploadStudentDocument(
-            getSupabase(),
-            {
-              studentId: userId,
-              documentName,
-              file,
-            },
-          );
-
-        setDocuments((current) => [
-          document,
-          ...current,
-        ]);
-
-        setSuccessMessage(
-          `${document.name} was uploaded successfully.`,
-        );
+        await uploadStudentDocument(getSupabase(), {
+          profileId,
+          documentType,
+          customDocumentName,
+          expiresAt,
+          file,
+        });
+        await refreshDocuments();
+        setSuccessMessage("Your document was uploaded successfully.");
+        return true;
       } catch (uploadError) {
-        setError(
-          getErrorMessage(
-            uploadError,
-            "Your document could not be uploaded. Please try again.",
-          ),
-        );
+        setError(getErrorMessage(uploadError, "Unable to upload document."));
+        return false;
       } finally {
         setIsUploading(false);
       }
     },
-    [
-      clearFeedback,
-      getSupabase,
-      userId,
-    ],
+    [clearFeedback, getSupabase, profileId, refreshDocuments],
   );
 
   const replaceDocument = useCallback(
-    async (
-      document: StudentDocument,
-      file: File,
-    ) => {
+    async (document: StudentDocument, file: File): Promise<boolean> => {
       setReplacingDocumentId(document.id);
       clearFeedback();
-
       try {
-        const replacement =
-          await replaceStudentDocument(
-            getSupabase(),
-            {
-              document,
-              file,
-            },
-          );
-
-        setDocuments((current) =>
-          current.map((item) =>
-            item.id === replacement.id
-              ? replacement
-              : item,
-          ),
-        );
-
+        await replaceStudentDocument(getSupabase(), document, file);
+        await refreshDocuments();
         setSuccessMessage(
-          `${document.name} was replaced and returned to pending review.`,
+          "A new document revision was uploaded. The previous revision remains in the audit history.",
         );
+        return true;
       } catch (replaceError) {
-        setError(
-          getErrorMessage(
-            replaceError,
-            "The document could not be replaced. Please try again.",
-          ),
-        );
+        setError(getErrorMessage(replaceError, "Unable to upload revision."));
+        return false;
       } finally {
         setReplacingDocumentId(null);
       }
     },
-    [
-      clearFeedback,
-      getSupabase,
-    ],
+    [clearFeedback, getSupabase, refreshDocuments],
   );
 
   const removeDocument = useCallback(
     async (document: StudentDocument) => {
       setDeletingDocumentId(document.id);
       clearFeedback();
-
       try {
-        await deleteStudentDocument(
+        await softDeleteStudentDocument(
           getSupabase(),
-          document,
+          document.id,
+          document.profile_id,
         );
-
         setDocuments((current) =>
-          current.filter(
-            (item) => item.id !== document.id,
-          ),
+          current.filter((item) => item.id !== document.id),
         );
-
-        setSuccessMessage(
-          `${document.name} was deleted.`,
-        );
+        setSuccessMessage("The document was removed from your active records.");
       } catch (deleteError) {
-        setError(
-          getErrorMessage(
-            deleteError,
-            "The document could not be deleted. Please try again.",
-          ),
-        );
+        setError(getErrorMessage(deleteError, "Unable to remove document."));
       } finally {
         setDeletingDocumentId(null);
       }
     },
-    [
-      clearFeedback,
-      getSupabase,
-    ],
+    [clearFeedback, getSupabase],
   );
 
   const openDocument = useCallback(
     async (document: StudentDocument) => {
       clearFeedback();
-
       try {
-        const url =
-          await createStudentDocumentUrl(
-            getSupabase(),
-            document,
-          );
-
-        const openedWindow = window.open(
-          url,
-          "_blank",
-          "noopener,noreferrer",
+        const url = await getStudentDocumentDownloadUrl(
+          getSupabase(),
+          document,
         );
-
-        if (!openedWindow) {
-          window.location.assign(url);
-        }
+        window.open(url, "_blank", "noopener,noreferrer");
       } catch (openError) {
-        setError(
-          getErrorMessage(
-            openError,
-            "The document could not be opened. Please try again.",
-          ),
-        );
+        setError(getErrorMessage(openError, "Unable to open document."));
       }
     },
-    [
-      clearFeedback,
-      getSupabase,
-    ],
+    [clearFeedback, getSupabase],
   );
 
   const downloadDocument = useCallback(
     async (document: StudentDocument) => {
       setDownloadingDocumentId(document.id);
       clearFeedback();
-
       try {
-        const url =
-          await createStudentDocumentUrl(
-            getSupabase(),
-            document,
-            true,
-          );
-
-        const link =
-          window.document.createElement("a");
-
-        link.href = url;
-        link.download = document.file_name;
-        link.rel = "noopener";
-
-        window.document.body.appendChild(link);
-        link.click();
-        link.remove();
-
-        setSuccessMessage(
-          `${document.file_name} is downloading.`,
+        const url = await getStudentDocumentDownloadUrl(
+          getSupabase(),
+          document,
+          true,
         );
+        window.location.assign(url);
       } catch (downloadError) {
-        setError(
-          getErrorMessage(
-            downloadError,
-            "The document could not be downloaded. Please try again.",
-          ),
-        );
+        setError(getErrorMessage(downloadError, "Unable to download document."));
       } finally {
         setDownloadingDocumentId(null);
       }
     },
-    [
-      clearFeedback,
-      getSupabase,
-    ],
+    [clearFeedback, getSupabase],
   );
 
   return {

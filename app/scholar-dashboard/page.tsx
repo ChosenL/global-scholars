@@ -8,9 +8,9 @@ import {
   Bot,
   CalendarDays,
   CheckCircle2,
+  ClipboardCheck,
   Circle,
   Clock3,
-  FileCheck2,
   FileText,
   GraduationCap,
   LayoutDashboard,
@@ -27,33 +27,17 @@ import { useCrmProfile } from "@/app/hooks/useCrmProfile";
 import DocumentsCard from "./components/DocumentsCard";
 import MessagesSection from "./components/MessagesSection";
 import ProgressTracker from "./components/ProgressTracker";
+import StudentProfileSection from "./components/StudentProfileSection";
+import StudentTasksSection from "./components/StudentTasksSection";
 import { useDocuments } from "./hooks/useDocuments";
 import { useStudentProfile } from "./hooks/useStudentProfile";
+import { useStudentTasks } from "./hooks/useStudentTasks";
+import { useNotifications } from "./hooks/useNotifications";
+import { summarizeStudentDocuments } from "./services/studentDocuments";
+import { getReadinessStage } from "@/lib/crm/readiness";
 
 const calendlyLink =
   "https://calendly.com/thompsondwayne0055/free-10_minute-consultation";
-
-const notifications = [
-  {
-    title: "Transcript received",
-    description: "Your academic transcript was added to your student profile.",
-    time: "Today",
-    icon: FileCheck2,
-  },
-  {
-    title: "Appointment confirmed",
-    description: "Your transfer-planning consultation has been scheduled.",
-    time: "Yesterday",
-    icon: CalendarDays,
-  },
-  {
-    title: "New advisor message",
-    description:
-      "Your advisor shared an update about your university shortlist.",
-    time: "2 days ago",
-    icon: MessageCircle,
-  },
-];
 
 const deadlines = [
   {
@@ -98,6 +82,7 @@ const sidebarLinks = [
   { label: "Dashboard", icon: LayoutDashboard, target: "dashboard" },
   { label: "My Progress", icon: GraduationCap, target: "progress" },
   { label: "Documents", icon: FileText, target: "documents" },
+  { label: "Tasks", icon: ClipboardCheck, target: "tasks" },
   { label: "Appointments", icon: CalendarDays, target: "appointments" },
   { label: "Messages", icon: MessageCircle, target: "messages" },
   { label: "AI Advisor", icon: Sparkles, target: "ai-advisor" },
@@ -105,7 +90,11 @@ const sidebarLinks = [
 ] as const;
 
 export default function ScholarDashboardPage() {
-  useCrmProfile();
+  const {
+    profile: crmProfile,
+    isLoading: crmProfileLoading,
+    error: crmProfileError,
+  } = useCrmProfile();
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("dashboard");
   const { isLoaded, isSignedIn, user } = useUser();
@@ -113,8 +102,11 @@ export default function ScholarDashboardPage() {
     profile,
     progress,
     isLoading: profileLoading,
+    isSaving: profileSaving,
     error: profileError,
-  } = useStudentProfile();
+    successMessage: profileSuccessMessage,
+    saveProfile,
+  } = useStudentProfile(crmProfile);
   const {
     documents,
     isLoading: documentsLoading,
@@ -131,23 +123,39 @@ export default function ScholarDashboardPage() {
     downloadDocument,
     refreshDocuments,
     clearFeedback: clearDocumentsFeedback,
-  } = useDocuments();
+  } = useDocuments(crmProfile?.id ?? null);
+  const documentSummary = summarizeStudentDocuments(documents);
+  const {
+    tasks,
+    isLoading: tasksLoading,
+    updatingTaskId,
+    error: tasksError,
+    refresh: refreshTasks,
+    updateStatus: updateTaskStatus,
+    openRelatedDocument,
+  } = useStudentTasks(crmProfile?.id ?? null);
+  const {
+    notifications,
+    isLoading: notificationsLoading,
+  } = useNotifications(crmProfile?.id ?? null);
 
   const studentName =
-    profile?.full_name ||
+    profile?.identity.display_name ||
+    crmProfile?.display_name ||
     user?.fullName ||
     user?.firstName ||
     user?.primaryEmailAddress?.emailAddress ||
     "Scholar";
 
   const firstName =
-    profile?.full_name?.split(" ")[0] ||
+    profile?.identity.display_name.split(" ")[0] ||
+    crmProfile?.display_name.split(" ")[0] ||
     user?.firstName ||
     user?.fullName?.split(" ")[0] ||
     "Scholar";
 
-  const progressPercent = progress?.progress_percent ?? 10;
-  const currentStage = progress?.current_stage ?? "Initial Consultation";
+  const progressPercent = progress?.total_score ?? 0;
+  const currentStage = getReadinessStage(progressPercent);
 
   function openAIAdvisor() {
     const advisorButton = document.querySelector<HTMLButtonElement>(
@@ -172,7 +180,10 @@ export default function ScholarDashboardPage() {
     section.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  if (!isLoaded || (isSignedIn && profileLoading)) {
+  if (
+    !isLoaded ||
+    (isSignedIn && (crmProfileLoading || profileLoading))
+  ) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#071526]">
         <div className="text-center text-white">
@@ -446,20 +457,12 @@ export default function ScholarDashboardPage() {
                   </p>
 
                   <h3 className="mt-2 text-xl font-black">
-                    {
-                      documents.filter(
-                        (document) => document.status === "approved",
-                      ).length
-                    }{" "}
+                    {documentSummary.approvedDocuments}{" "}
                     Approved
                   </h3>
 
                   <p className="mt-2 text-sm text-slate-500">
-                    {
-                      documents.filter(
-                        (document) => document.status === "pending",
-                      ).length
-                    }{" "}
+                    {documentSummary.pendingReviewDocuments}{" "}
                     pending review
                   </p>
                 </article>
@@ -580,6 +583,15 @@ export default function ScholarDashboardPage() {
               </div>
               {/* Documents and messages */}
               <div className="mt-8 space-y-8">
+                <StudentTasksSection
+                  tasks={tasks}
+                  isLoading={tasksLoading}
+                  updatingTaskId={updatingTaskId}
+                  error={tasksError}
+                  onRefresh={refreshTasks}
+                  onStatusChange={updateTaskStatus}
+                  onOpenRelatedDocument={openRelatedDocument}
+                />
                 <div id="documents" className="min-w-0 scroll-mt-28">
                   <DocumentsCard
                     documents={documents}
@@ -628,16 +640,20 @@ export default function ScholarDashboardPage() {
                   </div>
 
                   <div className="mt-7 space-y-4">
-                    {notifications.map((notification) => {
-                      const Icon = notification.icon;
-
+                    {notificationsLoading ? (
+                      <p className="text-sm text-slate-500">Loading notifications...</p>
+                    ) : notifications.length === 0 ? (
+                      <p className="rounded-2xl border border-dashed p-6 text-sm text-slate-500">
+                        No in-app notifications yet.
+                      </p>
+                    ) : notifications.map((notification) => {
                       return (
                         <article
-                          key={notification.title}
+                          key={notification.id}
                           className="flex gap-4 rounded-2xl bg-[#F4F7FA] p-5"
                         >
                           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-[#0F2747] shadow-sm">
-                            <Icon size={20} />
+                            <Bell size={20} />
                           </div>
 
                           <div className="min-w-0 flex-1">
@@ -645,12 +661,15 @@ export default function ScholarDashboardPage() {
                               <p className="font-black">{notification.title}</p>
 
                               <span className="shrink-0 text-xs text-slate-400">
-                                {notification.time}
+                                {new Intl.DateTimeFormat("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                }).format(new Date(notification.created_at))}
                               </span>
                             </div>
 
                             <p className="mt-2 text-sm leading-6 text-slate-500">
-                              {notification.description}
+                              {notification.body}
                             </p>
                           </div>
                         </article>
@@ -754,43 +773,24 @@ export default function ScholarDashboardPage() {
                   ))}
                 </div>
               </section>
-              <section
-                id="profile"
-                className="scroll-mt-28 mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8"
-              >
-                <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
-                  Profile
-                </p>
-                <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-4">
-                    <UserButton
-                      appearance={{ elements: { avatarBox: "h-14 w-14" } }}
-                    />
-                    <div>
-                      <h2 className="text-2xl font-black">{studentName}</h2>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {user.primaryEmailAddress?.emailAddress}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="max-w-xl text-sm leading-6 text-slate-600">
-                    Use your profile avatar to manage your Clerk account.
-                    Additional academic and immigration profile fields will be
-                    added in the dedicated Profile module.
-                  </p>
-                </div>
-              </section>
-              {profileError ? (
+              {profile ? (
+                <StudentProfileSection
+                  key={profile.student?.updated_at ?? profile.identity.id}
+                  profile={profile}
+                  isSaving={profileSaving}
+                  error={profileError}
+                  successMessage={profileSuccessMessage}
+                  onSave={saveProfile}
+                />
+              ) : null}
+              {crmProfileError ? (
                 <div className="mt-8 rounded-3xl border border-red-200 bg-red-50 p-5 text-sm leading-6 text-red-800">
-                  {profileError}
+                  {crmProfileError}
                 </div>
               ) : (
                 <div className="mt-8 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 text-sm leading-6 text-emerald-900">
-                  Your Clerk account, Supabase student profile, application
-                  progress, document records, and realtime messaging are
-                  connected. Appointments, notifications, and deadlines remain
-                  sample information until their individual dashboard features
-                  are connected.
+                  Your CRM identity, student profile, application progress,
+                  document records, and realtime messaging are connected.
                 </div>
               )}{" "}
             </div>

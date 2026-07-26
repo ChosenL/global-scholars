@@ -3,6 +3,7 @@
 import MessagesSection from "@/app/scholar-dashboard/components/MessagesSection";
 
 import type { AdvisorStudent } from "../hooks/useAdvisorStudents";
+import { useStudentReadiness } from "../hooks/useStudentReadiness";
 
 import StudentAppointmentsCard from "./StudentAppointmentsCard";
 import StudentDocumentsCard from "./StudentDocumentsCard";
@@ -18,23 +19,32 @@ interface StudentWorkspaceProps {
 export default function StudentWorkspace({
   student,
 }: StudentWorkspaceProps) {
+  const readiness = useStudentReadiness(student.profileId);
+  const readinessScore = readiness?.total_score ?? 0;
+
   return (
     <div className="w-full min-w-0 max-w-none">
       <div className="grid w-full min-w-0 items-start gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
         <aside className="w-full min-w-0 space-y-6">
-          <StudentNotesCard />
+          <StudentNotesCard
+            studentProfileId={student.profileId}
+            studentName={student.displayName}
+          />
 
-          <StudentTasksCard />
+          <StudentTasksCard
+            studentProfileId={student.profileId}
+            studentName={student.displayName}
+          />
 
           <StudentAppointmentsCard />
 
-          <StudentProgressCard progress={18} />
+          <StudentProgressCard progress={readinessScore} />
         </aside>
 
         <main className="w-full min-w-0 max-w-none space-y-6">
           <StudentHeader
             student={student}
-            progress={18}
+            progress={readinessScore}
           />
 
           <MessagesSection
@@ -44,7 +54,10 @@ export default function StudentWorkspace({
             layout="stacked"
           />
 
-          <StudentDocumentsCard />
+          <StudentDocumentsCard
+            studentProfileId={student.profileId}
+            studentName={student.displayName}
+          />
         </main>
       </div>
     </div>
