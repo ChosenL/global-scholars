@@ -564,6 +564,32 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      operational_rate_limits: {
+        Row: {
+          scope: string;
+          key_hash: string;
+          window_started_at: string;
+          request_count: number;
+          updated_at: string;
+        };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      ai_daily_usage: {
+        Row: {
+          profile_id: string;
+          usage_date: string;
+          request_count: number;
+          input_tokens: number;
+          output_tokens: number;
+          failed_count: number;
+          updated_at: string;
+        };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       conversations: {
         Row: {
           id: string;
@@ -795,6 +821,13 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      operational_readiness: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          database: boolean;
+          checked_at: string;
+        };
+      };
       current_clerk_user_id: {
         Args: Record<PropertyKey, never>;
         Returns: string | null;
@@ -1113,6 +1146,24 @@ export interface Database {
         Args: {
           target_period_start: string;
           target_period_end: string;
+        };
+        Returns: Json;
+      };
+      consume_operational_rate_limit: {
+        Args: {
+          rate_scope: string;
+          rate_key_hash: string;
+          request_limit: number;
+          window_seconds: number;
+        };
+        Returns: Json;
+      };
+      consume_ai_daily_quota: {
+        Args: {
+          daily_request_limit: number;
+          daily_token_limit: number;
+          circuit_failure_threshold: number;
+          circuit_window_minutes: number;
         };
         Returns: Json;
       };

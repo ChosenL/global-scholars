@@ -1,5 +1,13 @@
 # Global Scholars OS release runbook
 
+Certification documents:
+
+- [Production release checklist](./production-release-checklist.md)
+- [Go/no-go approval](./go-no-go-approval-checklist.md)
+- [Phase 2 migration rollback](./phase-2-migration-rollback.md)
+- [Post-deployment verification](./post-deployment-verification.md)
+- [Production sign-off](./production-sign-off.md)
+
 ## Release decision
 
 Use preview first. Promotion to staging requires a clean migration rehearsal,
@@ -56,9 +64,11 @@ staging, and production.
 
 Application rollback is the primary recovery path because release migrations are
 additive. Redeploy the last known-good application version without reverting
-tables. Disable `/api/ai` by removing its provider key if the AI provider is
-degraded; CRM workflows remain available. Preserve domain events during consumer
-failures and replay only idempotent consumers.
+tables. Use `AI_OPERATIONS_ENABLED=false` if the AI provider is degraded; CRM
+workflows remain available. Preserve domain events during consumer failures and
+replay only idempotent consumers. Applied migrations remain immutable; recovery
+uses a reviewed forward corrective migration as specified in the Phase 2
+migration rollback document.
 
 For authentication incidents, disable sign-in at Clerk and preserve CRM data.
 For database incidents, stop mutations, retain read-only diagnostics, and use

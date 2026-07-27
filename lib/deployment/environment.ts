@@ -20,6 +20,7 @@ export function getEnvironmentChecks(): EnvironmentCheck[] {
     },
     { name: "OPENAI_API_KEY", configured: Boolean(process.env.OPENAI_API_KEY), scope: "server", requiredFor: "ai" },
     { name: "OPENAI_SAFETY_SALT", configured: Boolean(process.env.OPENAI_SAFETY_SALT), scope: "server", requiredFor: "ai" },
+    { name: "OPERATIONS_HASH_SALT", configured: Boolean(process.env.OPERATIONS_HASH_SALT || process.env.OPENAI_SAFETY_SALT), scope: "server", requiredFor: "all" },
   ];
 }
 

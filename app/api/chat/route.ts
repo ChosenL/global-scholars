@@ -1,5 +1,15 @@
 import OpenAI from "openai";
-import { NextResponse } from "next/server";
+
+import {
+  createRequestContext,
+  executeAiProviderCall,
+  operationsLogger,
+  rateLimitHeaders,
+  reportError,
+  requestNetworkKey,
+  responseHeaders,
+  consumeRateLimit,
+} from "@/lib/operations";
 
 export const runtime = "nodejs";
 
@@ -99,14 +109,41 @@ function isValidMessage(value: unknown): value is ChatMessage {
 }
 
 export async function POST(request: Request) {
+  const context = createRequestContext(request, "/api/chat");
+  const json = (body: unknown, status = 200, headers: HeadersInit = {}) =>
+    Response.json(body, {
+      status,
+      headers: responseHeaders(context, {
+        "Cache-Control": "no-store",
+        ...headers,
+      }),
+    });
   try {
+    const rateLimit = await consumeRateLimit(
+      "public_chat",
+      requestNetworkKey(request),
+      Number(process.env.PUBLIC_CHAT_RATE_LIMIT || 20),
+      60,
+    );
+    if (!rateLimit.allowed) {
+      operationsLogger.warn("request.rate_limited", {
+        ...context,
+        statusCode: 429,
+      });
+      return json(
+        { error: "Too many questions. Please try again shortly." },
+        429,
+        rateLimitHeaders(rateLimit),
+      );
+    }
+
     if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
+      return json(
         {
           error:
             "The Global Scholars AI Advisor has not been configured correctly.",
         },
-        { status: 500 }
+        503,
       );
     }
 
@@ -114,10 +151,7 @@ export async function POST(request: Request) {
     const rawMessages = body?.messages;
 
     if (!Array.isArray(rawMessages)) {
-      return NextResponse.json(
-        { error: "Please enter a question." },
-        { status: 400 }
-      );
+      return json({ error: "Please enter a question." }, 400);
     }
 
     const messages = rawMessages
@@ -129,46 +163,48 @@ export async function POST(request: Request) {
       }));
 
     if (messages.length === 0) {
-      return NextResponse.json(
-        { error: "Please enter a question." },
-        { status: 400 }
-      );
+      return json({ error: "Please enter a question." }, 400);
     }
 
-    const response = await openai.responses.create({
-      model: "gpt-5.6-luna",
-      reasoning: {
-        effort: "low",
-      },
-      instructions: advisorInstructions,
-      input: messages,
-      max_output_tokens: 500,
-    });
+    const response = await executeAiProviderCall(
+      "public_chat.response",
+      (signal) => openai.responses.create({
+        model: "gpt-5.6-luna",
+        reasoning: {
+          effort: "low",
+        },
+        instructions: advisorInstructions,
+        input: messages,
+        max_output_tokens: 500,
+      }, { signal }),
+    );
 
     const answer = response.output_text?.trim();
 
     if (!answer) {
-      return NextResponse.json(
+      return json(
         {
           error:
             "I could not prepare an answer. Please contact info@globalscholarspathway.com.",
         },
-        { status: 500 }
+        502,
       );
     }
 
-    return NextResponse.json({
-      message: answer,
+    operationsLogger.info("request.completed", {
+      ...context,
+      statusCode: 200,
+      durationMs: Date.now() - context.startedAt,
     });
+    return json({ message: answer });
   } catch (error) {
-    console.error("Global Scholars AI Advisor error:", error);
-
-    return NextResponse.json(
+    await reportError({ error, context });
+    return json(
       {
         error:
           "The Global Scholars AI Advisor is temporarily unavailable. Please try again shortly.",
       },
-      { status: 500 }
+      503,
     );
   }
 }
