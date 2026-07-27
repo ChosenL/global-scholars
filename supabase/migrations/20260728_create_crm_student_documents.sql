@@ -139,7 +139,7 @@ set search_path = ''
 as $$
 declare
   previous_document crm.student_documents;
-  current_role text;
+  actor_role text;
 begin
   if not exists (
     select 1 from crm.profiles as p
@@ -212,8 +212,8 @@ begin
       raise exception 'Document upload and revision identity fields are immutable.';
     end if;
 
-    current_role := crm.current_profile_role();
-    if current_role = 'student' and (
+    actor_role := crm.current_profile_role();
+    if actor_role = 'student' and (
       new.status <> old.status
       or new.review_notes is distinct from old.review_notes
       or new.reviewed_by_profile_id is distinct from old.reviewed_by_profile_id

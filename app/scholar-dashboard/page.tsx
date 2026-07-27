@@ -22,7 +22,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { useCrmProfile } from "@/app/hooks/useCrmProfile";
 import DocumentsCard from "./components/DocumentsCard";
 import MessagesSection from "./components/MessagesSection";
@@ -90,6 +90,8 @@ const sidebarLinks = [
   { label: "Profile", icon: User, target: "profile" },
 ] as const;
 
+const ROOT_DASHBOARD_SECTION = "dashboard";
+
 export default function ScholarDashboardPage() {
   const {
     profile: crmProfile,
@@ -97,7 +99,7 @@ export default function ScholarDashboardPage() {
     error: crmProfileError,
   } = useCrmProfile();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("dashboard");
+  const [activeSection, setActiveSection] = useState(ROOT_DASHBOARD_SECTION);
   const { isLoaded, isSignedIn, user } = useUser();
   const {
     profile,
@@ -139,6 +141,24 @@ export default function ScholarDashboardPage() {
     notifications,
     isLoading: notificationsLoading,
   } = useNotifications(crmProfile?.id ?? null);
+
+  useLayoutEffect(() => {
+    const previousScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+
+    // The root dashboard is the overview route. Never let browser history
+    // restore a previous in-page section such as Messages on entry or refresh.
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+    return () => {
+      window.history.scrollRestoration = previousScrollRestoration;
+    };
+  }, [
+    isLoaded,
+    isSignedIn,
+    crmProfileLoading,
+    profileLoading,
+  ]);
 
   const studentName =
     profile?.identity.display_name ||

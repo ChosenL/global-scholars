@@ -140,12 +140,20 @@ as $$
       definition.conditions = '{}'::jsonb
       or (
         (not (definition.conditions ? 'aggregate_type')
-          or definition.conditions->>'aggregate_type' = event.aggregate_type)
+          or (
+            (definition.conditions ->> 'aggregate_type')
+              = event.aggregate_type
+          ))
         and (not (definition.conditions ? 'has_student')
-          or (definition.conditions->>'has_student')::boolean
-            = (event.student_profile_id is not null))
+          or (
+            ((definition.conditions ->> 'has_student')::boolean)
+              = (event.student_profile_id is not null)
+          ))
         and (not (definition.conditions ? 'payload_contains')
-          or event.payload @> definition.conditions->'payload_contains')
+          or (
+            event.payload
+              @> (definition.conditions -> 'payload_contains')
+          ))
       )
     );
 $$;
