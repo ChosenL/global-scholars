@@ -1,5 +1,8 @@
 import type { OrganizationStudentMembership } from "@/lib/crm/organizations";
-import { assignStudent } from "@/lib/crm/organizations";
+import {
+  assignStudent,
+  listOrganizationStudents,
+} from "@/lib/crm/organizations";
 import {
   optionalBoolean,
   optionalString,
@@ -10,6 +13,15 @@ import { handleOrganizationRoute } from "@/lib/api/organizationRoute";
 
 interface StudentRouteContext {
   params: Promise<{ organizationId: string }>;
+}
+
+export async function GET(request: Request, { params }: StudentRouteContext) {
+  const { organizationId } = await params;
+  return handleOrganizationRoute(
+    request,
+    "/api/organizations/[organizationId]/students",
+    (supabase) => listOrganizationStudents(supabase, organizationId),
+  );
 }
 
 export async function POST(request: Request, { params }: StudentRouteContext) {

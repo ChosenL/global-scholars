@@ -5,21 +5,14 @@ type PlatformRole = "student" | "advisor" | "admin";
 
 const SCHOLAR_DASHBOARD = "/scholar-dashboard";
 const ADVISOR_DASHBOARD = "/advisor-dashboard";
+const ORGANIZATIONS = "/organizations";
 
-function isRouteOrChild(
-  pathname: string,
-  route: string,
-): boolean {
+function isRouteOrChild(pathname: string, route: string): boolean {
   return pathname === route || pathname.startsWith(`${route}/`);
 }
 
-function getPlatformRole(
-  sessionClaims: unknown,
-): PlatformRole | null {
-  if (
-    !sessionClaims ||
-    typeof sessionClaims !== "object"
-  ) {
+function getPlatformRole(sessionClaims: unknown): PlatformRole | null {
+  if (!sessionClaims || typeof sessionClaims !== "object") {
     return null;
   }
 
@@ -31,11 +24,7 @@ function getPlatformRole(
 
   const role = claims.metadata?.role;
 
-  if (
-    role === "student" ||
-    role === "advisor" ||
-    role === "admin"
-  ) {
+  if (role === "student" || role === "advisor" || role === "admin") {
     return role;
   }
 
@@ -45,18 +34,14 @@ function getPlatformRole(
 export default clerkMiddleware(async (auth, request) => {
   const pathname = request.nextUrl.pathname;
 
-  const isScholarDashboard = isRouteOrChild(
-    pathname,
-    SCHOLAR_DASHBOARD,
-  );
+  const isScholarDashboard = isRouteOrChild(pathname, SCHOLAR_DASHBOARD);
 
-  const isAdvisorDashboard = isRouteOrChild(
-    pathname,
-    ADVISOR_DASHBOARD,
-  );
+  const isAdvisorDashboard = isRouteOrChild(pathname, ADVISOR_DASHBOARD);
+
+  const isOrganizationManagement = isRouteOrChild(pathname, ORGANIZATIONS);
 
   const isProtectedDashboard =
-    isScholarDashboard || isAdvisorDashboard;
+    isScholarDashboard || isAdvisorDashboard || isOrganizationManagement;
 
   if (!isProtectedDashboard) {
     return NextResponse.next();
@@ -67,22 +52,20 @@ export default clerkMiddleware(async (auth, request) => {
   const { sessionClaims } = await auth();
   const role = getPlatformRole(sessionClaims);
 
-  if (
-    isScholarDashboard &&
-    (role === "advisor" || role === "admin")
-  ) {
-    return NextResponse.redirect(
-      new URL(ADVISOR_DASHBOARD, request.url),
-    );
+  if (isScholarDashboard && (role === "advisor" || role === "admin")) {
+    return NextResponse.redirect(new URL(ADVISOR_DASHBOARD, request.url));
   }
 
-  if (
-    isAdvisorDashboard &&
-    role === "student"
-  ) {
-    return NextResponse.redirect(
-      new URL(SCHOLAR_DASHBOARD, request.url),
-    );
+  if (isAdvisorDashboard && role === "student") {
+    return NextResponse.redirect(new URL(SCHOLAR_DASHBOARD, request.url));
+  }
+
+  if (isOrganizationManagement && role === "student") {
+    return NextResponse.redirect(new URL(SCHOLAR_DASHBOARD, request.url));
+  }
+
+  if (isOrganizationManagement && role === "advisor") {
+    return NextResponse.redirect(new URL(ADVISOR_DASHBOARD, request.url));
   }
 
   /*

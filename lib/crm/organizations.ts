@@ -420,6 +420,40 @@ export async function listOrganizations(
   }, "Organizations could not be loaded.");
 }
 
+export async function listOrganizationAdvisors(
+  supabase: SupabaseClient,
+  organizationId: string,
+): Promise<OrganizationAdvisor[]> {
+  return execute(async () => {
+    const { data, error } = await supabase
+      .schema("crm")
+      .from("organization_advisors")
+      .select("*")
+      .eq("organization_id", requireCrmUuid(organizationId, "Organization"))
+      .is("ends_at", null)
+      .order("starts_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as OrganizationAdvisor[];
+  }, "Organization advisors could not be loaded.");
+}
+
+export async function listOrganizationStudents(
+  supabase: SupabaseClient,
+  organizationId: string,
+): Promise<OrganizationStudent[]> {
+  return execute(async () => {
+    const { data, error } = await supabase
+      .schema("crm")
+      .from("organization_students")
+      .select("*")
+      .eq("organization_id", requireCrmUuid(organizationId, "Organization"))
+      .eq("status", "active")
+      .order("starts_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as OrganizationStudent[];
+  }, "Organization students could not be loaded.");
+}
+
 export async function assignAdvisor(
   supabase: SupabaseClient,
   input: AssignAdvisorInput,

@@ -246,10 +246,12 @@ authoritative authorization and audit boundary.
 
 ### Read Endpoints
 
-| Method and path                           | Purpose                            |
-| ----------------------------------------- | ---------------------------------- |
-| `GET /api/organizations`                  | Offset-paginated search and filter |
-| `GET /api/organizations/{organizationId}` | Authorized organization detail     |
+| Method and path                                    | Purpose                            |
+| -------------------------------------------------- | ---------------------------------- |
+| `GET /api/organizations`                           | Offset-paginated search and filter |
+| `GET /api/organizations/{organizationId}`          | Authorized organization detail     |
+| `GET /api/organizations/{organizationId}/advisors` | Active advisor assignments         |
+| `GET /api/organizations/{organizationId}/students` | Active student memberships         |
 
 ### Mutation Endpoints
 
