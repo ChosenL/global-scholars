@@ -372,6 +372,7 @@ export interface Database {
       student_tasks: {
         Row: {
           id: string;
+          application_id: string | null;
           student_profile_id: string;
           title: string;
           description: string | null;
@@ -642,11 +643,15 @@ export interface Database {
       student_applications: {
         Row: {
           id: string;
+          organization_id: string | null;
           student_profile_id: string;
           intake_id: string;
           advisor_profile_id: string | null;
           status: string;
           external_reference: string | null;
+          tuition_amount: number | null;
+          tuition_currency: string | null;
+          tuition_source: string | null;
           submitted_at: string | null;
           closed_at: string | null;
           withdrawn_at: string | null;
