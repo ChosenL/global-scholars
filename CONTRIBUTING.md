@@ -72,8 +72,16 @@ Run the following before opening a pull request:
 npm run typecheck
 npm run lint
 npm test
+npm run test:e2e
 npm run build
 git diff --check
+```
+
+Playwright starts a local application server for end-to-end tests. Install its
+Chromium browser once after `npm ci`:
+
+```bash
+npx playwright install chromium
 ```
 
 The Git hooks provide additional local safeguards:

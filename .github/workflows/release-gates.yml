@@ -24,4 +24,11 @@ jobs:
           CLERK_SECRET_KEY: sk_test_release_validation
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: release-validation-key
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+        env:
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_release_validation
+          CLERK_SECRET_KEY: sk_test_release_validation
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: release-validation-key
       - run: git diff --check
