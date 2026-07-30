@@ -2,7 +2,7 @@
 
 ## Status and Terminology
 
-This document defines the Version 1.1 architecture formerly described as “Institution Management.” Persistence phase 1 is represented by the additive `20260823_create_crm_organizations.sql` migration and generated database types. The service phase is represented by `20260824_create_crm_organization_services.sql` and `lib/crm/organizations.ts`, which provide administrator-authorized mutation RPCs, RLS-protected reads, validation, and structured errors. UI, pages, application APIs, customer provisioning, and broader authorization changes remain out of scope and are not implemented.
+This document defines the Version 1.1 architecture formerly described as “Institution Management.” Persistence phase 1 is represented by the additive `20260823_create_crm_organizations.sql` migration and generated database types. The service phase is represented by `20260824_create_crm_organization_services.sql` and `lib/crm/organizations.ts`, which provide administrator-authorized mutation RPCs, RLS-protected reads, validation, and structured errors. The initial API phase exposes those service operations through authenticated Route Handlers. UI, pages, customer provisioning, and broader authorization changes remain out of scope and are not implemented.
 
 The proposed entity represents **customer and partner organizations that use or participate in Global Scholars OS**. It does not represent universities that students apply to.
 
@@ -238,31 +238,37 @@ Recommended authorization helpers include `can_view_organization(uuid)`, `can_ma
 
 ## 6. API Design
 
-Thin authenticated route handlers or server-side service functions should call secure database RPCs rather than writing tables directly.
+Authenticated Next.js Route Handlers now provide the initial Organization API.
+Every handler calls the Organization Service Layer with the caller's
+Clerk-backed Supabase client, preserving RLS. Mutations perform an administrator
+role preflight before calling the service; the secure service RPCs remain the
+authoritative authorization and audit boundary.
 
-### Proposed Read Endpoints
+### Read Endpoints
 
-| Method and path                                    | Purpose                                   |
-| -------------------------------------------------- | ----------------------------------------- |
-| `GET /api/organizations`                           | Cursor-paginated search and filter        |
-| `GET /api/organizations/{organizationId}`          | Authorized organization detail            |
-| `GET /api/organizations/{organizationId}/advisors` | Active and authorized advisor assignments |
-| `GET /api/organizations/{organizationId}/students` | Authorized, paginated student memberships |
+| Method and path                           | Purpose                            |
+| ----------------------------------------- | ---------------------------------- |
+| `GET /api/organizations`                  | Offset-paginated search and filter |
+| `GET /api/organizations/{organizationId}` | Authorized organization detail     |
 
-### Proposed Mutation Endpoints
+### Mutation Endpoints
 
-| Method and path                                                      | Purpose                                                                   |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `POST /api/organizations`                                            | Create through `crm.create_organization(...)`                             |
-| `PATCH /api/organizations/{organizationId}`                          | Update through `crm.update_organization(...)` with a version precondition |
-| `POST /api/organizations/{organizationId}/archive`                   | Archive through `crm.archive_organization(...)`                           |
-| `POST /api/organizations/{organizationId}/reactivate`                | Optional controlled reactivation                                          |
-| `POST /api/organizations/{organizationId}/advisors`                  | Assign through `crm.assign_organization_advisor(...)`                     |
-| `DELETE /api/organizations/{organizationId}/advisors/{assignmentId}` | End, not delete, an advisor assignment                                    |
-| `POST /api/organizations/{organizationId}/students`                  | Associate through `crm.associate_organization_student(...)`               |
-| `DELETE /api/organizations/{organizationId}/students/{membershipId}` | End, not delete, a student membership                                     |
+| Method and path                                                      | Purpose                                                  |
+| -------------------------------------------------------------------- | -------------------------------------------------------- |
+| `POST /api/organizations`                                            | Create through `crm.create_organization(...)`            |
+| `PATCH /api/organizations/{organizationId}`                          | Update through `crm.update_organization(...)`            |
+| `POST /api/organizations/{organizationId}/archive`                   | Archive through `crm.archive_organization(...)`          |
+| `POST /api/organizations/{organizationId}/advisors`                  | Assign through `crm.assign_organization_advisor(...)`    |
+| `DELETE /api/organizations/{organizationId}/advisors/{assignmentId}` | End, not delete, an advisor assignment                   |
+| `POST /api/organizations/{organizationId}/students`                  | Associate through `crm.assign_organization_student(...)` |
+| `DELETE /api/organizations/{organizationId}/students/{membershipId}` | End, not delete, a student membership                    |
 
-All mutation requests should use schema validation, return stable error codes, support request correlation, and use idempotency keys where retries could duplicate relationships. Responses should expose CRM UUIDs only to authorized clients and must not expose Clerk identifiers.
+All routes return `{ "ok": true, "data": ... }` on success or
+`{ "ok": false, "error": { "code": "...", "message": "..." } }` on failure.
+Payloads are validated before service execution, responses are private and
+uncached, request/correlation identifiers are returned as headers, and internal
+database errors are sent only to the operational error pipeline. Responses
+expose CRM UUIDs only to authorized clients and never expose Clerk identifiers.
 
 ## 7. UI Overview
 
