@@ -78,6 +78,59 @@ export function getOrganizationStudents(
   return apiRequest(`/api/organizations/${encodeURIComponent(id)}/students`);
 }
 
+export function assignOrganizationAdvisor(
+  organizationId: string,
+  input: {
+    advisorProfileId: string;
+    assignmentRole: "primary" | "support" | "manager";
+  },
+): Promise<OrganizationAdvisor> {
+  return apiRequest(
+    `/api/organizations/${encodeURIComponent(organizationId)}/advisors`,
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+  );
+}
+
+export function removeOrganizationAdvisor(
+  organizationId: string,
+  assignmentId: string,
+): Promise<OrganizationAdvisor> {
+  return apiRequest(
+    `/api/organizations/${encodeURIComponent(organizationId)}/advisors/${encodeURIComponent(assignmentId)}`,
+    { method: "DELETE" },
+  );
+}
+
+export function assignOrganizationStudent(
+  organizationId: string,
+  input: {
+    studentProfileId: string;
+    membershipType: "client" | "sponsored" | "referred" | "managed";
+    isPrimary: boolean;
+  },
+): Promise<OrganizationStudent> {
+  return apiRequest(
+    `/api/organizations/${encodeURIComponent(organizationId)}/students`,
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+  );
+}
+
+export function removeOrganizationStudent(
+  organizationId: string,
+  membershipId: string,
+): Promise<OrganizationStudent> {
+  return apiRequest(
+    `/api/organizations/${encodeURIComponent(organizationId)}/students/${encodeURIComponent(membershipId)}`,
+    { method: "DELETE" },
+  );
+}
+
 function toPayload(values: OrganizationFormValues) {
   return {
     name: values.name,
