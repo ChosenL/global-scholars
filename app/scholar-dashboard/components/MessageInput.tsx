@@ -29,6 +29,7 @@ import type { Message } from "../types/dashboard";
 const MAX_ATTACHMENT_COUNT = 5;
 
 interface MessageInputProps {
+  allowAutoFocus?: boolean;
   disabled?: boolean;
   isSending?: boolean;
   isSendingAttachment?: boolean;
@@ -68,6 +69,7 @@ function getFileKey(file: File): string {
 }
 
 export default function MessageInput({
+  allowAutoFocus = true,
   disabled = false,
   isSending = false,
   isSendingAttachment = false,
@@ -93,21 +95,14 @@ export default function MessageInput({
   const typingStopTimerRef = useRef<number | null>(null);
 
   const normalizedBody = body.trim();
-  const composerIsBusy =
-    isSending || isSendingAttachment || isUploadingQueue;
+  const composerIsBusy = isSending || isSendingAttachment || isUploadingQueue;
 
-  const canSend =
-    normalizedBody.length > 0 &&
-    !disabled &&
-    !composerIsBusy;
+  const canSend = normalizedBody.length > 0 && !disabled && !composerIsBusy;
 
   const remainingCharacters = maxLength - body.length;
 
   const replyPreview = useMemo(
-    () =>
-      replyToMessage
-        ? getReplyPreview(replyToMessage)
-        : "",
+    () => (replyToMessage ? getReplyPreview(replyToMessage) : ""),
     [replyToMessage],
   );
 
@@ -153,9 +148,11 @@ export default function MessageInput({
   const resetComposer = (): void => {
     setBody("");
 
-    window.requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-    });
+    if (allowAutoFocus) {
+      window.requestAnimationFrame(() => {
+        textareaRef.current?.focus();
+      });
+    }
   };
 
   const resetFileInput = (): void => {
@@ -178,23 +175,18 @@ export default function MessageInput({
 
     await onSend({
       body: normalizedBody,
-      replyToMessageId:
-        replyToMessage?.id ?? undefined,
+      replyToMessageId: replyToMessage?.id ?? undefined,
     });
 
     resetComposer();
   };
 
-  const handleSubmit = (
-    event: FormEvent<HTMLFormElement>,
-  ): void => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
     void submitMessage();
   };
 
-  const handleKeyDown = (
-    event: KeyboardEvent<HTMLTextAreaElement>,
-  ): void => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
     if (
       event.key === "Enter" &&
       !event.shiftKey &&
@@ -205,23 +197,18 @@ export default function MessageInput({
     }
   };
 
-  const validateAndQueueFiles = (
-    incomingFiles: File[],
-  ): void => {
+  const validateAndQueueFiles = (incomingFiles: File[]): void => {
     if (!onSendAttachment || incomingFiles.length === 0) {
       return;
     }
 
-    const existingKeys = new Set(
-      queuedFiles.map(getFileKey),
-    );
+    const existingKeys = new Set(queuedFiles.map(getFileKey));
 
     const uniqueIncomingFiles = incomingFiles.filter(
       (file) => !existingKeys.has(getFileKey(file)),
     );
 
-    const availableSlots =
-      MAX_ATTACHMENT_COUNT - queuedFiles.length;
+    const availableSlots = MAX_ATTACHMENT_COUNT - queuedFiles.length;
 
     if (availableSlots <= 0) {
       setAttachmentError(
@@ -230,19 +217,13 @@ export default function MessageInput({
       return;
     }
 
-    const filesToValidate = uniqueIncomingFiles.slice(
-      0,
-      availableSlots,
-    );
+    const filesToValidate = uniqueIncomingFiles.slice(0, availableSlots);
 
     for (const file of filesToValidate) {
-      const validationError =
-        validateMessageAttachmentFile(file);
+      const validationError = validateMessageAttachmentFile(file);
 
       if (validationError) {
-        setAttachmentError(
-          `${file.name}: ${validationError}`,
-        );
+        setAttachmentError(`${file.name}: ${validationError}`);
         return;
       }
     }
@@ -257,10 +238,7 @@ export default function MessageInput({
       setAttachmentError("");
     }
 
-    setQueuedFiles((current) => [
-      ...current,
-      ...filesToValidate,
-    ]);
+    setQueuedFiles((current) => [...current, ...filesToValidate]);
   };
 
   const handleAttachmentChange = (
@@ -273,18 +251,12 @@ export default function MessageInput({
 
   const removeQueuedFile = (fileKey: string): void => {
     setQueuedFiles((current) =>
-      current.filter(
-        (file) => getFileKey(file) !== fileKey,
-      ),
+      current.filter((file) => getFileKey(file) !== fileKey),
     );
   };
 
   const uploadQueuedFiles = async (): Promise<void> => {
-    if (
-      queuedFiles.length === 0 ||
-      !onSendAttachment ||
-      composerIsBusy
-    ) {
+    if (queuedFiles.length === 0 || !onSendAttachment || composerIsBusy) {
       return;
     }
 
@@ -295,8 +267,7 @@ export default function MessageInput({
       for (const file of queuedFiles) {
         await onSendAttachment({
           file,
-          replyToMessageId:
-            replyToMessage?.id ?? undefined,
+          replyToMessageId: replyToMessage?.id ?? undefined,
         });
       }
 
@@ -312,9 +283,7 @@ export default function MessageInput({
     }
   };
 
-  const handleDragEnter = (
-    event: DragEvent<HTMLDivElement>,
-  ): void => {
+  const handleDragEnter = (event: DragEvent<HTMLDivElement>): void => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -326,9 +295,7 @@ export default function MessageInput({
     setIsDragging(true);
   };
 
-  const handleDragOver = (
-    event: DragEvent<HTMLDivElement>,
-  ): void => {
+  const handleDragOver = (event: DragEvent<HTMLDivElement>): void => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -342,25 +309,18 @@ export default function MessageInput({
     }
   };
 
-  const handleDragLeave = (
-    event: DragEvent<HTMLDivElement>,
-  ): void => {
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>): void => {
     event.preventDefault();
     event.stopPropagation();
 
-    dragDepthRef.current = Math.max(
-      0,
-      dragDepthRef.current - 1,
-    );
+    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
 
     if (dragDepthRef.current === 0) {
       setIsDragging(false);
     }
   };
 
-  const handleDrop = (
-    event: DragEvent<HTMLDivElement>,
-  ): void => {
+  const handleDrop = (event: DragEvent<HTMLDivElement>): void => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -371,9 +331,7 @@ export default function MessageInput({
       return;
     }
 
-    const files = Array.from(
-      event.dataTransfer.files ?? [],
-    );
+    const files = Array.from(event.dataTransfer.files ?? []);
 
     validateAndQueueFiles(files);
   };
@@ -408,10 +366,7 @@ export default function MessageInput({
       {replyToMessage ? (
         <div className="mb-3 flex items-start gap-3 rounded-xl border border-[#C8A24A]/30 bg-[#FFF9EA] px-3 py-3">
           <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#8A6A1F] shadow-sm">
-            <CornerUpLeft
-              aria-hidden="true"
-              className="h-4 w-4"
-            />
+            <CornerUpLeft aria-hidden="true" className="h-4 w-4" />
           </div>
 
           <div className="min-w-0 flex-1">
@@ -437,10 +392,7 @@ export default function MessageInput({
             ].join(" ")}
             aria-label="Cancel reply"
           >
-            <X
-              aria-hidden="true"
-              className="h-4 w-4"
-            />
+            <X aria-hidden="true" className="h-4 w-4" />
           </button>
         </div>
       ) : null}
@@ -450,14 +402,9 @@ export default function MessageInput({
           role="alert"
           className="mb-3 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
         >
-          <AlertCircle
-            aria-hidden="true"
-            className="mt-0.5 h-4 w-4 shrink-0"
-          />
+          <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
 
-          <p className="min-w-0 flex-1 leading-5">
-            {attachmentError}
-          </p>
+          <p className="min-w-0 flex-1 leading-5">{attachmentError}</p>
 
           <button
             type="button"
@@ -465,10 +412,7 @@ export default function MessageInput({
             className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md hover:bg-red-100"
             aria-label="Dismiss attachment error"
           >
-            <X
-              aria-hidden="true"
-              className="h-3.5 w-3.5"
-            />
+            <X aria-hidden="true" className="h-3.5 w-3.5" />
           </button>
         </div>
       ) : null}
@@ -506,10 +450,7 @@ export default function MessageInput({
                   className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5"
                 >
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#F4F7FA] text-[#0F2747]">
-                    <FileText
-                      aria-hidden="true"
-                      className="h-4 w-4"
-                    />
+                    <FileText aria-hidden="true" className="h-4 w-4" />
                   </div>
 
                   <div className="min-w-0 flex-1">
@@ -524,17 +465,12 @@ export default function MessageInput({
 
                   <button
                     type="button"
-                    onClick={() =>
-                      removeQueuedFile(fileKey)
-                    }
+                    onClick={() => removeQueuedFile(fileKey)}
                     disabled={composerIsBusy}
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                     aria-label={`Remove ${file.name}`}
                   >
-                    <X
-                      aria-hidden="true"
-                      className="h-4 w-4"
-                    />
+                    <X aria-hidden="true" className="h-4 w-4" />
                   </button>
                 </div>
               );
@@ -557,25 +493,15 @@ export default function MessageInput({
             ].join(" ")}
           >
             {isUploadingQueue || isSendingAttachment ? (
-              <Loader2
-                aria-hidden="true"
-                className="h-4 w-4 animate-spin"
-              />
+              <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
             ) : (
-              <UploadCloud
-                aria-hidden="true"
-                className="h-4 w-4"
-              />
+              <UploadCloud aria-hidden="true" className="h-4 w-4" />
             )}
 
             {isUploadingQueue || isSendingAttachment
-              ? `Uploading ${
-                  uploadingAttachmentName ?? "file"
-                }`
+              ? `Uploading ${uploadingAttachmentName ?? "file"}`
               : `Upload ${
-                  queuedFiles.length === 1
-                    ? "attachment"
-                    : "attachments"
+                  queuedFiles.length === 1 ? "attachment" : "attachments"
                 }`}
           </button>
         </div>
@@ -587,10 +513,7 @@ export default function MessageInput({
           className="mb-3 flex items-center gap-3 rounded-xl border border-[#C8A24A]/30 bg-[#FFF9EA] px-3 py-3"
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#8A6A1F] shadow-sm">
-            <Loader2
-              aria-hidden="true"
-              className="h-4 w-4 animate-spin"
-            />
+            <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
           </div>
 
           <div className="min-w-0">
@@ -599,8 +522,7 @@ export default function MessageInput({
             </p>
 
             <p className="mt-1 truncate text-sm text-slate-600">
-              {uploadingAttachmentName ??
-                "Preparing your file..."}
+              {uploadingAttachmentName ?? "Preparing your file..."}
             </p>
             <div
               className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#C8A24A]/20"
@@ -627,9 +549,7 @@ export default function MessageInput({
         <textarea
           ref={textareaRef}
           value={body}
-          onChange={(event) =>
-            handleBodyChange(event.target.value)
-          }
+          onChange={(event) => handleBodyChange(event.target.value)}
           onBlur={stopTyping}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
@@ -653,9 +573,7 @@ export default function MessageInput({
                   ref={fileInputRef}
                   type="file"
                   multiple
-                  accept={
-                    ACCEPTED_MESSAGE_ATTACHMENT_EXTENSIONS
-                  }
+                  accept={ACCEPTED_MESSAGE_ATTACHMENT_EXTENSIONS}
                   onChange={handleAttachmentChange}
                   disabled={disabled || composerIsBusy}
                   className="sr-only"
@@ -683,20 +601,13 @@ export default function MessageInput({
                   aria-label="Add attachments"
                   title="Add PDF, DOCX, JPG, or PNG attachments"
                 >
-                  <Paperclip
-                    aria-hidden="true"
-                    className="h-5 w-5"
-                  />
+                  <Paperclip aria-hidden="true" className="h-5 w-5" />
                 </button>
               </>
             ) : null}
 
             <div className="hidden items-center gap-1.5 text-xs text-slate-400 sm:flex">
-              <FileText
-                aria-hidden="true"
-                className="h-3.5 w-3.5"
-              />
-
+              <FileText aria-hidden="true" className="h-3.5 w-3.5" />
               Drag files here or choose up to {MAX_ATTACHMENT_COUNT}
             </div>
           </div>
@@ -727,15 +638,9 @@ export default function MessageInput({
               ].join(" ")}
             >
               {isSending ? (
-                <Loader2
-                  aria-hidden="true"
-                  className="h-4 w-4 animate-spin"
-                />
+                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
               ) : (
-                <Send
-                  aria-hidden="true"
-                  className="h-4 w-4"
-                />
+                <Send aria-hidden="true" className="h-4 w-4" />
               )}
 
               <span className="hidden sm:inline">

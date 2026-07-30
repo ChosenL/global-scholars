@@ -137,10 +137,9 @@ export default function ScholarDashboardPage() {
     updateStatus: updateTaskStatus,
     openRelatedDocument,
   } = useStudentTasks(crmProfile?.id ?? null);
-  const {
-    notifications,
-    isLoading: notificationsLoading,
-  } = useNotifications(crmProfile?.id ?? null);
+  const { notifications, isLoading: notificationsLoading } = useNotifications(
+    crmProfile?.id ?? null,
+  );
 
   useLayoutEffect(() => {
     const previousScrollRestoration = window.history.scrollRestoration;
@@ -153,12 +152,7 @@ export default function ScholarDashboardPage() {
     return () => {
       window.history.scrollRestoration = previousScrollRestoration;
     };
-  }, [
-    isLoaded,
-    isSignedIn,
-    crmProfileLoading,
-    profileLoading,
-  ]);
+  }, [isLoaded, isSignedIn, crmProfileLoading, profileLoading]);
 
   const studentName =
     profile?.identity.display_name ||
@@ -201,10 +195,7 @@ export default function ScholarDashboardPage() {
     section.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  if (
-    !isLoaded ||
-    (isSignedIn && (crmProfileLoading || profileLoading))
-  ) {
+  if (!isLoaded || (isSignedIn && (crmProfileLoading || profileLoading))) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#071526]">
         <div className="text-center text-white">
@@ -478,13 +469,11 @@ export default function ScholarDashboardPage() {
                   </p>
 
                   <h3 className="mt-2 text-xl font-black">
-                    {documentSummary.approvedDocuments}{" "}
-                    Approved
+                    {documentSummary.approvedDocuments} Approved
                   </h3>
 
                   <p className="mt-2 text-sm text-slate-500">
-                    {documentSummary.pendingReviewDocuments}{" "}
-                    pending review
+                    {documentSummary.pendingReviewDocuments} pending review
                   </p>
                 </article>
 
@@ -613,7 +602,9 @@ export default function ScholarDashboardPage() {
                   onStatusChange={updateTaskStatus}
                   onOpenRelatedDocument={openRelatedDocument}
                 />
-                <PlatformJourneyPanel studentProfileId={crmProfile?.id ?? null} />
+                <PlatformJourneyPanel
+                  studentProfileId={crmProfile?.id ?? null}
+                />
                 <div id="documents" className="min-w-0 scroll-mt-28">
                   <DocumentsCard
                     documents={documents}
@@ -634,11 +625,8 @@ export default function ScholarDashboardPage() {
                   />
                 </div>
 
-                <section
-                  id="messages"
-                  className="min-w-0 scroll-mt-28"
-                >
-                  <MessagesSection />
+                <section id="messages" className="min-w-0 scroll-mt-28">
+                  <MessagesSection isActive={activeSection === "messages"} />
                 </section>
               </div>
               {/* Notifications and deadlines */}
@@ -663,40 +651,46 @@ export default function ScholarDashboardPage() {
 
                   <div className="mt-7 space-y-4">
                     {notificationsLoading ? (
-                      <p className="text-sm text-slate-500">Loading notifications...</p>
+                      <p className="text-sm text-slate-500">
+                        Loading notifications...
+                      </p>
                     ) : notifications.length === 0 ? (
                       <p className="rounded-2xl border border-dashed p-6 text-sm text-slate-500">
                         No in-app notifications yet.
                       </p>
-                    ) : notifications.map((notification) => {
-                      return (
-                        <article
-                          key={notification.id}
-                          className="flex gap-4 rounded-2xl bg-[#F4F7FA] p-5"
-                        >
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-[#0F2747] shadow-sm">
-                            <Bell size={20} />
-                          </div>
-
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-start justify-between gap-3">
-                              <p className="font-black">{notification.title}</p>
-
-                              <span className="shrink-0 text-xs text-slate-400">
-                                {new Intl.DateTimeFormat("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                }).format(new Date(notification.created_at))}
-                              </span>
+                    ) : (
+                      notifications.map((notification) => {
+                        return (
+                          <article
+                            key={notification.id}
+                            className="flex gap-4 rounded-2xl bg-[#F4F7FA] p-5"
+                          >
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-[#0F2747] shadow-sm">
+                              <Bell size={20} />
                             </div>
 
-                            <p className="mt-2 text-sm leading-6 text-slate-500">
-                              {notification.body}
-                            </p>
-                          </div>
-                        </article>
-                      );
-                    })}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-3">
+                                <p className="font-black">
+                                  {notification.title}
+                                </p>
+
+                                <span className="shrink-0 text-xs text-slate-400">
+                                  {new Intl.DateTimeFormat("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                  }).format(new Date(notification.created_at))}
+                                </span>
+                              </div>
+
+                              <p className="mt-2 text-sm leading-6 text-slate-500">
+                                {notification.body}
+                              </p>
+                            </div>
+                          </article>
+                        );
+                      })
+                    )}
                   </div>
                 </section>
 

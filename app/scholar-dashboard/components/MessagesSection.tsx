@@ -8,12 +8,7 @@ import {
   MessageCirclePlus,
   X,
 } from "lucide-react";
-import {
-  type FormEvent,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useMessages } from "../hooks/useMessages";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
 import ChatWindow from "./ChatWindow";
@@ -22,6 +17,7 @@ import ConversationList from "./ConversationList";
 const SUBJECT_MAX_LENGTH = 120;
 
 export interface MessagesSectionProps {
+  isActive?: boolean;
   portalRole?: "student" | "advisor";
   selectedStudentProfileId?: string;
   selectedStudentName?: string;
@@ -29,6 +25,7 @@ export interface MessagesSectionProps {
 }
 
 export default function MessagesSection({
+  isActive = true,
   portalRole = "student",
   selectedStudentProfileId,
   selectedStudentName,
@@ -71,14 +68,11 @@ export default function MessagesSection({
     clearFeedback,
   } = useMessages();
 
-  const [isComposerOpen, setIsComposerOpen] =
-    useState(false);
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
 
-  const [newConversationSubject, setNewConversationSubject] =
-    useState("");
+  const [newConversationSubject, setNewConversationSubject] = useState("");
 
-  const [showMobileChat, setShowMobileChat] =
-    useState(false);
+  const [showMobileChat, setShowMobileChat] = useState(false);
 
   const currentUserId = user?.id ?? "";
   const isAdvisorPortal = portalRole === "advisor";
@@ -102,51 +96,36 @@ export default function MessagesSection({
           !participant.removed_at,
       ),
     );
-  }, [
-    conversations,
-    isAdvisorPortal,
-    selectedStudentProfileId,
-  ]);
+  }, [conversations, isAdvisorPortal, selectedStudentProfileId]);
 
   const visibleConversationIds = useMemo(
-    () =>
-      new Set(
-        visibleConversations.map(
-          (conversation) => conversation.id,
-        ),
-      ),
+    () => new Set(visibleConversations.map((conversation) => conversation.id)),
     [visibleConversations],
   );
 
   const visibleActiveConversation =
-    activeConversation &&
-    visibleConversationIds.has(activeConversation.id)
+    activeConversation && visibleConversationIds.has(activeConversation.id)
       ? activeConversation
       : null;
 
-  const visibleActiveConversationId =
-    visibleActiveConversation?.id ?? null;
+  const visibleActiveConversationId = visibleActiveConversation?.id ?? null;
 
-  const visibleMessages = visibleActiveConversation
-    ? messages
-    : [];
+  const visibleMessages = visibleActiveConversation ? messages : [];
 
   const visibleUnreadCount = useMemo(
     () =>
       visibleConversations.reduce(
-        (total, conversation) =>
-          total + (conversation.unread_count ?? 0),
+        (total, conversation) => total + (conversation.unread_count ?? 0),
         0,
       ),
     [visibleConversations],
   );
 
-  const { typingParticipants, notifyTyping } =
-    useTypingIndicator({
-      conversationId: visibleActiveConversationId,
-      displayName: currentUserDisplayName,
-      role: isAdvisorPortal ? "advisor" : "student",
-    });
+  const { typingParticipants, notifyTyping } = useTypingIndicator({
+    conversationId: visibleActiveConversationId,
+    displayName: currentUserDisplayName,
+    role: isAdvisorPortal ? "advisor" : "student",
+  });
 
   useEffect(() => {
     if (!isAdvisorPortal) {
@@ -155,8 +134,7 @@ export default function MessagesSection({
 
     if (
       visibleConversations.length === 0 ||
-      (activeConversationId &&
-        visibleConversationIds.has(activeConversationId))
+      (activeConversationId && visibleConversationIds.has(activeConversationId))
     ) {
       return;
     }
@@ -171,8 +149,7 @@ export default function MessagesSection({
     visibleConversations,
   ]);
 
-  const normalizedSubject =
-    newConversationSubject.trim();
+  const normalizedSubject = newConversationSubject.trim();
 
   const canCreateConversation =
     !isAdvisorPortal &&
@@ -241,19 +218,14 @@ export default function MessagesSection({
     : "Send questions, receive application updates, and stay connected with your Global Scholars advisor.";
 
   return (
-    <section
-      id="messages"
-      className="w-full min-w-0 max-w-none scroll-mt-28"
-    >
+    <section id="messages" className="w-full min-w-0 max-w-none scroll-mt-28">
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-sm font-black uppercase tracking-[0.22em] text-[#C8A24A]">
             Messages
           </p>
 
-          <h2 className="mt-2 text-3xl font-black text-[#071526]">
-            {heading}
-          </h2>
+          <h2 className="mt-2 text-3xl font-black text-[#071526]">{heading}</h2>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
             {description}
@@ -261,14 +233,9 @@ export default function MessagesSection({
         </div>
 
         <div className="flex items-center gap-3">
-          {(isAdvisorPortal
-            ? visibleUnreadCount
-            : totalUnreadCount) > 0 ? (
+          {(isAdvisorPortal ? visibleUnreadCount : totalUnreadCount) > 0 ? (
             <span className="rounded-full bg-[#FFF4CF] px-3 py-2 text-xs font-black text-[#8A6A1F]">
-              {isAdvisorPortal
-                ? visibleUnreadCount
-                : totalUnreadCount}{" "}
-              unread
+              {isAdvisorPortal ? visibleUnreadCount : totalUnreadCount} unread
             </span>
           ) : null}
 
@@ -287,17 +254,10 @@ export default function MessagesSection({
               ].join(" ")}
             >
               {isCreatingConversation ? (
-                <Loader2
-                  aria-hidden="true"
-                  className="h-4 w-4 animate-spin"
-                />
+                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
               ) : (
-                <MessageCirclePlus
-                  aria-hidden="true"
-                  className="h-4 w-4"
-                />
+                <MessageCirclePlus aria-hidden="true" className="h-4 w-4" />
               )}
-
               New conversation
             </button>
           ) : null}
@@ -324,10 +284,7 @@ export default function MessagesSection({
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-red-100"
             aria-label="Dismiss error"
           >
-            <X
-              aria-hidden="true"
-              className="h-4 w-4"
-            />
+            <X aria-hidden="true" className="h-4 w-4" />
           </button>
         </div>
       ) : null}
@@ -343,9 +300,7 @@ export default function MessagesSection({
               className="mt-0.5 h-5 w-5 shrink-0"
             />
 
-            <p className="leading-6">
-              {successMessage}
-            </p>
+            <p className="leading-6">{successMessage}</p>
           </div>
 
           <button
@@ -354,10 +309,7 @@ export default function MessagesSection({
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-emerald-100"
             aria-label="Dismiss success message"
           >
-            <X
-              aria-hidden="true"
-              className="h-4 w-4"
-            />
+            <X aria-hidden="true" className="h-4 w-4" />
           </button>
         </div>
       ) : null}
@@ -374,24 +326,18 @@ export default function MessagesSection({
             isStacked
               ? "h-[28rem] w-full min-w-0 overflow-hidden"
               : showMobileChat
-              ? "hidden h-full min-h-0 overflow-hidden xl:block"
-              : "block h-full min-h-0 overflow-hidden"
+                ? "hidden h-full min-h-0 overflow-hidden xl:block"
+                : "block h-full min-h-0 overflow-hidden"
           }
         >
           <ConversationList
             conversations={visibleConversations}
-            activeConversationId={
-              visibleActiveConversationId
-            }
+            activeConversationId={visibleActiveConversationId}
             isLoading={isLoadingConversations}
             isCreatingConversation={
-              isAdvisorPortal
-                ? false
-                : isCreatingConversation
+              isAdvisorPortal ? false : isCreatingConversation
             }
-            onSelectConversation={
-              handleSelectConversation
-            }
+            onSelectConversation={handleSelectConversation}
             onStartConversation={openComposer}
           />
         </div>
@@ -401,11 +347,12 @@ export default function MessagesSection({
             isStacked
               ? "h-[calc(100dvh-8rem)] min-h-[36rem] max-h-[52rem] w-full min-w-0 overflow-hidden"
               : showMobileChat
-              ? "block h-full min-h-0 overflow-hidden"
-              : "hidden h-full min-h-0 overflow-hidden xl:block"
+                ? "block h-full min-h-0 overflow-hidden"
+                : "hidden h-full min-h-0 overflow-hidden xl:block"
           }
         >
           <ChatWindow
+            isActive={isActive}
             conversation={visibleActiveConversation}
             messages={visibleMessages}
             currentUserId={currentUserId}
@@ -413,30 +360,18 @@ export default function MessagesSection({
             isLoadingOlderMessages={isLoadingOlderMessages}
             hasMoreMessages={hasMoreMessages}
             isSendingMessage={isSendingMessage}
-            isSendingAttachment={
-              isSendingAttachment
-            }
-            uploadingAttachmentName={
-              uploadingAttachmentName
-            }
-            attachmentUploadProgress={
-              attachmentUploadProgress
-            }
+            isSendingAttachment={isSendingAttachment}
+            uploadingAttachmentName={uploadingAttachmentName}
+            attachmentUploadProgress={attachmentUploadProgress}
             typingParticipants={typingParticipants}
             editingMessageId={editingMessageId}
             deletingMessageId={deletingMessageId}
-            updatingConversationId={
-              updatingConversationId
-            }
+            updatingConversationId={updatingConversationId}
             onSendMessage={sendMessage}
             onSendAttachment={sendAttachment}
             onOpenAttachment={openAttachment}
-            onDownloadAttachment={
-              downloadAttachment
-            }
-            onGetAttachmentPreviewUrl={
-              getAttachmentPreviewUrl
-            }
+            onDownloadAttachment={downloadAttachment}
+            onGetAttachmentPreviewUrl={getAttachmentPreviewUrl}
             onEditMessage={editMessage}
             onDeleteMessage={deleteMessage}
             onRefreshMessages={refreshMessages}
@@ -487,8 +422,8 @@ export default function MessagesSection({
                 </h3>
 
                 <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Add a clear subject so your advisor can
-                  quickly understand what you need help with.
+                  Add a clear subject so your advisor can quickly understand
+                  what you need help with.
                 </p>
               </div>
 
@@ -506,10 +441,7 @@ export default function MessagesSection({
                 ].join(" ")}
                 aria-label="Close dialog"
               >
-                <X
-                  aria-hidden="true"
-                  className="h-5 w-5"
-                />
+                <X aria-hidden="true" className="h-5 w-5" />
               </button>
             </div>
 
@@ -531,9 +463,7 @@ export default function MessagesSection({
                 type="text"
                 value={newConversationSubject}
                 onChange={(event) =>
-                  setNewConversationSubject(
-                    event.target.value,
-                  )
+                  setNewConversationSubject(event.target.value)
                 }
                 maxLength={SUBJECT_MAX_LENGTH}
                 placeholder="Example: Help with my university shortlist"
@@ -555,8 +485,7 @@ export default function MessagesSection({
                 </p>
 
                 <span className="text-xs font-semibold text-slate-400">
-                  {newConversationSubject.length}/
-                  {SUBJECT_MAX_LENGTH}
+                  {newConversationSubject.length}/{SUBJECT_MAX_LENGTH}
                 </span>
               </div>
 
@@ -595,15 +524,10 @@ export default function MessagesSection({
                       className="h-4 w-4 animate-spin"
                     />
                   ) : (
-                    <MessageCirclePlus
-                      aria-hidden="true"
-                      className="h-4 w-4"
-                    />
+                    <MessageCirclePlus aria-hidden="true" className="h-4 w-4" />
                   )}
 
-                  {isCreatingConversation
-                    ? "Starting"
-                    : "Start conversation"}
+                  {isCreatingConversation ? "Starting" : "Start conversation"}
                 </button>
               </div>
             </form>

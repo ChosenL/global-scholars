@@ -11,12 +11,7 @@ import {
   RefreshCw,
   RotateCcw,
 } from "lucide-react";
-import {
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type {
   Conversation,
   ConversationWithDetails,
@@ -27,6 +22,7 @@ import MessageInput from "./MessageInput";
 import type { TypingParticipant } from "../hooks/useTypingIndicator";
 
 interface ChatWindowProps {
+  isActive?: boolean;
   conversation: ConversationWithDetails | null;
   messages: Message[];
   currentUserId: string;
@@ -53,22 +49,14 @@ interface ChatWindowProps {
     messageId: string;
     body: string;
   }) => void | Promise<unknown>;
-  onDeleteMessage: (
-    messageId: string,
-  ) => void | Promise<unknown>;
-  onOpenAttachment?: (
-    message: Message,
-  ) => void | Promise<unknown>;
-  onDownloadAttachment?: (
-    message: Message,
-  ) => void | Promise<unknown>;
+  onDeleteMessage: (messageId: string) => void | Promise<unknown>;
+  onOpenAttachment?: (message: Message) => void | Promise<unknown>;
+  onDownloadAttachment?: (message: Message) => void | Promise<unknown>;
   onGetAttachmentPreviewUrl?: (
     message: Message,
     forceRefresh?: boolean,
   ) => Promise<string>;
-  onRefreshMessages: (
-    conversationId?: string,
-  ) => void | Promise<void>;
+  onRefreshMessages: (conversationId?: string) => void | Promise<void>;
   onLoadOlderMessages: () => void | Promise<void>;
   onUpdateStatus: (input: {
     conversationId: string;
@@ -98,11 +86,7 @@ function formatConversationDate(value: string): {
   }
 
   const now = new Date();
-  const today = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-  );
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   const messageDay = new Date(
     date.getFullYear(),
@@ -111,8 +95,7 @@ function formatConversationDate(value: string): {
   );
 
   const differenceInDays = Math.round(
-    (today.getTime() - messageDay.getTime()) /
-      86_400_000,
+    (today.getTime() - messageDay.getTime()) / 86_400_000,
   );
 
   if (differenceInDays === 0) {
@@ -134,23 +117,16 @@ function formatConversationDate(value: string): {
     label: new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
-      year:
-        date.getFullYear() === now.getFullYear()
-          ? undefined
-          : "numeric",
+      year: date.getFullYear() === now.getFullYear() ? undefined : "numeric",
     }).format(date),
   };
 }
 
-function groupMessagesByDate(
-  messages: Message[],
-): MessageGroup[] {
+function groupMessagesByDate(messages: Message[]): MessageGroup[] {
   const groups: MessageGroup[] = [];
 
   for (const message of messages) {
-    const date = formatConversationDate(
-      message.created_at,
-    );
+    const date = formatConversationDate(message.created_at);
 
     const currentGroup = groups.at(-1);
 
@@ -169,9 +145,7 @@ function groupMessagesByDate(
   return groups;
 }
 
-function getStatusDescription(
-  status: Conversation["status"],
-): string {
+function getStatusDescription(status: Conversation["status"]): string {
   switch (status) {
     case "resolved":
       return "This conversation has been resolved.";
@@ -182,12 +156,8 @@ function getStatusDescription(
   }
 }
 
-function getTypingLabel(
-  participants: TypingParticipant[],
-): string {
-  const names = participants.map(
-    (participant) => participant.displayName,
-  );
+function getTypingLabel(participants: TypingParticipant[]): string {
+  const names = participants.map((participant) => participant.displayName);
 
   if (names.length === 0) {
     return "";
@@ -205,6 +175,7 @@ function getTypingLabel(
 }
 
 export default function ChatWindow({
+  isActive = true,
   conversation,
   messages,
   currentUserId,
@@ -232,19 +203,16 @@ export default function ChatWindow({
   onBack,
   onTypingChange,
 }: ChatWindowProps) {
-  const [replyToMessage, setReplyToMessage] =
-    useState<Message | null>(null);
+  const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
 
-  const [actionsOpen, setActionsOpen] =
-    useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
 
-  const messagesEndRef =
-    useRef<HTMLDivElement | null>(null);
-  const scrollContainerRef =
-    useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const isNearBottomRef = useRef(true);
+  const wasActiveRef = useRef(isActive);
   const previousConversationIdRef = useRef<string | null>(null);
   const previousMessageCountRef = useRef(0);
+  const previousNewestMessageIdRef = useRef<string | null>(null);
 
   const messageGroups = useMemo(
     () => groupMessagesByDate(messages),
@@ -255,8 +223,7 @@ export default function ChatWindow({
     () =>
       conversation?.participants.filter(
         (participant) =>
-          participant.user_id !== currentUserId &&
-          !participant.removed_at,
+          participant.user_id !== currentUserId && !participant.removed_at,
       ) ?? [],
     [conversation, currentUserId],
   );
@@ -264,48 +231,50 @@ export default function ChatWindow({
   const latestOtherParticipantReadAt = useMemo(() => {
     const timestamps = otherParticipants
       .map((participant) => participant.last_read_at)
-      .filter(
-        (value): value is string => Boolean(value),
-      )
+      .filter((value): value is string => Boolean(value))
       .map((value) => new Date(value).getTime())
       .filter((value) => !Number.isNaN(value));
 
-    return timestamps.length > 0
-      ? Math.max(...timestamps)
-      : null;
+    return timestamps.length > 0 ? Math.max(...timestamps) : null;
   }, [otherParticipants]);
 
-  const conversationIsUpdating =
-    conversation?.id === updatingConversationId;
+  const conversationIsUpdating = conversation?.id === updatingConversationId;
 
   const composerDisabled =
-    !conversation ||
-    conversation.status !== "open" ||
-    isLoadingMessages;
+    !conversation || conversation.status !== "open" || isLoadingMessages;
 
   useLayoutEffect(() => {
     const conversationChanged =
       previousConversationIdRef.current !== (conversation?.id ?? null);
-    const messageAdded = messages.length > previousMessageCountRef.current;
     const newestMessage = messages.at(-1);
+    const messageAddedAtBottom =
+      messages.length > previousMessageCountRef.current &&
+      newestMessage?.id !== previousNewestMessageIdRef.current;
     const currentUserSentNewestMessage =
       newestMessage?.sender_id === currentUserId;
+    const becameActive = isActive && !wasActiveRef.current;
+    const scrollContainer = scrollContainerRef.current;
 
     if (
+      isActive &&
+      scrollContainer &&
       messages.length > 0 &&
-      (conversationChanged ||
+      (becameActive ||
+        conversationChanged ||
         currentUserSentNewestMessage ||
-        (messageAdded && isNearBottomRef.current))
+        (messageAddedAtBottom && isNearBottomRef.current))
     ) {
-      messagesEndRef.current?.scrollIntoView({
+      scrollContainer.scrollTo({
+        top: scrollContainer.scrollHeight,
         behavior: conversationChanged ? "auto" : "smooth",
-        block: "end",
       });
     }
 
+    wasActiveRef.current = isActive;
     previousConversationIdRef.current = conversation?.id ?? null;
     previousMessageCountRef.current = messages.length;
-  }, [conversation?.id, currentUserId, messages]);
+    previousNewestMessageIdRef.current = newestMessage?.id ?? null;
+  }, [conversation?.id, currentUserId, isActive, messages]);
 
   const handleStatusUpdate = async (
     status: Conversation["status"],
@@ -326,10 +295,7 @@ export default function ChatWindow({
     return (
       <section className="flex h-full min-h-0 flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F4F7FA] text-[#0F2747]">
-          <Inbox
-            aria-hidden="true"
-            className="h-7 w-7"
-          />
+          <Inbox aria-hidden="true" className="h-7 w-7" />
         </div>
 
         <h2 className="mt-5 text-2xl font-black text-[#071526]">
@@ -337,8 +303,8 @@ export default function ChatWindow({
         </h2>
 
         <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-          Choose a conversation from your inbox to read
-          messages and continue speaking with your advisor.
+          Choose a conversation from your inbox to read messages and continue
+          speaking with your advisor.
         </p>
       </section>
     );
@@ -362,18 +328,12 @@ export default function ChatWindow({
               ].join(" ")}
               aria-label="Return to conversations"
             >
-              <ArrowLeft
-                aria-hidden="true"
-                className="h-5 w-5"
-              />
+              <ArrowLeft aria-hidden="true" className="h-5 w-5" />
             </button>
           ) : null}
 
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0F2747] text-white">
-            <MessageCircle
-              aria-hidden="true"
-              className="h-5 w-5"
-            />
+            <MessageCircle aria-hidden="true" className="h-5 w-5" />
           </div>
 
           <div className="min-w-0">
@@ -417,9 +377,7 @@ export default function ChatWindow({
           <div className="relative">
             <button
               type="button"
-              onClick={() =>
-                setActionsOpen((current) => !current)
-              }
+              onClick={() => setActionsOpen((current) => !current)}
               disabled={conversationIsUpdating}
               className={[
                 "flex h-10 w-10 items-center justify-center rounded-xl",
@@ -433,15 +391,9 @@ export default function ChatWindow({
               aria-expanded={actionsOpen}
             >
               {conversationIsUpdating ? (
-                <Loader2
-                  aria-hidden="true"
-                  className="h-4 w-4 animate-spin"
-                />
+                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
               ) : (
-                <MoreVertical
-                  aria-hidden="true"
-                  className="h-4 w-4"
-                />
+                <MoreVertical aria-hidden="true" className="h-4 w-4" />
               )}
             </button>
 
@@ -455,10 +407,7 @@ export default function ChatWindow({
                     }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-slate-700 hover:bg-slate-100"
                   >
-                    <RotateCcw
-                      aria-hidden="true"
-                      className="h-4 w-4"
-                    />
+                    <RotateCcw aria-hidden="true" className="h-4 w-4" />
                     Reopen conversation
                   </button>
                 ) : null}
@@ -471,10 +420,7 @@ export default function ChatWindow({
                     }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-emerald-700 hover:bg-emerald-50"
                   >
-                    <CheckCircle2
-                      aria-hidden="true"
-                      className="h-4 w-4"
-                    />
+                    <CheckCircle2 aria-hidden="true" className="h-4 w-4" />
                     Mark as resolved
                   </button>
                 ) : null}
@@ -487,10 +433,7 @@ export default function ChatWindow({
                     }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-slate-700 hover:bg-slate-100"
                   >
-                    <Archive
-                      aria-hidden="true"
-                      className="h-4 w-4"
-                    />
+                    <Archive aria-hidden="true" className="h-4 w-4" />
                     Archive conversation
                   </button>
                 ) : null}
@@ -510,7 +453,10 @@ export default function ChatWindow({
           }
 
           isNearBottomRef.current =
-            container.scrollHeight - container.scrollTop - container.clientHeight < 160;
+            container.scrollHeight -
+              container.scrollTop -
+              container.clientHeight <
+            160;
         }}
         className="relative min-h-0 min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-[#F8FAFC] px-3 py-5 sm:px-4 md:px-6"
       >
@@ -532,10 +478,7 @@ export default function ChatWindow({
         ) : messages.length === 0 ? (
           <div className="flex min-h-80 flex-col items-center justify-center text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[#0F2747] shadow-sm">
-              <MessageCircle
-                aria-hidden="true"
-                className="h-6 w-6"
-              />
+              <MessageCircle aria-hidden="true" className="h-6 w-6" />
             </div>
 
             <h3 className="mt-5 text-lg font-black text-[#071526]">
@@ -543,9 +486,8 @@ export default function ChatWindow({
             </h3>
 
             <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
-              Send your first message to ask about
-              admissions, documents, appointments, or your
-              study-abroad pathway.
+              Send your first message to ask about admissions, documents,
+              appointments, or your study-abroad pathway.
             </p>
           </div>
         ) : (
@@ -566,9 +508,7 @@ export default function ChatWindow({
                       className="h-4 w-4 animate-spin"
                     />
                   ) : null}
-                  {isLoadingOlderMessages
-                    ? "Loading"
-                    : "Load earlier messages"}
+                  {isLoadingOlderMessages ? "Loading" : "Load earlier messages"}
                 </button>
               </div>
             ) : null}
@@ -587,16 +527,13 @@ export default function ChatWindow({
 
                 <div className="space-y-4">
                   {group.messages.map((message) => {
-                    const createdAt =
-                      new Date(message.created_at).getTime();
+                    const createdAt = new Date(message.created_at).getTime();
 
                     const isRead =
-                      message.sender_id ===
-                        currentUserId &&
+                      message.sender_id === currentUserId &&
                       latestOtherParticipantReadAt !== null &&
                       !Number.isNaN(createdAt) &&
-                      latestOtherParticipantReadAt >=
-                        createdAt;
+                      latestOtherParticipantReadAt >= createdAt;
 
                     return (
                       <MessageBubble
@@ -605,16 +542,9 @@ export default function ChatWindow({
                         currentUserId={currentUserId}
                         senderName={message.sender_name}
                         isRead={isRead}
-                        isEditing={
-                          editingMessageId === message.id
-                        }
-                        isDeleting={
-                          deletingMessageId === message.id
-                        }
-                        onEdit={async (
-                          messageId,
-                          body,
-                        ) => {
+                        isEditing={editingMessageId === message.id}
+                        isDeleting={deletingMessageId === message.id}
+                        onEdit={async (messageId, body) => {
                           await onEditMessage({
                             messageId,
                             body,
@@ -625,29 +555,19 @@ export default function ChatWindow({
                         }}
                         onOpenAttachment={
                           onOpenAttachment
-                            ? async (
-                                selectedMessage,
-                              ) => {
-                                await onOpenAttachment(
-                                  selectedMessage,
-                                );
+                            ? async (selectedMessage) => {
+                                await onOpenAttachment(selectedMessage);
                               }
                             : undefined
                         }
                         onDownloadAttachment={
                           onDownloadAttachment
-                            ? async (
-                                selectedMessage,
-                              ) => {
-                                await onDownloadAttachment(
-                                  selectedMessage,
-                                );
+                            ? async (selectedMessage) => {
+                                await onDownloadAttachment(selectedMessage);
                               }
                             : undefined
                         }
-                        onGetAttachmentPreviewUrl={
-                          onGetAttachmentPreviewUrl
-                        }
+                        onGetAttachmentPreviewUrl={onGetAttachmentPreviewUrl}
                         onReply={setReplyToMessage}
                       />
                     );
@@ -655,8 +575,6 @@ export default function ChatWindow({
                 </div>
               </div>
             ))}
-
-            <div ref={messagesEndRef} />
           </div>
         )}
       </div>
@@ -679,32 +597,27 @@ export default function ChatWindow({
           ) : null}
 
           <MessageInput
-          disabled={composerDisabled}
-          isSending={isSendingMessage}
-          isSendingAttachment={isSendingAttachment}
-          uploadingAttachmentName={
-            uploadingAttachmentName
-          }
-          attachmentUploadProgress={
-            attachmentUploadProgress
-          }
-          replyToMessage={replyToMessage}
-          onCancelReply={() =>
-            setReplyToMessage(null)
-          }
-          onSendAttachment={
-            onSendAttachment
-              ? async (input) => {
-                  await onSendAttachment(input);
-                  setReplyToMessage(null);
-                }
-              : undefined
-          }
-          onTypingChange={onTypingChange}
-          onSend={async (input) => {
-            await onSendMessage(input);
-            setReplyToMessage(null);
-          }}
+            allowAutoFocus={isActive}
+            disabled={composerDisabled}
+            isSending={isSendingMessage}
+            isSendingAttachment={isSendingAttachment}
+            uploadingAttachmentName={uploadingAttachmentName}
+            attachmentUploadProgress={attachmentUploadProgress}
+            replyToMessage={replyToMessage}
+            onCancelReply={() => setReplyToMessage(null)}
+            onSendAttachment={
+              onSendAttachment
+                ? async (input) => {
+                    await onSendAttachment(input);
+                    setReplyToMessage(null);
+                  }
+                : undefined
+            }
+            onTypingChange={onTypingChange}
+            onSend={async (input) => {
+              await onSendMessage(input);
+              setReplyToMessage(null);
+            }}
           />
         </div>
       ) : (
@@ -716,8 +629,7 @@ export default function ChatWindow({
               </p>
 
               <p className="mt-1 text-xs leading-5 text-slate-500">
-                Reopen this conversation to send another
-                message.
+                Reopen this conversation to send another message.
               </p>
             </div>
 
@@ -737,17 +649,10 @@ export default function ChatWindow({
               ].join(" ")}
             >
               {conversationIsUpdating ? (
-                <Loader2
-                  aria-hidden="true"
-                  className="h-4 w-4 animate-spin"
-                />
+                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
               ) : (
-                <RotateCcw
-                  aria-hidden="true"
-                  className="h-4 w-4"
-                />
+                <RotateCcw aria-hidden="true" className="h-4 w-4" />
               )}
-
               Reopen
             </button>
           </div>
