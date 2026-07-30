@@ -9,10 +9,167 @@ export type Json =
 type ProfileRole = "student" | "advisor" | "admin";
 type ConversationStatus = "open" | "resolved" | "archived";
 type MessageType = "text" | "file" | "system";
+type OrganizationType =
+  "partner_school" | "advising_agency" | "sponsor" | "operating_unit";
+type OrganizationStatus = "active" | "archived";
+type OrganizationAdvisorRole = "primary" | "support" | "manager";
+type OrganizationStudentMembership =
+  "client" | "sponsored" | "referred" | "managed";
+type OrganizationStudentStatus = "active" | "ended";
 
 export interface Database {
   crm: {
     Tables: {
+      organizations: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          organization_type: OrganizationType;
+          status: OrganizationStatus;
+          email: string | null;
+          phone: string | null;
+          website: string | null;
+          address: string | null;
+          created_at: string;
+          updated_at: string;
+          archived_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          organization_type: OrganizationType;
+          status?: OrganizationStatus;
+          email?: string | null;
+          phone?: string | null;
+          website?: string | null;
+          address?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          archived_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          organization_type?: OrganizationType;
+          status?: OrganizationStatus;
+          email?: string | null;
+          phone?: string | null;
+          website?: string | null;
+          address?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          archived_at?: string | null;
+        };
+        Relationships: [];
+      };
+      organization_advisors: {
+        Row: {
+          id: string;
+          organization_id: string;
+          advisor_profile_id: string;
+          assignment_role: OrganizationAdvisorRole;
+          starts_at: string;
+          ends_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          advisor_profile_id: string;
+          assignment_role?: OrganizationAdvisorRole;
+          starts_at?: string;
+          ends_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          advisor_profile_id?: string;
+          assignment_role?: OrganizationAdvisorRole;
+          starts_at?: string;
+          ends_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_advisors_organization_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "organization_advisors_profile_fkey";
+            columns: ["advisor_profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organization_students: {
+        Row: {
+          id: string;
+          organization_id: string;
+          student_profile_id: string;
+          membership_type: OrganizationStudentMembership;
+          status: OrganizationStudentStatus;
+          is_primary: boolean;
+          external_student_reference: string | null;
+          starts_at: string;
+          ends_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          student_profile_id: string;
+          membership_type?: OrganizationStudentMembership;
+          status?: OrganizationStudentStatus;
+          is_primary?: boolean;
+          external_student_reference?: string | null;
+          starts_at?: string;
+          ends_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          student_profile_id?: string;
+          membership_type?: OrganizationStudentMembership;
+          status?: OrganizationStudentStatus;
+          is_primary?: boolean;
+          external_student_reference?: string | null;
+          starts_at?: string;
+          ends_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_students_organization_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "organization_students_profile_fkey";
+            columns: ["student_profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           id: string;
@@ -850,6 +1007,18 @@ export interface Database {
       };
       can_manage_student: {
         Args: { target_student_profile_id: string };
+        Returns: boolean;
+      };
+      is_organization_advisor: {
+        Args: { target_organization_id: string };
+        Returns: boolean;
+      };
+      is_organization_student: {
+        Args: { target_organization_id: string };
+        Returns: boolean;
+      };
+      can_access_organization: {
+        Args: { target_organization_id: string };
         Returns: boolean;
       };
       can_access_document: {
