@@ -1273,6 +1273,29 @@ export interface Database {
         };
         Returns: Database["crm"]["Tables"]["student_applications"]["Row"];
       };
+      update_student_application: {
+        Args: {
+          target_application_id: string;
+          new_values: Json;
+        };
+        Returns: Database["crm"]["Tables"]["student_applications"]["Row"];
+      };
+      assign_application_advisor: {
+        Args: {
+          target_application_id: string;
+          target_advisor_profile_id: string;
+        };
+        Returns: Database["crm"]["Tables"]["student_applications"]["Row"];
+      };
+      update_application_financial_details: {
+        Args: {
+          target_application_id: string;
+          new_tuition_amount: number | null;
+          new_tuition_currency: string | null;
+          new_tuition_source: string | null;
+        };
+        Returns: Database["crm"]["Tables"]["student_applications"]["Row"];
+      };
       update_application_status: {
         Args: {
           target_application_id: string;
