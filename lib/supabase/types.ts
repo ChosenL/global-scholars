@@ -1021,6 +1021,57 @@ export interface Database {
         Args: { target_organization_id: string };
         Returns: boolean;
       };
+      create_organization: {
+        Args: {
+          new_name: string;
+          new_slug: string;
+          new_organization_type: OrganizationType;
+          new_email?: string | null;
+          new_phone?: string | null;
+          new_website?: string | null;
+          new_address?: string | null;
+        };
+        Returns: Database["crm"]["Tables"]["organizations"]["Row"];
+      };
+      update_organization: {
+        Args: {
+          target_organization_id: string;
+          new_values: Json;
+        };
+        Returns: Database["crm"]["Tables"]["organizations"]["Row"];
+      };
+      archive_organization: {
+        Args: { target_organization_id: string };
+        Returns: Database["crm"]["Tables"]["organizations"]["Row"];
+      };
+      assign_organization_advisor: {
+        Args: {
+          target_organization_id: string;
+          target_advisor_profile_id: string;
+          new_assignment_role?: OrganizationAdvisorRole;
+          new_starts_at?: string;
+        };
+        Returns: Database["crm"]["Tables"]["organization_advisors"]["Row"];
+      };
+      remove_organization_advisor: {
+        Args: { target_assignment_id: string };
+        Returns: Database["crm"]["Tables"]["organization_advisors"]["Row"];
+      };
+      assign_organization_student: {
+        Args: {
+          target_organization_id: string;
+          target_student_profile_id: string;
+          new_membership_type?: OrganizationStudentMembership;
+          new_is_primary?: boolean;
+          new_external_student_reference?: string | null;
+          new_starts_at?: string;
+        };
+        Returns: Database["crm"]["Tables"]["organization_students"]["Row"];
+      };
+      remove_organization_student: {
+        Args: { target_membership_id: string };
+        Returns: Database["crm"]["Tables"]["organization_students"]["Row"];
+      };
       can_access_document: {
         Args: { target_document_id: string };
         Returns: boolean;

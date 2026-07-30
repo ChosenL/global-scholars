@@ -2,7 +2,7 @@
 
 ## Status and Terminology
 
-This document defines the Version 1.1 architecture formerly described as “Institution Management.” Persistence phase 1 is represented by the additive `20260823_create_crm_organizations.sql` migration and generated database types. UI, pages, application APIs, customer provisioning, and broader authorization changes remain out of scope and are not implemented.
+This document defines the Version 1.1 architecture formerly described as “Institution Management.” Persistence phase 1 is represented by the additive `20260823_create_crm_organizations.sql` migration and generated database types. The service phase is represented by `20260824_create_crm_organization_services.sql` and `lib/crm/organizations.ts`, which provide administrator-authorized mutation RPCs, RLS-protected reads, validation, and structured errors. UI, pages, application APIs, customer provisioning, and broader authorization changes remain out of scope and are not implemented.
 
 The proposed entity represents **customer and partner organizations that use or participate in Global Scholars OS**. It does not represent universities that students apply to.
 
