@@ -6,11 +6,13 @@ import {
   Clock3,
   DollarSign,
   Loader2,
+  UserPlus,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import {
   archiveApplication,
+  assignApplicationAdvisor,
   changeApplicationStatus,
   getApplication,
   listApplicationTimeline,
@@ -49,8 +51,10 @@ export default function ApplicationDetailsPage({ id }: { id: string }) {
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("");
   const [source, setSource] = useState("");
+  const [advisorProfileId, setAdvisorProfileId] = useState("");
+  const [advisorError, setAdvisorError] = useState<string | null>(null);
   const [pending, setPending] = useState<
-    "status" | "financials" | "archive" | null
+    "status" | "financials" | "archive" | "advisor" | null
   >(null);
   const [showArchive, setShowArchive] = useState(false);
 
@@ -65,6 +69,7 @@ export default function ApplicationDetailsPage({ id }: { id: string }) {
         setAmount(record.tuition_amount?.toString() ?? "");
         setCurrency(record.tuition_currency ?? "");
         setSource(record.tuition_source ?? "");
+        setAdvisorProfileId(record.advisor_profile_id ?? "");
       })
       .catch((cause: unknown) => {
         if (active)
@@ -128,6 +133,31 @@ export default function ApplicationDetailsPage({ id }: { id: string }) {
             ? cause.message
             : "Financial details could not be updated.",
       });
+    } finally {
+      setPending(null);
+    }
+  };
+  const assignAdvisor = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const nextAdvisor = advisorProfileId.trim();
+    if (!nextAdvisor) {
+      setAdvisorError("Advisor profile ID is required.");
+      return;
+    }
+    setPending("advisor");
+    setAdvisorError(null);
+    try {
+      const updated = await assignApplicationAdvisor(id, nextAdvisor);
+      setApplication(updated);
+      setAdvisorProfileId(updated.advisor_profile_id ?? "");
+      setToast({ tone: "success", message: "Advisor assignment updated." });
+    } catch (cause) {
+      const message =
+        cause instanceof Error
+          ? cause.message
+          : "Advisor could not be assigned.";
+      setAdvisorError(message);
+      setToast({ tone: "error", message });
     } finally {
       setPending(null);
     }
@@ -218,6 +248,57 @@ export default function ApplicationDetailsPage({ id }: { id: string }) {
             labelText="Program"
             value="Resolved through the selected intake"
           />
+        </Section>
+        <Section title="Advisor Assignment">
+          <Info
+            labelText="Current advisor"
+            value={application.advisor_profile_id ?? "Unassigned"}
+          />
+          {advisorError ? (
+            <p
+              role="alert"
+              className="mb-4 rounded-xl bg-rose-50 p-3 text-sm font-bold text-rose-800"
+            >
+              {advisorError}
+            </p>
+          ) : null}
+          <form onSubmit={assignAdvisor} className="space-y-4">
+            <label className="block text-sm font-bold">
+              Advisor profile ID
+              <input
+                value={advisorProfileId}
+                onChange={(event) => setAdvisorProfileId(event.target.value)}
+                disabled={pending !== null}
+                aria-invalid={!advisorProfileId.trim()}
+                className="mt-2 w-full rounded-xl border p-3 font-mono text-sm disabled:opacity-60"
+              />
+            </label>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                disabled={pending !== null}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#0F2747] px-4 py-3 text-sm font-black text-white disabled:opacity-50"
+              >
+                {pending === "advisor" ? (
+                  <Loader2
+                    aria-hidden="true"
+                    className="h-4 w-4 animate-spin"
+                  />
+                ) : (
+                  <UserPlus aria-hidden="true" className="h-4 w-4" />
+                )}
+                {application.advisor_profile_id
+                  ? "Change advisor"
+                  : "Assign advisor"}
+              </button>
+              <button
+                type="button"
+                disabled
+                className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-black text-slate-400"
+              >
+                Remove advisor unavailable
+              </button>
+            </div>
+          </form>
         </Section>
         <Section title="Status">
           <p className="mb-5">

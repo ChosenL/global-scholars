@@ -51,7 +51,13 @@ test("application browser client uses only the authenticated Application API", a
     });
   };
   try {
+    await api.createApplication({
+      studentProfileId: "student-id",
+      intakeId: "intake-id",
+      advisorProfileId: null,
+    });
     await api.listApplications({ status: "submitted", limit: 10, offset: 20 });
+    await api.assignApplicationAdvisor("application-id", "advisor-id");
     await api.changeApplicationStatus(
       "application-id",
       "under_review",
@@ -68,15 +74,17 @@ test("application browser client uses only the authenticated Application API", a
     globalThis.fetch = originalFetch;
   }
 
+  assert.equal(calls[0].path, "/api/applications");
   assert.match(
-    calls[0].path,
+    calls[1].path,
     /^\/api\/applications\?limit=10&offset=20&status=submitted$/,
   );
   assert.deepEqual(
     calls
-      .slice(1)
+      .slice(2)
       .map(({ path: requestPath, method }) => [requestPath, method]),
     [
+      ["/api/applications/application-id/advisor", "POST"],
       ["/api/applications/application-id/status", "POST"],
       ["/api/applications/application-id/financials", "POST"],
       ["/api/applications/application-id/archive", "POST"],
@@ -95,6 +103,16 @@ test("application list includes search, filters, pagination, and all data states
     "utf8",
   );
   for (const expected of [
+    "New Application",
+    "Create application",
+    "Student selector",
+    "University selector",
+    "Intake field",
+    "Program field",
+    "Degree level field",
+    "Application created.",
+    "Creating...",
+    "Student is required.",
     'role="search"',
     "Search applications",
     "Filter by status",
@@ -113,6 +131,7 @@ test("application list includes search, filters, pagination, and all data states
   ])
     assert.match(source, new RegExp(expected));
   assert.match(source, /listApplications/);
+  assert.match(source, /createApplication/);
   assert.match(source, /setQuery/);
   assert.match(source, /APPLICATION_STATUSES/);
 });
@@ -127,6 +146,13 @@ test("application details supports status, financial, timeline, and archive work
   );
   for (const expected of [
     "Overview",
+    "Advisor Assignment",
+    "Current advisor",
+    "Assign advisor",
+    "Change advisor",
+    "Remove advisor unavailable",
+    "Advisor profile ID is required.",
+    "Advisor assignment updated.",
     "Financials",
     "Scholarship",
     "Timeline",
@@ -143,6 +169,7 @@ test("application details supports status, financial, timeline, and archive work
     assert.match(source, new RegExp(expected));
   }
   assert.match(source, /changeApplicationStatus/);
+  assert.match(source, /assignApplicationAdvisor/);
   assert.match(source, /updateApplicationFinancials/);
   assert.match(source, /archiveApplication/);
   assert.match(source, /listApplicationTimeline/);

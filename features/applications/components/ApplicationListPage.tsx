@@ -5,18 +5,21 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Loader2,
+  Plus,
   Search,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { listApplications } from "../api";
+import { createApplication, listApplications } from "../api";
 import {
   APPLICATION_STATUSES,
   type ApplicationStatus,
   type StudentApplication,
 } from "../types";
 import ApplicationShell from "./ApplicationShell";
+import ApplicationToast from "./ApplicationToast";
 
 const PAGE_SIZE = 10;
 const label = (value: string) =>
@@ -36,6 +39,23 @@ export default function ApplicationListPage() {
   const [page, setPage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [showCreate, setShowCreate] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createdId, setCreatedId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    tone: "success" | "error";
+  } | null>(null);
+  const [form, setForm] = useState({
+    studentProfileId: "",
+    university: "",
+    intakeId: "",
+    program: "",
+    degreeLevel: "",
+    advisorProfileId: "",
+  });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -62,7 +82,57 @@ export default function ApplicationListPage() {
     }
     void load();
     return () => controller.abort();
-  }, [page, status]);
+  }, [page, reloadKey, status]);
+
+  const validateCreateForm = () => {
+    if (!form.studentProfileId.trim()) return "Student is required.";
+    if (!form.university.trim()) return "University is required.";
+    if (!form.intakeId.trim()) return "Intake is required.";
+    if (!form.program.trim()) return "Program is required.";
+    if (!form.degreeLevel.trim()) return "Degree level is required.";
+    return null;
+  };
+
+  const submitCreate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const validationError = validateCreateForm();
+    if (validationError) {
+      setCreateError(validationError);
+      return;
+    }
+    setIsCreating(true);
+    setCreateError(null);
+    try {
+      const created = await createApplication({
+        studentProfileId: form.studentProfileId.trim(),
+        intakeId: form.intakeId.trim(),
+        advisorProfileId: form.advisorProfileId.trim() || null,
+      });
+      setCreatedId(created.id);
+      setShowCreate(false);
+      setQuery(created.id);
+      setPage(0);
+      setReloadKey((value) => value + 1);
+      setToast({ tone: "success", message: "Application created." });
+      setForm({
+        studentProfileId: "",
+        university: "",
+        intakeId: "",
+        program: "",
+        degreeLevel: "",
+        advisorProfileId: "",
+      });
+    } catch (cause) {
+      const message =
+        cause instanceof Error
+          ? cause.message
+          : "Application could not be created.";
+      setCreateError(message);
+      setToast({ tone: "error", message });
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -83,6 +153,19 @@ export default function ApplicationListPage() {
     <ApplicationShell
       title="Student applications"
       description="Track application progress, assignments, financial snapshots, and auditable lifecycle events."
+      actions={
+        <button
+          type="button"
+          onClick={() => {
+            setCreateError(null);
+            setShowCreate(true);
+          }}
+          className="inline-flex items-center gap-2 rounded-xl bg-[#0F2747] px-4 py-3 text-sm font-black text-white"
+        >
+          <Plus aria-hidden="true" className="h-4 w-4" />
+          New Application
+        </button>
+      }
     >
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
         <div
@@ -206,6 +289,14 @@ export default function ApplicationListPage() {
         )}
         <div className="flex items-center justify-between border-t border-slate-200 px-5 py-4">
           <p className="text-sm text-slate-600">Page {page + 1}</p>
+          {createdId ? (
+            <Link
+              href={`/applications/${createdId}`}
+              className="rounded-xl border border-[#C8A24A] px-3 py-2 text-sm font-black text-[#0F2747]"
+            >
+              Open new application
+            </Link>
+          ) : null}
           <div className="flex gap-2">
             <button
               type="button"
@@ -228,6 +319,164 @@ export default function ApplicationListPage() {
           </div>
         </div>
       </section>
+      {showCreate ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#071526]/70 p-5">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-application-title"
+            className="w-full max-w-2xl rounded-[2rem] bg-white p-6 shadow-2xl"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2
+                  id="create-application-title"
+                  className="text-xl font-black"
+                >
+                  Create application
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Catalog context is validated here; the application is created
+                  from the selected student and intake.
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={isCreating}
+                onClick={() => setShowCreate(false)}
+                className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-black"
+              >
+                Close
+              </button>
+            </div>
+            {createError ? (
+              <p
+                role="alert"
+                className="mt-4 rounded-xl bg-rose-50 p-3 text-sm font-bold text-rose-800"
+              >
+                {createError}
+              </p>
+            ) : null}
+            <form
+              onSubmit={submitCreate}
+              className="mt-5 grid gap-4 md:grid-cols-2"
+            >
+              <CreateField
+                labelText="Student selector"
+                value={form.studentProfileId}
+                onChange={(value) =>
+                  setForm((current) => ({
+                    ...current,
+                    studentProfileId: value,
+                  }))
+                }
+                disabled={isCreating}
+                required
+              />
+              <CreateField
+                labelText="University selector"
+                value={form.university}
+                onChange={(value) =>
+                  setForm((current) => ({ ...current, university: value }))
+                }
+                disabled={isCreating}
+                required
+              />
+              <CreateField
+                labelText="Intake field"
+                value={form.intakeId}
+                onChange={(value) =>
+                  setForm((current) => ({ ...current, intakeId: value }))
+                }
+                disabled={isCreating}
+                required
+              />
+              <CreateField
+                labelText="Program field"
+                value={form.program}
+                onChange={(value) =>
+                  setForm((current) => ({ ...current, program: value }))
+                }
+                disabled={isCreating}
+                required
+              />
+              <CreateField
+                labelText="Degree level field"
+                value={form.degreeLevel}
+                onChange={(value) =>
+                  setForm((current) => ({ ...current, degreeLevel: value }))
+                }
+                disabled={isCreating}
+                required
+              />
+              <CreateField
+                labelText="Advisor profile ID"
+                value={form.advisorProfileId}
+                onChange={(value) =>
+                  setForm((current) => ({
+                    ...current,
+                    advisorProfileId: value,
+                  }))
+                }
+                disabled={isCreating}
+              />
+              <div className="flex justify-end gap-3 md:col-span-2">
+                <button
+                  type="button"
+                  disabled={isCreating}
+                  onClick={() => setShowCreate(false)}
+                  className="rounded-xl border px-4 py-3 text-sm font-black"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={isCreating}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#0F2747] px-4 py-3 text-sm font-black text-white disabled:opacity-50"
+                >
+                  {isCreating ? (
+                    <Loader2
+                      aria-hidden="true"
+                      className="h-4 w-4 animate-spin"
+                    />
+                  ) : (
+                    <Plus aria-hidden="true" className="h-4 w-4" />
+                  )}
+                  {isCreating ? "Creating..." : "Create application"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+      {toast ? <ApplicationToast {...toast} /> : null}
     </ApplicationShell>
+  );
+}
+
+function CreateField({
+  labelText,
+  value,
+  onChange,
+  disabled,
+  required = false,
+}: {
+  labelText: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled: boolean;
+  required?: boolean;
+}) {
+  return (
+    <label className="text-sm font-bold">
+      {labelText}
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+        required={required}
+        aria-invalid={required && !value.trim()}
+        className="mt-2 w-full rounded-xl border border-slate-300 p-3 text-sm disabled:opacity-60"
+      />
+    </label>
   );
 }

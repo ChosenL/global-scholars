@@ -59,6 +59,16 @@ export function listApplications(options: {
   if (options.status) params.set("status", options.status);
   return apiRequest<StudentApplication[]>(`/api/applications?${params}`);
 }
+export function createApplication(input: {
+  studentProfileId: string;
+  intakeId: string;
+  advisorProfileId?: string | null;
+}) {
+  return apiRequest<StudentApplication>("/api/applications", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
 export function getApplication(id: string) {
   return apiRequest<StudentApplication>(
     `/api/applications/${encodeURIComponent(id)}`,
@@ -72,6 +82,12 @@ export function changeApplicationStatus(
   return apiRequest<StudentApplication>(
     `/api/applications/${encodeURIComponent(id)}/status`,
     { method: "POST", body: JSON.stringify({ status, reason }) },
+  );
+}
+export function assignApplicationAdvisor(id: string, advisorProfileId: string) {
+  return apiRequest<StudentApplication>(
+    `/api/applications/${encodeURIComponent(id)}/advisor`,
+    { method: "POST", body: JSON.stringify({ advisorProfileId }) },
   );
 }
 export function updateApplicationFinancials(
