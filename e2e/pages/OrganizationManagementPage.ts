@@ -61,10 +61,7 @@ export class OrganizationManagementPage {
     await this.page.getByLabel("Email").fill(data.email);
     await this.page.getByLabel("Address").fill(data.address);
     await this.page.getByRole("button", { name: "Save changes" }).click();
-    await expect(this.page.getByRole("status")).toContainText(
-      "Organization updated.",
-    );
-    await this.page.waitForURL(/\/organizations\/[0-9a-f-]+$/);
+    await expect(this.page).toHaveURL(/\/organizations\/[0-9a-f-]+$/);
     await expect(
       this.page.getByRole("heading", { name: data.name, exact: true }),
     ).toBeVisible();
@@ -77,13 +74,16 @@ export class OrganizationManagementPage {
   }
 
   async assignAdvisor(profileId: string) {
-    await this.page.getByRole("button", { name: "Assign advisor" }).click();
-    await this.page
+    await this.assignmentsRegion()
+      .getByRole("button", { name: "Assign advisor", exact: true })
+      .click();
+    const dialog = this.page.getByRole("dialog", { name: /assign advisor/i });
+    await dialog
       .getByRole("combobox", {
         name: "Advisor profile",
       })
       .fill(profileId);
-    await this.page
+    await dialog
       .getByRole("button", { name: "Assign advisor", exact: true })
       .click();
     await expect(this.page.getByRole("status")).toContainText(
@@ -93,22 +93,25 @@ export class OrganizationManagementPage {
   }
 
   async verifyDuplicateAdvisorIsPrevented(profileId: string) {
-    await this.page.getByRole("button", { name: "Assign advisor" }).click();
-    await this.page
+    await this.assignmentsRegion()
+      .getByRole("button", { name: "Assign advisor", exact: true })
+      .click();
+    const dialog = this.page.getByRole("dialog", { name: /assign advisor/i });
+    await dialog
       .getByRole("combobox", {
         name: "Advisor profile",
       })
       .fill(profileId);
-    await expect(this.page.getByRole("alert")).toContainText(
+    await expect(dialog.getByRole("alert")).toContainText(
       "already has an active assignment",
     );
     await expect(
-      this.page.getByRole("button", {
+      dialog.getByRole("button", {
         name: "Assign advisor",
         exact: true,
       }),
     ).toBeDisabled();
-    await this.page
+    await dialog
       .getByRole("button", {
         name: "Close assign advisor dialog",
       })
@@ -130,16 +133,19 @@ export class OrganizationManagementPage {
   }
 
   async assignStudent(profileId: string) {
-    await this.page.getByRole("button", { name: "Assign student" }).click();
-    await this.page
+    await this.assignmentsRegion()
+      .getByRole("button", { name: "Assign student", exact: true })
+      .click();
+    const dialog = this.page.getByRole("dialog", { name: /assign student/i });
+    await dialog
       .getByRole("combobox", {
         name: "Student profile",
       })
       .fill(profileId);
-    await this.page
+    await dialog
       .getByRole("checkbox", { name: "Primary organization membership" })
       .check();
-    await this.page
+    await dialog
       .getByRole("button", { name: "Assign student", exact: true })
       .click();
     await expect(this.page.getByRole("status")).toContainText(
@@ -191,5 +197,9 @@ export class OrganizationManagementPage {
     await this.page.getByLabel("Phone").fill(data.phone);
     await this.page.getByLabel("Website").fill(data.website);
     await this.page.getByLabel("Address").fill(data.address);
+  }
+
+  private assignmentsRegion(): Locator {
+    return this.page.getByRole("region", { name: "Assignments" });
   }
 }

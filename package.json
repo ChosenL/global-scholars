@@ -9,9 +9,12 @@
     "lint": "eslint",
     "prepare": "husky",
     "test": "node --test tests/*.test.mjs",
-    "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed",
-    "test:e2e:ui": "playwright test --ui",
+    "test:e2e": "node e2e/run-playwright.mjs",
+    "test:e2e:organization": "node e2e/run-playwright.mjs e2e/organizations/organization-management.spec.ts --project=authenticated",
+    "test:e2e:application": "node e2e/run-playwright.mjs e2e/applications/application-management.spec.ts --project=authenticated",
+    "test:e2e:local": "playwright test --config=playwright.local.config.ts",
+    "test:e2e:headed": "node e2e/run-playwright.mjs --headed",
+    "test:e2e:ui": "node e2e/run-playwright.mjs --ui",
     "typecheck": "tsc --noEmit",
     "verify:release": "npx tsc --noEmit && npm run lint && npm test && npm run build && git diff --check"
   },
@@ -26,6 +29,7 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@clerk/testing": "^2.2.16",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
@@ -35,6 +39,7 @@
     "eslint-config-next": "16.2.12",
     "husky": "^9.1.7",
     "lint-staged": "^17.2.0",
+    "postgres": "^3.4.9",
     "prettier": "^3.9.6",
     "tailwindcss": "^4",
     "typescript": "^5"

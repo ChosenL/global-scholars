@@ -27,13 +27,19 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
         env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.E2E_CLERK_PUBLISHABLE_KEY || 'pk_test_release_validation' }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.E2E_CLERK_PUBLISHABLE_KEY }}
           CLERK_SECRET_KEY: ${{ secrets.E2E_CLERK_SECRET_KEY || 'sk_test_release_validation' }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL || 'https://example.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.E2E_SUPABASE_PUBLISHABLE_KEY || 'release-validation-key' }}
           E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
-          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
           E2E_ADVISOR_PROFILE_ID: ${{ secrets.E2E_ADVISOR_PROFILE_ID }}
+          E2E_SECOND_ADVISOR_PROFILE_ID: ${{ secrets.E2E_SECOND_ADVISOR_PROFILE_ID }}
           E2E_STUDENT_PROFILE_ID: ${{ secrets.E2E_STUDENT_PROFILE_ID }}
+          E2E_APPLICATION_STUDENT_PROFILE_ID: ${{ secrets.E2E_APPLICATION_STUDENT_PROFILE_ID }}
+          E2E_APPLICATION_INTAKE_ID: ${{ secrets.E2E_APPLICATION_INTAKE_ID }}
           E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       - run: git diff --check

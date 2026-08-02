@@ -85,14 +85,15 @@ export const config = {
      * Skip Next.js internals and static files unless they are
      * explicitly requested through search parameters.
      */
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/((?!api/health$|api/ready$|_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
 
     /*
      * Always allow Clerk to inspect API and tRPC requests.
      * Authorization for data access should still be enforced
      * inside each route handler and Supabase policy.
      */
-    "/(api|trpc)(.*)",
+    "/api/((?!health$|ready$).*)",
+    "/trpc/(.*)",
 
     /*
      * Required for Clerk frontend API proxy routes.

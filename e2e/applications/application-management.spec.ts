@@ -1,11 +1,10 @@
-import { test } from "@playwright/test";
+import { test } from "../fixtures/test";
 
 import {
   applicationTestData,
   missingApplicationE2EEnvironment,
   requireApplicationE2EConfig,
 } from "../fixtures/application";
-import { signInAsAdministrator } from "../fixtures/auth";
 import { ApplicationManagementPage } from "../pages/ApplicationManagementPage";
 
 const missingEnvironment = missingApplicationE2EEnvironment();
@@ -22,13 +21,6 @@ test.describe("Student Application Management workflow", () => {
     const config = requireApplicationE2EConfig();
     const data = applicationTestData(config.runId, testInfo.retry);
     const applications = new ApplicationManagementPage(page);
-
-    await test.step("administrator signs in", async () => {
-      await signInAsAdministrator(page, {
-        email: config.adminEmail,
-        password: config.adminPassword,
-      });
-    });
 
     await test.step("create application and open details", async () => {
       await applications.openList();

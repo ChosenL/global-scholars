@@ -1,11 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/test";
 
 import {
   missingOrganizationE2EEnvironment,
   organizationTestData,
   requireOrganizationE2EConfig,
 } from "../fixtures/organization";
-import { signInAsAdministrator } from "../fixtures/auth";
 import { OrganizationManagementPage } from "../pages/OrganizationManagementPage";
 
 const missingEnvironment = missingOrganizationE2EEnvironment();
@@ -22,13 +21,6 @@ test.describe("Organization Management workflow", () => {
     const config = requireOrganizationE2EConfig();
     const data = organizationTestData(config.runId, testInfo.retry);
     const organizations = new OrganizationManagementPage(page);
-
-    await test.step("administrator signs in", async () => {
-      await signInAsAdministrator(page, {
-        email: config.adminEmail,
-        password: config.adminPassword,
-      });
-    });
 
     await test.step("create organization and open details", async () => {
       await organizations.openList();

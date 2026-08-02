@@ -8,10 +8,18 @@ async function source(path) {
 
 test("liveness remains available and directs monitoring to dependency readiness", async () => {
   const health = await source("../app/api/health/route.ts");
+  const proxy = await source("../proxy.ts");
   assert.match(health, /status: "ok"/);
   assert.match(health, /status: 200/);
   assert.match(health, /readinessPath: "\/api\/ready"/);
   assert.match(health, /Cache-Control.*no-store/);
+  assert.doesNotMatch(health, /@\/lib\/operations";/);
+  assert.doesNotMatch(
+    health,
+    /checkDatabaseReadiness|createSupabase|OpenAI|Clerk/,
+  );
+  assert.match(proxy, /api\/health\$/);
+  assert.match(proxy, /api\/ready\$/);
 });
 
 test("readiness verifies the database while allowing AI degradation", async () => {
@@ -23,6 +31,8 @@ test("readiness verifies the database while allowing AI degradation", async () =
   assert.match(route, /createRequestContext/);
   assert.match(route, /responseHeaders/);
   assert.match(probe, /AbortController/);
+  assert.match(probe, /Promise\.race/);
+  assert.match(probe, /controller\.abort\(\)/);
   assert.match(probe, /READINESS_DATABASE_TIMEOUT_MS/);
   assert.match(probe, /\.rpc\("operational_readiness"\)/);
 });
@@ -35,7 +45,10 @@ test("database readiness probe is non-privileged and discloses no business data"
   assert.match(migration, /set search_path = ''/);
   assert.match(migration, /revoke all .* from public/);
   assert.match(migration, /grant execute .* to anon, authenticated/);
-  assert.doesNotMatch(migration, /security definer|crm\.profiles|clerk_user_id/);
+  assert.doesNotMatch(
+    migration,
+    /security definer|crm\.profiles|clerk_user_id/,
+  );
 });
 
 test("private storage links retain bounded expiry controls", async () => {
@@ -45,8 +58,14 @@ test("private storage links retain bounded expiry controls", async () => {
   const messages = await source(
     "../app/scholar-dashboard/services/messages.ts",
   );
-  assert.match(documents, /createSignedUrl\(\s*document\.storage_path,\s*60 \* 5/s);
-  assert.match(messages, /MESSAGE_ATTACHMENT_SIGNED_URL_TTL_SECONDS = 60 \* 10/);
+  assert.match(
+    documents,
+    /createSignedUrl\(\s*document\.storage_path,\s*60 \* 5/s,
+  );
+  assert.match(
+    messages,
+    /MESSAGE_ATTACHMENT_SIGNED_URL_TTL_SECONDS = 60 \* 10/,
+  );
 });
 
 test("recovery documentation defines RTO RPO restore and signed-link evidence", async () => {

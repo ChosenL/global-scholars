@@ -35,9 +35,32 @@ export class ApplicationManagementPage {
     await dialog.getByLabel("Program field").fill(data.program);
     await dialog.getByLabel("Degree level field").fill(data.degreeLevel);
     await dialog.getByRole("button", { name: "Create application" }).click();
-    await expect(this.page.getByRole("status")).toContainText(
-      "Application created.",
-    );
+    try {
+      await expect(this.page.getByRole("status")).toContainText(
+        "Application created.",
+      );
+    } catch (error) {
+      const dialogVisible = await dialog.isVisible();
+      const feedback = [
+        ...new Set(
+          (
+            await this.page
+              .locator('[role="alert"]:visible, [role="status"]:visible')
+              .allInnerTexts()
+          )
+            .map((text) => text.trim())
+            .filter(Boolean),
+        ),
+      ];
+
+      throw new Error(
+        "Application creation did not reach its visible success state.\n" +
+          `Dialog visible: ${dialogVisible}\n` +
+          `Visible alert/status text: ${feedback.join(" | ") || "<none>"}\n` +
+          `Current URL: ${this.page.url()}`,
+        { cause: error },
+      );
+    }
 
     const openLink = this.page.getByRole("link", {
       name: "Open new application",
@@ -124,9 +147,11 @@ export class ApplicationManagementPage {
     await expect(
       this.page.getByRole("heading", { name: "Timeline" }),
     ).toBeVisible();
-    await expect(
-      this.page.getByText(/Application\.Status Changed/i),
-    ).toBeVisible();
+    const visibleStatusChanges = this.page
+      .getByText(/Application\.Status Changed/i)
+      .filter({ visible: true });
+
+    await expect.poll(() => visibleStatusChanges.count()).toBeGreaterThan(0);
   }
 
   async archiveApplication() {
