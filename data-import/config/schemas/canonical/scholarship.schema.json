@@ -13,6 +13,10 @@
     "name",
     "awardType",
     "eligibility",
+    "internationalEligibility",
+    "verificationStatus",
+    "lastVerifiedAt",
+    "sourceUrl",
     "isActive"
   ],
   "properties": {
@@ -39,6 +43,14 @@
       "maximum": 100
     },
     "eligibility": { "type": "object" },
+    "internationalEligibility": {
+      "enum": ["confirmed_eligible", "confirmed_ineligible", "unspecified"]
+    },
+    "verificationStatus": {
+      "enum": ["current", "expired", "future", "unknown"]
+    },
+    "lastVerifiedAt": { "type": "string", "format": "date-time" },
+    "sourceUrl": { "type": "string", "format": "uri" },
     "applicationDeadline": { "type": ["string", "null"], "format": "date" },
     "isActive": { "type": "boolean" }
   }

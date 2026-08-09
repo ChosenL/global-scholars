@@ -39,6 +39,10 @@ const REQUIRED = {
     "name",
     "awardType",
     "eligibility",
+    "internationalEligibility",
+    "verificationStatus",
+    "lastVerifiedAt",
+    "sourceUrl",
     "isActive",
   ],
 };
@@ -295,6 +299,12 @@ export function validateDeterministicRecords(records, { runId } = {}) {
       expected = deterministicIdentity("intake", {
         programCanonicalId: record.programCanonicalId,
         campusCanonicalId: record.campusCanonicalId,
+        sourceSystem: record.provenance?.sourceSystem,
+        sourceEntityId: record.provenance?.sourceEntityId,
+      });
+    else if (record.entityType === "scholarship")
+      expected = deterministicIdentity("scholarship", {
+        universityCanonicalId: record.universityCanonicalId,
         sourceSystem: record.provenance?.sourceSystem,
         sourceEntityId: record.provenance?.sourceEntityId,
       });

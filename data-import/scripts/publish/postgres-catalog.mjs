@@ -51,9 +51,12 @@ function catalog(sql) {
       else if (type === "program-campus")
         rows =
           await sql`select program_id, campus_id from crm.program_campuses where program_id=${desired.program_id} and campus_id=${desired.campus_id} limit 1`;
-      else
+      else if (type === "intake")
         rows =
           await sql`select id, program_id, campus_id, name, start_date::text, start_date_precision, application_deadline::text, international_deadline::text, capacity, status from crm.intakes where id=${deterministicId} or (program_id=${desired.program_id} and campus_id=${desired.campus_id} and ((start_date_precision='exact' and start_date=${desired.start_date}) or (start_date_precision='term' and lower(name)=lower(${desired.name})))) order by (id=${deterministicId}) desc limit 1`;
+      else
+        rows =
+          await sql`select id,university_id,program_id,intake_id,name,award_type,amount::float8,currency,percentage::float8,eligibility,application_deadline::text,international_eligibility,verification_status,to_char(last_verified_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as last_verified_at,source_url,is_active from crm.scholarships where id=${deterministicId} or (university_id=${desired.university_id} and lower(name)=lower(${desired.name})) order by (id=${deterministicId}) desc limit 1`;
       return rows[0] ?? null;
     },
     async insert(type, row) {
@@ -69,8 +72,10 @@ function catalog(sql) {
         await sql`insert into crm.programs ${sql(row, "id", "university_id", "faculty_id", "name", "program_code", "credential_level", "duration_months", "description", "is_active")}`;
       else if (type === "program-campus")
         await sql`insert into crm.program_campuses ${sql(row, "program_id", "campus_id")}`;
-      else
+      else if (type === "intake")
         await sql`insert into crm.intakes ${sql(row, "id", "program_id", "campus_id", "name", "start_date", "start_date_precision", "application_deadline", "international_deadline", "capacity", "status")}`;
+      else
+        await sql`insert into crm.scholarships ${sql(row, "id", "university_id", "program_id", "intake_id", "name", "award_type", "amount", "currency", "percentage", "eligibility", "application_deadline", "international_eligibility", "verification_status", "last_verified_at", "source_url", "is_active")}`;
     },
     async update(type, id, values) {
       if (type === "country")
@@ -85,6 +90,8 @@ function catalog(sql) {
         await sql`update crm.programs set ${sql(values, "university_id", "faculty_id", "name", "program_code", "credential_level", "duration_months", "description", "is_active")} where id=${id}`;
       else if (type === "intake")
         await sql`update crm.intakes set ${sql(values, "program_id", "campus_id", "name", "start_date", "start_date_precision", "application_deadline", "international_deadline", "capacity", "status")} where id=${id}`;
+      else if (type === "scholarship")
+        await sql`update crm.scholarships set ${sql(values, "university_id", "program_id", "intake_id", "name", "award_type", "amount", "currency", "percentage", "eligibility", "application_deadline", "international_eligibility", "verification_status", "last_verified_at", "source_url", "is_active")} where id=${id}`;
     },
     async verify({ expected, actions, dryRun }) {
       if (dryRun) {
@@ -123,12 +130,14 @@ function catalog(sql) {
         programs,
         relations,
         intakes,
+        scholarships,
         brokenUniversity,
         brokenCampus,
         brokenFaculty,
         brokenProgram,
         brokenRelation,
         brokenIntake,
+        brokenScholarship,
       ] = await Promise.all([
         sql`select count(*)::int as count from crm.countries where id = any(${ids})`,
         sql`select count(*)::int as count from crm.universities where id = any(${ids})`,
@@ -137,12 +146,14 @@ function catalog(sql) {
         sql`select count(*)::int as count from crm.programs where id = any(${ids})`,
         sql`select count(*)::int as count from crm.program_campuses where program_id = any(${ids})`,
         sql`select count(*)::int as count from crm.intakes where id = any(${ids})`,
+        sql`select count(*)::int as count from crm.scholarships where id = any(${ids})`,
         sql`select count(*)::int as count from crm.universities u left join crm.countries c on c.id = u.country_id where u.id = any(${ids}) and c.id is null`,
         sql`select count(*)::int as count from crm.campuses ca left join crm.universities u on u.id = ca.university_id where ca.id = any(${ids}) and u.id is null`,
         sql`select count(*)::int as count from crm.faculties f left join crm.universities u on u.id=f.university_id where f.id=any(${ids}) and u.id is null`,
         sql`select count(*)::int as count from crm.programs p left join crm.universities u on u.id=p.university_id left join crm.faculties f on f.id=p.faculty_id where p.id=any(${ids}) and (u.id is null or (p.faculty_id is not null and f.id is null))`,
         sql`select count(*)::int as count from crm.program_campuses pc left join crm.programs p on p.id=pc.program_id left join crm.campuses c on c.id=pc.campus_id where pc.program_id=any(${ids}) and (p.id is null or c.id is null)`,
         sql`select count(*)::int as count from crm.intakes i left join crm.program_campuses pc on pc.program_id=i.program_id and pc.campus_id=i.campus_id where i.id=any(${ids}) and pc.program_id is null`,
+        sql`select count(*)::int as count from crm.scholarships s left join crm.universities u on u.id=s.university_id left join crm.programs p on p.id=s.program_id left join crm.intakes i on i.id=s.intake_id where s.id=any(${ids}) and (u.id is null or (s.program_id is not null and p.id is null) or (s.intake_id is not null and i.id is null))`,
       ]);
       const rowCounts = {
         country: countries[0].count,
@@ -152,6 +163,7 @@ function catalog(sql) {
         program: programs[0].count,
         "program-campus": relations[0].count,
         intake: intakes[0].count,
+        scholarship: scholarships[0].count,
       };
       const expectedCounts = Object.fromEntries(
         [
@@ -162,6 +174,7 @@ function catalog(sql) {
           "program",
           "program-campus",
           "intake",
+          "scholarship",
         ].map((type) => [
           type,
           expected.filter((record) => record.entityType === type).length,
@@ -176,6 +189,7 @@ function catalog(sql) {
           brokenProgram,
           brokenRelation,
           brokenIntake,
+          brokenScholarship,
         ].every((rows) => rows[0].count === 0),
         identityConsistency: Object.keys(expectedCounts).every(
           (type) => rowCounts[type] === expectedCounts[type],

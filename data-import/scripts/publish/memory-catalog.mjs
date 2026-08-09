@@ -9,6 +9,7 @@ const TABLE = {
   program: "programs",
   "program-campus": "programCampuses",
   intake: "intakes",
+  scholarship: "scholarships",
 };
 const TYPES = Object.keys(TABLE);
 export class MemoryCatalogRepository {
@@ -18,7 +19,13 @@ export class MemoryCatalogRepository {
       universities: clone(seed.universities ?? []),
       campuses: clone(seed.campuses ?? []),
     };
-    for (const table of ["faculties", "programs", "programCampuses", "intakes"])
+    for (const table of [
+      "faculties",
+      "programs",
+      "programCampuses",
+      "intakes",
+      "scholarships",
+    ])
       if (seed[table]) this.state[table] = clone(seed[table]);
   }
   async transaction(callback, { dryRun = false } = {}) {
@@ -68,6 +75,14 @@ export class MemoryCatalogRepository {
             rows.find(
               (r) =>
                 r.program_id === d.program_id && r.campus_id === d.campus_id,
+            ) ?? null
+          );
+        if (type === "scholarship")
+          return (
+            rows.find(
+              (r) =>
+                r.university_id === d.university_id &&
+                r.name.toLowerCase() === d.name.toLowerCase(),
             ) ?? null
           );
         return (
@@ -121,6 +136,7 @@ export class MemoryCatalogRepository {
           programs: [],
           programCampuses: [],
           intakes: [],
+          scholarships: [],
           ...this.state,
         };
         return {
@@ -151,6 +167,13 @@ export class MemoryCatalogRepository {
                 (p) =>
                   p.program_id === r.program_id && p.campus_id === r.campus_id,
               ),
+            ) &&
+            s.scholarships.every(
+              (r) =>
+                s.universities.some((u) => u.id === r.university_id) &&
+                (!r.program_id ||
+                  s.programs.some((p) => p.id === r.program_id)) &&
+                (!r.intake_id || s.intakes.some((i) => i.id === r.intake_id)),
             ),
           identityConsistency: actions
             .filter((a) => a.operation !== "skipped")

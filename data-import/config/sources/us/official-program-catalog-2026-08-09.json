@@ -202,6 +202,86 @@
       "credentialLevel": "bachelor",
       "faculty": "School of Arts and Sciences",
       "programUrl": "https://bulletin.oakwood.edu/preview_program.php?catoid=6&poid=619"
+    },
+    {
+      "unitid": "102368",
+      "sourceId": "troy-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Arts and Sciences",
+      "programUrl": "https://www.troy.edu/academics/academic-programs/computer-science.html"
+    },
+    {
+      "unitid": "102377",
+      "sourceId": "tuskegee-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Arts and Sciences",
+      "programUrl": "https://www.tuskegee.edu/programs-courses/colleges-schools/cas/computer-science"
+    },
+    {
+      "unitid": "100654",
+      "sourceId": "aamu-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Engineering, Technology, and Physical Sciences",
+      "programUrl": "https://www.aamu.edu/academics/colleges/engineering-technology-physical-sciences/departments/electrical-engineering-computer-science/programs/computer-science.html"
+    },
+    {
+      "unitid": "100724",
+      "sourceId": "asu-alabama-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Science, Technology, Engineering and Mathematics",
+      "programUrl": "https://www.alasu.edu/cstem/computer-science"
+    },
+    {
+      "unitid": "102270",
+      "sourceId": "stillman-bs-cybersecurity",
+      "name": "Cybersecurity, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "School of Business, Entrepreneurship, and Computational and Information Sciences",
+      "programUrl": "https://stillman.edu/academics/cybersecurity/"
+    },
+    {
+      "unitid": "101189",
+      "sourceId": "faulkner-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Arts and Sciences",
+      "programUrl": "https://www.faulkner.edu/undergraduate/computer-science/"
+    },
+    {
+      "unitid": "102234",
+      "sourceId": "spring-hill-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "Division of Business",
+      "programUrl": "https://www.shc.edu/academics/programs/computer-science/"
+    },
+    {
+      "unitid": "100812",
+      "sourceId": "athens-bs-cis",
+      "name": "Computer Information Systems, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Business",
+      "programUrl": "https://www.athens.edu/programs/computer-information-systems/"
+    },
+    {
+      "unitid": "105154",
+      "sourceId": "mesa-aas-cybersecurity",
+      "name": "Cybersecurity, AAS",
+      "credentialLevel": "associate",
+      "faculty": "Science, Technology, Engineering and Mathematics",
+      "programUrl": "https://www.mesacc.edu/programs/cybersecurity"
+    },
+    {
+      "unitid": "105145",
+      "sourceId": "gateway-aas-information-technology",
+      "name": "Information Technology, AAS",
+      "credentialLevel": "associate",
+      "faculty": "Information Technology",
+      "programUrl": "https://www.gatewaycc.edu/degrees-certificates/information-technology"
     }
   ],
   "quarantine": [
@@ -239,6 +319,154 @@
       "unitid": "102614",
       "entityType": "intake",
       "reason": "No source-supported currently-open term with exact start date was established."
+    },
+    {
+      "unitid": "104179",
+      "entityType": "scholarship",
+      "reason": "An older official scholarship page was found, but current award availability and terms could not be verified."
+    },
+    {
+      "unitid": "102368",
+      "entityType": "scholarship",
+      "reason": "The official scholarship URL redirects to an application portal and does not expose enough current award evidence for normalization."
+    }
+  ],
+  "scholarships": [
+    {
+      "unitid": "100663",
+      "sourceId": "uab-international-scholarship",
+      "name": "UAB International Scholarship",
+      "provider": "University of Alabama at Birmingham",
+      "sourceTier": "official_university",
+      "sourceUrl": "https://www.uab.edu/admissions/cost/scholarships/international-students",
+      "awardType": "fixed",
+      "amount": 7500,
+      "currency": "USD",
+      "internationalEligibility": "confirmed_eligible",
+      "verificationStatus": "current",
+      "isActive": true,
+      "applicationDeadline": null,
+      "eligibility": {
+        "automaticConsideration": true,
+        "meritBased": true,
+        "degreeLevels": ["bachelor"],
+        "minimumGpa": 3.0,
+        "renewable": true,
+        "renewableYears": 4,
+        "internationalEvidence": "Applicants living outside the US who anticipate F-1 status."
+      }
+    },
+    {
+      "unitid": "104151",
+      "sourceId": "asu-new-american-university",
+      "name": "New American University Scholarship",
+      "provider": "Arizona State University",
+      "sourceTier": "official_university",
+      "sourceUrl": "https://admission.asu.edu/apply/international/graduate",
+      "awardType": "other",
+      "amount": null,
+      "currency": null,
+      "internationalEligibility": "confirmed_eligible",
+      "verificationStatus": "current",
+      "isActive": true,
+      "applicationDeadline": null,
+      "eligibility": {
+        "automaticConsideration": true,
+        "meritBased": true,
+        "degreeLevels": ["bachelor"],
+        "minimumAmount": 3000,
+        "maximumAmount": 10000,
+        "currency": "USD"
+      }
+    },
+    {
+      "unitid": "100751",
+      "sourceId": "ua-crimson-legends-2026",
+      "name": "Crimson Legends",
+      "provider": "The University of Alabama",
+      "sourceTier": "official_university",
+      "sourceUrl": "https://afford.ua.edu/scholarships/international/",
+      "awardType": "fixed",
+      "amount": 6000,
+      "currency": "USD",
+      "internationalEligibility": "confirmed_eligible",
+      "verificationStatus": "expired",
+      "isActive": false,
+      "applicationDeadline": "2025-12-05",
+      "eligibility": {
+        "automaticConsideration": true,
+        "meritBased": true,
+        "degreeLevels": ["bachelor"],
+        "minimumGpa": 3.5,
+        "awardPeriod": "2026"
+      }
+    },
+    {
+      "unitid": "101879",
+      "sourceId": "una-international-undergraduate-recruitment",
+      "name": "International Undergraduate Recruitment Scholarship",
+      "provider": "University of North Alabama",
+      "sourceTier": "official_university",
+      "sourceUrl": "https://www.una.edu/international/costs-and-scholarships/scholarships.html",
+      "awardType": "fixed",
+      "amount": 10000,
+      "currency": "USD",
+      "internationalEligibility": "confirmed_eligible",
+      "verificationStatus": "current",
+      "isActive": true,
+      "applicationDeadline": null,
+      "eligibility": {
+        "automaticConsideration": true,
+        "degreeLevels": ["bachelor"],
+        "campusRequirement": "on-campus",
+        "firstYearOnly": true
+      }
+    },
+    {
+      "unitid": "102094",
+      "sourceId": "south-alabama-global-freshman-2026",
+      "name": "Global Freshman Scholars Talent and Ability Scholarship",
+      "provider": "University of South Alabama",
+      "sourceTier": "official_university",
+      "sourceUrl": "https://www.southalabama.edu/departments/globalusa/internationalscholarships.html",
+      "awardType": "other",
+      "amount": null,
+      "currency": null,
+      "internationalEligibility": "confirmed_eligible",
+      "verificationStatus": "current",
+      "isActive": true,
+      "applicationDeadline": "2026-05-01",
+      "eligibility": {
+        "separateApplicationRequired": true,
+        "meritBased": true,
+        "degreeLevels": ["bachelor"],
+        "minimumGpa": 3.0,
+        "renewable": true,
+        "renewableYears": 4,
+        "awardDescription": "In-state tuition classification for award purposes."
+      }
+    },
+    {
+      "unitid": "104717",
+      "sourceId": "gcu-international-indirect-faculty-2026-27",
+      "name": "International Indirect Faculty Scholarship",
+      "provider": "Grand Canyon University",
+      "sourceTier": "official_university",
+      "sourceUrl": "https://www.gcu.edu/financial-aid/scholarships-grants/international-students",
+      "awardType": "fixed",
+      "amount": 1500,
+      "currency": "USD",
+      "internationalEligibility": "confirmed_eligible",
+      "verificationStatus": "current",
+      "isActive": true,
+      "applicationDeadline": null,
+      "eligibility": {
+        "meritBased": true,
+        "degreeLevels": ["bachelor"],
+        "campusRequirement": "traditional on-campus",
+        "visa": "F-1",
+        "awardPeriod": "2026-27"
+      }
     }
   ]
 }

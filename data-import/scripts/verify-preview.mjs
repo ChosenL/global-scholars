@@ -111,10 +111,12 @@ export async function verifyOfficialCatalog({
     ),
   );
   const byType = Object.fromEntries(
-    ["faculty", "program", "program-campus", "intake"].map((type) => [
-      type,
-      normalized.records.filter((record) => record.entityType === type),
-    ]),
+    ["faculty", "program", "program-campus", "intake", "scholarship"].map(
+      (type) => [
+        type,
+        normalized.records.filter((record) => record.entityType === type),
+      ],
+    ),
   );
   const ids = Object.fromEntries(
     Object.entries(byType).map(([type, records]) => [
@@ -136,10 +138,15 @@ export async function verifyOfficialCatalog({
       openIntakes,
       exactIntakes,
       termIntakes,
+      scholarships,
+      eligibleScholarships,
+      unsafeActiveScholarships,
       coverage,
       broken,
+      brokenScholarships,
       duplicatePrograms,
       duplicateIntakes,
+      duplicateScholarships,
     ] = await Promise.all([
       sql`select count(*)::int as count from crm.faculties where id in ${sql(ids.faculty)}`,
       sql`select count(*)::int as count from crm.programs where id in ${sql(ids.program)} and is_active`,
@@ -148,10 +155,15 @@ export async function verifyOfficialCatalog({
       sql`select count(*)::int as count from crm.intakes where id in ${sql(ids.intake)} and status = 'open'`,
       sql`select count(*)::int as count from crm.intakes where id in ${sql(ids.intake)} and start_date_precision='exact'`,
       sql`select count(*)::int as count from crm.intakes where id in ${sql(ids.intake)} and start_date_precision='term'`,
+      sql`select count(*)::int as count from crm.scholarships where id in ${sql(ids.scholarship)}`,
+      sql`select count(*)::int as count from crm.scholarships where id in ${sql(ids.scholarship)} and international_eligibility='confirmed_eligible'`,
+      sql`select count(*)::int as count from crm.scholarships where id in ${sql(ids.scholarship)} and is_active and verification_status <> 'current'`,
       sql`select count(distinct university_id)::int as count from crm.programs where id in ${sql(ids.program)} and is_active`,
       sql`select count(*)::int as count from crm.intakes i left join crm.programs p on p.id=i.program_id left join crm.campuses c on c.id=i.campus_id left join crm.program_campuses pc on pc.program_id=i.program_id and pc.campus_id=i.campus_id where i.id in ${sql(ids.intake)} and (p.id is null or c.id is null or pc.program_id is null)`,
+      sql`select count(*)::int as count from crm.scholarships s left join crm.universities u on u.id=s.university_id left join crm.programs p on p.id=s.program_id left join crm.intakes i on i.id=s.intake_id where s.id in ${sql(ids.scholarship)} and (u.id is null or (s.program_id is not null and p.id is null) or (s.intake_id is not null and i.id is null))`,
       sql`select count(*)::int as count from (select university_id,lower(name) from crm.programs where id in ${sql(ids.program)} group by university_id,lower(name) having count(*)>1) duplicate`,
       sql`select count(*)::int as count from (select program_id,campus_id,start_date from crm.intakes where id in ${sql(ids.intake)} group by program_id,campus_id,start_date having count(*)>1) duplicate`,
+      sql`select count(*)::int as count from (select university_id,lower(name) from crm.scholarships where id in ${sql(ids.scholarship)} group by university_id,lower(name) having count(*)>1) duplicate`,
     ]);
     const report = {
       runId: normalized.runId,
@@ -165,6 +177,9 @@ export async function verifyOfficialCatalog({
         openIntake: openIntakes[0].count,
         exactIntake: exactIntakes[0].count,
         termIntake: termIntakes[0].count,
+        scholarship: scholarships[0].count,
+        internationallyEligibleScholarship: eligibleScholarships[0].count,
+        unsafeActiveScholarship: unsafeActiveScholarships[0].count,
         universitiesCovered: coverage[0].count,
       },
       expectedCounts: {
@@ -180,15 +195,23 @@ export async function verifyOfficialCatalog({
         termIntake: byType.intake.filter(
           ({ startDatePrecision }) => startDatePrecision === "term",
         ).length,
+        scholarship: byType.scholarship.length,
+        internationallyEligibleScholarship: byType.scholarship.filter(
+          ({ internationalEligibility }) =>
+            internationalEligibility === "confirmed_eligible",
+        ).length,
+        unsafeActiveScholarship: 0,
         universitiesCovered: new Set(
           byType.program.map(
             ({ universityCanonicalId }) => universityCanonicalId,
           ),
         ).size,
       },
-      brokenForeignKeys: broken[0].count,
+      brokenForeignKeys: broken[0].count + brokenScholarships[0].count,
       duplicateNaturalKeys:
-        duplicatePrograms[0].count + duplicateIntakes[0].count,
+        duplicatePrograms[0].count +
+        duplicateIntakes[0].count +
+        duplicateScholarships[0].count,
       publicationChecksum: publication.checksum,
       checksumVerified:
         publication.checksum === sha256(stableStringify(publication.actions)),
@@ -225,7 +248,7 @@ if (
         `PREVIEW_VERIFY accepted=${report.accepted} country=${report.counts.country} university=${report.counts.university} campus=${report.counts.campus} checksum=${report.checksumVerified}`,
       );
       console.log(
-        `PHASE_C_VERIFY accepted=${official.accepted} universities=${official.counts.universitiesCovered} programs=${official.counts.program} openIntakes=${official.counts.openIntake} checksum=${official.checksumVerified}`,
+        `PHASE_E_VERIFY accepted=${official.accepted} universities=${official.counts.universitiesCovered} programs=${official.counts.program} openIntakes=${official.counts.openIntake} scholarships=${official.counts.scholarship} checksum=${official.checksumVerified}`,
       );
       if (!report.accepted || !official.accepted) process.exitCode = 1;
     })

@@ -1,0 +1,10 @@
+begin;
+select plan(6);
+select col_not_null('crm','scholarships','international_eligibility','International eligibility is explicit');
+select col_not_null('crm','scholarships','verification_status','Evidence freshness is explicit');
+select col_is_nullable('crm','scholarships','last_verified_at','Unverified legacy rows remain representable');
+select col_is_nullable('crm','scholarships','source_url','Unverified legacy rows remain representable');
+select throws_ok($$insert into crm.scholarships(university_id,name,award_type,eligibility,international_eligibility,verification_status,is_active) values(gen_random_uuid(),'Invalid eligibility','other','{}','assumed_eligible','current',false)$$,'23514',null,'International eligibility rejects inferred states');
+select throws_ok($$insert into crm.scholarships(university_id,name,award_type,eligibility,international_eligibility,verification_status,source_url,is_active) values(gen_random_uuid(),'Invalid source','other','{}','unspecified','unknown','http://example.test',false)$$,'23514',null,'Evidence URLs require HTTPS');
+select * from finish();
+rollback;

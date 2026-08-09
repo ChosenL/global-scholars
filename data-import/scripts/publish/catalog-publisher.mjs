@@ -18,6 +18,7 @@ const IMPLEMENTED = new Set([
   "program",
   "program-campus",
   "intake",
+  "scholarship",
 ]);
 
 export function deterministicUuid(canonicalId) {
@@ -102,10 +103,40 @@ function comparable(entityType, record, ids) {
       capacity: record.capacity ?? null,
       status: record.status,
     };
+  if (entityType === "scholarship")
+    return {
+      university_id:
+        ids.get(record.universityCanonicalId) ??
+        deterministicUuid(record.universityCanonicalId),
+      program_id: record.programCanonicalId
+        ? (ids.get(record.programCanonicalId) ??
+          deterministicUuid(record.programCanonicalId))
+        : null,
+      intake_id: record.intakeCanonicalId
+        ? (ids.get(record.intakeCanonicalId) ??
+          deterministicUuid(record.intakeCanonicalId))
+        : null,
+      name: record.name,
+      award_type: record.awardType,
+      amount: record.amount ?? null,
+      currency: record.currency ?? null,
+      percentage: record.percentage ?? null,
+      eligibility: record.eligibility,
+      application_deadline: record.applicationDeadline ?? null,
+      international_eligibility: record.internationalEligibility,
+      verification_status: record.verificationStatus,
+      last_verified_at: record.lastVerifiedAt,
+      source_url: record.sourceUrl,
+      is_active: record.isActive,
+    };
   return null;
 }
 function same(left, right) {
-  return Object.entries(right).every(([key, value]) => left?.[key] === value);
+  return Object.entries(right).every(([key, value]) =>
+    value && typeof value === "object"
+      ? stableStringify(left?.[key]) === stableStringify(value)
+      : left?.[key] === value,
+  );
 }
 function counts(actions) {
   return Object.fromEntries(

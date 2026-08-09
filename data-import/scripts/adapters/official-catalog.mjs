@@ -13,6 +13,10 @@ import {
   validateDeterministicRecords,
   validateRelationships,
 } from "../lib/validation.mjs";
+import {
+  loadScholarshipGovernance,
+  validateScholarshipEvidence,
+} from "../lib/scholarship-governance.mjs";
 
 const SOURCE_SYSTEM = "official_university_catalog";
 const VERSION = "us_official_catalog@1.0.0";
@@ -40,6 +44,12 @@ export const officialCatalogAdapter = {
   name: "us_official_catalog",
   version: VERSION,
   async acquire({ config }) {
+    const governance = await loadScholarshipGovernance();
+    if (
+      governance.rules?.tier2MayPublishAlone !== false ||
+      governance.rules?.unspecifiedMeansEligible !== false
+    )
+      throw new Error("Scholarship governance gate is not safely configured.");
     const file = sourceFile(config);
     const bytes = await readFile(file);
     const dataset = JSON.parse(bytes);
@@ -67,7 +77,11 @@ export const officialCatalogAdapter = {
         "utf8",
       ),
     ).records;
-    const selected = new Set(dataset.programs.map(({ unitid }) => unitid));
+    const selected = new Set(
+      [...dataset.programs, ...(dataset.scholarships ?? [])].map(
+        ({ unitid }) => unitid,
+      ),
+    );
     const parents = base.filter(
       (r) =>
         r.entityType === "country" ||
@@ -183,6 +197,50 @@ export const officialCatalogAdapter = {
           ),
         );
     }
+    for (const item of dataset.scholarships ?? []) {
+      const university = parents.find(
+        (r) =>
+          r.entityType === "university" &&
+          r.provenance.sourceEntityId === item.unitid,
+      );
+      if (!university)
+        throw new Error(
+          `Scholarship institution ${item.unitid} is unavailable in the pilot.`,
+        );
+      records.push(
+        entity(
+          "scholarship",
+          {
+            universityCanonicalId: university.canonicalId,
+            sourceSystem: SOURCE_SYSTEM,
+            sourceEntityId: item.sourceId,
+          },
+          {
+            provenance: provenance(
+              config,
+              snapshot,
+              item.sourceId,
+              item.sourceUrl,
+            ),
+            universityCanonicalId: university.canonicalId,
+            programCanonicalId: null,
+            intakeCanonicalId: null,
+            name: item.name,
+            awardType: item.awardType,
+            amount: item.amount ?? null,
+            currency: item.currency ?? null,
+            percentage: null,
+            eligibility: item.eligibility,
+            internationalEligibility: item.internationalEligibility,
+            verificationStatus: item.verificationStatus,
+            lastVerifiedAt: snapshot.retrievedAt,
+            sourceUrl: item.sourceUrl,
+            applicationDeadline: item.applicationDeadline ?? null,
+            isActive: item.isActive,
+          },
+        ),
+      );
+    }
     return records.sort(
       (a, b) =>
         a.entityType.localeCompare(b.entityType) ||
@@ -209,6 +267,33 @@ export const officialCatalogAdapter = {
         quarantine: true,
       });
     const evidence = JSON.parse(await readFile(sourceFile(config), "utf8"));
+    const governance = await loadScholarshipGovernance();
+    for (const record of evidence.scholarships ?? []) {
+      const evidenceIssues = validateScholarshipEvidence(
+        {
+          ...record,
+          sourceEntityId: record.sourceId,
+          retrievedAt: snapshot.retrievedAt,
+          lastVerifiedAt: snapshot.retrievedAt,
+          rawChecksum: snapshot.artifacts[0].sha256,
+          mappingVersion: config.mappingVersion,
+        },
+        governance,
+        { now: new Date(snapshot.retrievedAt) },
+      );
+      for (const code of evidenceIssues)
+        issues.push({
+          runId,
+          category: "business-rule",
+          severity: "error",
+          code,
+          message: `Scholarship evidence failed governance: ${code}.`,
+          entityType: "scholarship",
+          sourceEntityId: record.sourceId,
+          fieldPath: null,
+          quarantine: true,
+        });
+    }
     for (const candidate of evidence.quarantine ?? [])
       issues.push({
         runId,
@@ -243,6 +328,7 @@ export const officialCatalogAdapter = {
       "program",
       "program-campus",
       "intake",
+      "scholarship",
     ];
     const operations = records
       .map((after) => ({

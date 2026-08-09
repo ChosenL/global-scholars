@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "authoritativeTiers": [
+    "official_university",
+    "official_government",
+    "administering_provider"
+  ],
+  "discoveryOnlyTiers": [
+    "search_engine",
+    "aggregator",
+    "ranking",
+    "blog",
+    "social_media",
+    "ai_summary"
+  ],
+  "requiredPublicationFields": [
+    "name",
+    "provider",
+    "sourceUrl",
+    "sourceEntityId",
+    "retrievedAt",
+    "rawChecksum",
+    "mappingVersion",
+    "internationalEligibility",
+    "verificationStatus",
+    "lastVerifiedAt"
+  ],
+  "internationalEligibilityStates": [
+    "confirmed_eligible",
+    "confirmed_ineligible",
+    "unspecified"
+  ],
+  "verificationStatuses": ["current", "expired", "future", "unknown"],
+  "maximumVerificationAgeDays": 180,
+  "rules": {
+    "tier2MayPublishAlone": false,
+    "unspecifiedMeansEligible": false,
+    "fuzzyIdentityAllowed": false,
+    "missingFactsRemainNull": true
+  }
+}
