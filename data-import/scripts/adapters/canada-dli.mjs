@@ -75,6 +75,12 @@ function provenance(config, snapshot, sourceEntityId) {
   };
 }
 
+function canonicalCampusName(row, repeatedName) {
+  const suffix = repeatedName ? ` — ${row.city}` : "";
+  const available = 150 - suffix.length;
+  return `${row.campus.slice(0, Math.max(2, available)).trim()}${suffix}`;
+}
+
 export const canadaDliAdapter = {
   name: "ca_ircc_dli",
   version: VERSION,
@@ -185,7 +191,7 @@ export const canadaDliAdapter = {
           {
             provenance: provenance(config, snapshot, campusKey),
             universityCanonicalId: university.canonicalId,
-            name: repeatedName ? `${row.campus} — ${row.city}` : row.campus,
+            name: canonicalCampusName(row, repeatedName),
             city: row.city,
             region: row.province,
             isPrimary: !records.some(
