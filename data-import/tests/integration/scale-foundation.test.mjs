@@ -1,0 +1,75 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFile } from "node:fs/promises";
+import { parseDliHtml } from "../../scripts/adapters/canada-dli.mjs";
+import { partitionByInstitution } from "../../scripts/publish/batched-publisher.mjs";
+
+test("Canada DLI parser preserves authoritative identity and campus fields", () => {
+  const rows = parseDliHtml(`
+    <table><tr><td>Alberta</td><td>Example University</td><td>O12345678901</td><td>Calgary</td><td>Main Campus</td><td>Yes</td><td>Public institution</td></tr></table>
+  `);
+  assert.deepEqual(rows, [
+    {
+      province: "Alberta",
+      name: "Example University",
+      dliNumber: "O12345678901",
+      city: "Calgary",
+      campus: "Main Campus",
+      institutionType: "Public institution",
+    },
+  ]);
+});
+
+test("full U.S. foundation is bounded, conservative, and deterministic", async () => {
+  const normalized = JSON.parse(
+    await readFile("data-import/normalized/us/ipeds/2024/records.json", "utf8"),
+  );
+  const universities = normalized.records.filter(
+    ({ entityType }) => entityType === "university",
+  );
+  assert.equal(universities.length, 2825);
+  assert.equal(
+    universities.filter(({ searchEligible }) => searchEligible).length,
+    47,
+  );
+  assert.equal(
+    universities.filter(
+      ({ catalogClassification }) =>
+        catalogClassification === "classification_unknown",
+    ).length,
+    2775,
+  );
+});
+
+test("institution batches retain complete dependency groups and stable boundaries", async () => {
+  const normalized = JSON.parse(
+    await readFile(
+      "data-import/normalized/us/official_catalog/2026-08-09/records.json",
+      "utf8",
+    ),
+  );
+  const first = partitionByInstitution(normalized.records, 250);
+  const repeat = partitionByInstitution(normalized.records, 250);
+  assert.deepEqual(first, repeat);
+  assert.equal(first.length, 12);
+  const seenUniversities = new Set();
+  for (const batch of first) {
+    const universityIds = new Set(
+      batch
+        .filter(({ entityType }) => entityType === "university")
+        .map(({ canonicalId }) => canonicalId),
+    );
+    for (const university of universityIds) {
+      assert.equal(seenUniversities.has(university), false);
+      seenUniversities.add(university);
+    }
+    assert.ok(
+      batch
+        .filter(({ entityType }) => entityType === "campus")
+        .every(({ universityCanonicalId }) =>
+          universityIds.has(universityCanonicalId),
+        ),
+    );
+  }
+  assert.equal(seenUniversities.size, 2825);
+});

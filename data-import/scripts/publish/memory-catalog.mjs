@@ -58,8 +58,9 @@ export class MemoryCatalogRepository {
             rows.find(
               (r) =>
                 r.country_id === d.country_id &&
-                (r.slug === d.slug ||
-                  r.name.toLowerCase() === d.name.toLowerCase()),
+                (d.dli_number
+                  ? r.dli_number === d.dli_number
+                  : r.slug === d.slug),
             ) ?? null
           );
         if (type === "campus" || type === "faculty" || type === "program")

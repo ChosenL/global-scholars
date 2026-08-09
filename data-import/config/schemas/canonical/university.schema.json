@@ -40,6 +40,10 @@
     "degreeGranting": { "type": ["boolean", "null"] },
     "acceptsDirectApplications": { "type": ["boolean", "null"] },
     "searchEligible": { "type": "boolean" },
+    "internationalStudentStatus": {
+      "enum": ["designated", "not_designated", "unknown"]
+    },
+    "dliNumber": { "type": ["string", "null"], "pattern": "^O[0-9]+$" },
     "degreeLevels": {
       "type": "array",
       "uniqueItems": true,

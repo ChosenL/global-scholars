@@ -70,8 +70,8 @@ test("extended publication is idempotent and dry-run is write-free", async () =>
   const repository = new MemoryCatalogRepository();
   const first = await publishCatalog({ repository, records, manifest });
   const repeat = await publishCatalog({ repository, records, manifest });
-  assert.equal(first.report.counts.insert, 253);
-  assert.equal(repeat.report.counts.unchanged, 253);
+  assert.equal(first.report.counts.insert, records.length);
+  assert.equal(repeat.report.counts.unchanged, records.length);
   const before = structuredClone(repository.state);
   const dry = await publishCatalog({
     repository,
@@ -79,6 +79,6 @@ test("extended publication is idempotent and dry-run is write-free", async () =>
     manifest,
     dryRun: true,
   });
-  assert.equal(dry.report.counts.unchanged, 253);
+  assert.equal(dry.report.counts.unchanged, records.length);
   assert.deepEqual(repository.state, before);
 });

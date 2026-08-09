@@ -11,13 +11,17 @@ import {
   officialCatalogAdapter,
   officialCatalogVersions,
 } from "../adapters/official-catalog.mjs";
+import {
+  canadaDliAdapter,
+  canadaDliVersions,
+} from "../adapters/canada-dli.mjs";
 import { publishCatalog } from "../publish/catalog-publisher.mjs";
 import { MemoryCatalogRepository } from "../publish/memory-catalog.mjs";
 import { createPostgresCatalogRepository } from "../publish/postgres-catalog.mjs";
 
 const execFileAsync = promisify(execFile);
 const adapters = new Map(
-  [ipedsAdapter, officialCatalogAdapter].map((adapter) => [
+  [ipedsAdapter, officialCatalogAdapter, canadaDliAdapter].map((adapter) => [
     adapter.name,
     assertAdapter(adapter),
   ]),
@@ -25,6 +29,7 @@ const adapters = new Map(
 const versions = new Map([
   [ipedsAdapter.name, ipedsVersions],
   [officialCatalogAdapter.name, officialCatalogVersions],
+  [canadaDliAdapter.name, canadaDliVersions],
 ]);
 const pathsFor = (config) => {
   const base = path.join(

@@ -47,6 +47,9 @@ function comparable(entityType, record, ids) {
       degree_granting: record.degreeGranting ?? null,
       accepts_direct_applications: record.acceptsDirectApplications ?? null,
       search_eligible: record.searchEligible,
+      international_student_status:
+        record.internationalStudentStatus ?? "unknown",
+      dli_number: record.dliNumber ?? null,
       is_active: record.isActive,
     };
   if (entityType === "campus")

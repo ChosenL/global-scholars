@@ -29,6 +29,9 @@ const CLASSIFICATIONS = JSON.parse(
     "utf8",
   ),
 );
+const CERTIFIED_SEARCH_ELIGIBLE = new Set(
+  CLASSIFICATIONS.certifiedSearchEligibleUnitids,
+);
 const CONTROL = {
   1: "Public institution",
   2: "Private nonprofit institution",
@@ -194,6 +197,14 @@ export const ipedsAdapter = {
       const characteristic = ic.get(unitid) ?? {};
       const classification = {
         ...CLASSIFICATIONS.default,
+        ...(CERTIFIED_SEARCH_ELIGIBLE.has(unitid)
+          ? {
+              classification: "degree_granting_institution",
+              degreeGranting: true,
+              acceptsDirectApplications: true,
+              searchEligible: true,
+            }
+          : {}),
         ...(CLASSIFICATIONS.overrides[unitid] ?? {}),
       };
       const university = withIdentity(

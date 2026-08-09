@@ -14,8 +14,11 @@ export async function verifyPreview({
   const normalized = await readJson(
     path.join(ROOT, "normalized", "us", "ipeds", "2024", "records.json"),
   );
-  const publication = await readJson(
-    path.join(ROOT, "validation", "reports", "us_ipeds-2024-publication.json"),
+  const byType = Object.fromEntries(
+    ["country", "university", "campus"].map((type) => [
+      type,
+      normalized.records.filter((record) => record.entityType === type),
+    ]),
   );
   const ids = normalized.records.map((record) =>
     deterministicUuid(record.canonicalId),
@@ -58,7 +61,9 @@ export async function verifyPreview({
         university: universities[0].count,
         campus: campuses[0].count,
       },
-      expectedCounts: { country: 1, university: 50, campus: 50 },
+      expectedCounts: Object.fromEntries(
+        Object.entries(byType).map(([type, records]) => [type, records.length]),
+      ),
       identityCount: ids.length,
       brokenForeignKeys: brokenUniversities[0].count + brokenCampuses[0].count,
       inactivePilotRows: inactive[0].count,
@@ -66,26 +71,135 @@ export async function verifyPreview({
         duplicateUniversities[0].count + duplicateCampuses[0].count,
       searchEligibleUniversities: searchEligible[0].count,
       exposedAdministrativeOffices: exposedAdministrativeOffices[0].count,
-      publicationChecksum: publication.checksum,
-      checksumVerified:
-        publication.checksum === sha256(stableStringify(publication.actions)),
+      searchEligibleExpected: byType.university.filter(
+        ({ isActive, searchEligible }) => isActive && searchEligible,
+      ).length,
     };
     report.accepted =
       stableStringify(report.counts) ===
         stableStringify(report.expectedCounts) &&
-      report.identityCount === 101 &&
+      report.identityCount === normalized.records.length &&
       report.brokenForeignKeys === 0 &&
       report.inactivePilotRows === 0 &&
       report.duplicateNaturalKeys === 0 &&
-      report.searchEligibleUniversities === 47 &&
-      report.exposedAdministrativeOffices === 0 &&
-      report.checksumVerified;
+      report.searchEligibleUniversities === report.searchEligibleExpected &&
+      report.exposedAdministrativeOffices === 0;
     await writeJson(
       path.join(
         ROOT,
         "validation",
         "reports",
         "us_ipeds-2024-preview-verification.json",
+      ),
+      report,
+    );
+    return report;
+  } finally {
+    await sql.end({ timeout: 5 });
+  }
+}
+
+export async function verifyCanadaFoundation({
+  connectionString = process.env.SUPABASE_DB_URL,
+} = {}) {
+  if (!connectionString)
+    throw new Error("SUPABASE_DB_URL is required for Preview verification.");
+  const normalized = await readJson(
+    path.join(
+      ROOT,
+      "normalized",
+      "ca",
+      "ircc_dli",
+      "2026-08-09",
+      "records.json",
+    ),
+  );
+  const publication = await readJson(
+    path.join(
+      ROOT,
+      "validation",
+      "reports",
+      "ca_ircc_dli-scale-publication.json",
+    ),
+  );
+  const universities = normalized.records.filter(
+    ({ entityType }) => entityType === "university",
+  );
+  const campuses = normalized.records.filter(
+    ({ entityType }) => entityType === "campus",
+  );
+  const ids = normalized.records.map(({ canonicalId }) =>
+    deterministicUuid(canonicalId),
+  );
+  const sql = postgres(connectionString, {
+    max: 1,
+    prepare: false,
+    idle_timeout: 5,
+  });
+  try {
+    const [
+      countries,
+      universityRows,
+      campusRows,
+      designated,
+      missingDli,
+      broken,
+      duplicates,
+    ] = await Promise.all([
+      sql`select count(*)::int as count from crm.countries where id in ${sql(ids)}`,
+      sql`select count(*)::int as count from crm.universities where id in ${sql(ids)}`,
+      sql`select count(*)::int as count from crm.campuses where id in ${sql(ids)}`,
+      sql`select count(*)::int as count from crm.universities where id in ${sql(ids)} and is_active and search_eligible and international_student_status='designated'`,
+      sql`select count(*)::int as count from crm.universities where id in ${sql(ids)} and dli_number is null`,
+      sql`select count(*)::int as count from crm.campuses c left join crm.universities u on u.id=c.university_id where c.id in ${sql(ids)} and u.id is null`,
+      sql`select count(*)::int as count from (select dli_number from crm.universities where dli_number is not null group by dli_number having count(*)>1) d`,
+    ]);
+    const report = {
+      runId: normalized.runId,
+      verifiedAt: new Date().toISOString(),
+      environment: "preview",
+      counts: {
+        country: countries[0].count,
+        university: universityRows[0].count,
+        campus: campusRows[0].count,
+      },
+      expectedCounts: {
+        country: 1,
+        university: universities.length,
+        campus: campuses.length,
+      },
+      designatedSearchEligible: designated[0].count,
+      expectedDesignatedSearchEligible: universities.filter(
+        ({ isActive, searchEligible, internationalStudentStatus }) =>
+          isActive &&
+          searchEligible &&
+          internationalStudentStatus === "designated",
+      ).length,
+      missingDliNumbers: missingDli[0].count,
+      brokenForeignKeys: broken[0].count,
+      duplicateDliIdentities: duplicates[0].count,
+      publicationChecksum: publication.checksum,
+      checksumVerified:
+        publication.checksum ===
+        sha256(
+          stableStringify(publication.batches.map(({ checksum }) => checksum)),
+        ),
+    };
+    report.accepted =
+      stableStringify(report.counts) ===
+        stableStringify(report.expectedCounts) &&
+      report.designatedSearchEligible ===
+        report.expectedDesignatedSearchEligible &&
+      report.missingDliNumbers === 0 &&
+      report.brokenForeignKeys === 0 &&
+      report.duplicateDliIdentities === 0 &&
+      report.checksumVerified;
+    await writeJson(
+      path.join(
+        ROOT,
+        "validation",
+        "reports",
+        "ca_ircc_dli-2026-08-09-preview-verification.json",
       ),
       report,
     );
@@ -250,15 +364,23 @@ if (
   import.meta.url ===
     new URL(`file://${process.argv[1].replace(/\\/g, "/")}`).href
 )
-  Promise.all([verifyPreview(), verifyOfficialCatalog()])
-    .then(([report, official]) => {
+  Promise.all([
+    verifyPreview(),
+    verifyOfficialCatalog(),
+    verifyCanadaFoundation(),
+  ])
+    .then(([report, official, canada]) => {
       console.log(
         `PREVIEW_VERIFY accepted=${report.accepted} country=${report.counts.country} university=${report.counts.university} campus=${report.counts.campus} checksum=${report.checksumVerified}`,
       );
       console.log(
         `PHASE_E_VERIFY accepted=${official.accepted} universities=${official.counts.universitiesCovered} programs=${official.counts.program} openIntakes=${official.counts.openIntake} scholarships=${official.counts.scholarship} checksum=${official.checksumVerified}`,
       );
-      if (!report.accepted || !official.accepted) process.exitCode = 1;
+      console.log(
+        `CANADA_VERIFY accepted=${canada.accepted} university=${canada.counts.university} campus=${canada.counts.campus} designated=${canada.designatedSearchEligible} checksum=${canada.checksumVerified}`,
+      );
+      if (!report.accepted || !official.accepted || !canada.accepted)
+        process.exitCode = 1;
     })
     .catch((error) => {
       console.error(`ERROR ${error.message}`);
