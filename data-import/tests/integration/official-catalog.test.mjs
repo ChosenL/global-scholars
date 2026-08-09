@@ -31,6 +31,15 @@ test("official facts normalize deterministically with valid relationships", asyn
     b = await load();
   assert.deepEqual(a.records, b.records);
   assert.equal(a.records.filter((r) => r.entityType === "program").length, 47);
+  assert.equal(a.snapshot.sourceRegistry.length, 47);
+  assert.ok(
+    a.snapshot.sourceRegistry.every(
+      (source) =>
+        source.acquisitionStatus === "verified" &&
+        source.officialSourceUrl.startsWith("https://") &&
+        /^[a-f0-9]{64}$/.test(source.evidenceChecksum),
+    ),
+  );
   assert.equal(
     a.records.filter((r) => r.entityType === "university" && r.searchEligible)
       .length,
@@ -63,6 +72,20 @@ test("official facts normalize deterministically with valid relationships", asyn
       })
     ).valid,
     true,
+  );
+});
+test("application-ready publication is blocked by an incomplete source registry", async () => {
+  const { records, snapshot } = await load();
+  snapshot.sourceRegistry.pop();
+  const report = await officialCatalogAdapter.validate({
+    config,
+    records,
+    runId: "registry-test",
+    snapshot,
+  });
+  assert.equal(report.valid, false);
+  assert.ok(
+    report.issues.some(({ code }) => code === "SOURCE_REGISTRY_INCOMPLETE"),
   );
 });
 test("extended publication is idempotent and dry-run is write-free", async () => {

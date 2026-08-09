@@ -63,7 +63,11 @@ async function executeFixtureScript(filename: string) {
   );
   const sqlText = source
     .replaceAll("\\set ON_ERROR_STOP on", "")
-    .replaceAll(":'run_id'", `'${runId}'`);
+    .replaceAll(":'run_id'", `'${runId}'`)
+    .replaceAll(
+      ":'admin_email'",
+      `'${process.env.E2E_ADMIN_EMAIL?.trim().replaceAll("'", "''") ?? ""}'`,
+    );
   const sql = postgres(databaseUrl, {
     max: 1,
     onnotice: () => undefined,

@@ -35,7 +35,20 @@ const formatDate = (value: string) =>
     timeStyle: "short",
   }).format(new Date(value));
 
-export default function ApplicationListPage() {
+export interface InitialApplicationSelection {
+  studentProfileId: string;
+  universityId: string;
+  universityName: string;
+  programId: string;
+  programName: string;
+  credentialLevel: string;
+}
+
+export default function ApplicationListPage({
+  initialSelection,
+}: {
+  initialSelection?: InitialApplicationSelection;
+}) {
   const [items, setItems] = useState<StudentApplication[]>([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<ApplicationStatus | "">("");
@@ -43,7 +56,7 @@ export default function ApplicationListPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(Boolean(initialSelection));
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [createdId, setCreatedId] = useState<string | null>(null);
@@ -52,12 +65,12 @@ export default function ApplicationListPage() {
     tone: "success" | "error";
   } | null>(null);
   const [form, setForm] = useState({
-    studentProfileId: "",
-    universityId: "",
-    universityName: "",
-    programId: "",
-    programName: "",
-    credentialLevel: "",
+    studentProfileId: initialSelection?.studentProfileId ?? "",
+    universityId: initialSelection?.universityId ?? "",
+    universityName: initialSelection?.universityName ?? "",
+    programId: initialSelection?.programId ?? "",
+    programName: initialSelection?.programName ?? "",
+    credentialLevel: initialSelection?.credentialLevel ?? "",
     intakeId: "",
     advisorProfileId: "",
   });

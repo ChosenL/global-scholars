@@ -23,6 +23,40 @@ test.describe("Student Application Management workflow", () => {
     const data = applicationTestData(config.runId, testInfo.retry);
     const applications = new ApplicationManagementPage(page);
 
+    await test.step("review deterministic evidence and hand off to application creation", async () => {
+      await page.goto("/advisor-dashboard");
+      await page
+        .getByRole("button", {
+          name: new RegExp(
+            `e2e-preview-${config.runId} Application Student`,
+            "i",
+          ),
+        })
+        .click();
+      await expect(
+        page.getByRole("heading", { name: "Find Matches" }),
+      ).toBeVisible();
+      await page.getByRole("button", { name: "Find Matches" }).click();
+      await expect(
+        page.getByText(
+          "Matches are based on verified catalog evidence and require advisor review.",
+        ),
+      ).toBeVisible();
+      await expect(page.getByText("Unknown / verify").first()).toBeVisible();
+      await expect(page.getByText("Known blockers").first()).toBeVisible();
+      await page
+        .getByRole("link", { name: "Start Application" })
+        .first()
+        .click();
+      await expect(
+        page.getByRole("dialog", { name: "Create application" }),
+      ).toBeVisible();
+      await expect(page.getByLabel("Student selector")).toHaveValue(
+        config.studentProfileId,
+      );
+      await expect(page.getByLabel("Program selector")).not.toHaveValue("");
+    });
+
     await test.step("request deterministic matches for the authorized student", async () => {
       const response = await page.request.get(
         `/api/matching?studentProfileId=${config.studentProfileId}`,

@@ -52,11 +52,24 @@ test("advisor matching UI covers loading, results, insufficient evidence, and er
     "Additional verification is required",
     "Matching service unavailable",
     "Unknown / verify",
+    "Known blockers",
+    "Start Application",
   ])
     assert.match(component, new RegExp(phrase.replace("/", "\\/"), "i"));
   assert.match(workspace, /StudentMatchesCard/);
+  assert.match(component, /pathname: "\/applications"/);
+  assert.match(component, /studentProfileId/);
   assert.doesNotMatch(
     component,
     /guaranteed admission|acceptance probability|safe school|likely acceptance/i,
   );
+});
+
+test("database-backed matching authorization contract is installed", () => {
+  const pgTap = read("supabase/tests/volume16_matching_authorization.sql");
+  assert.match(pgTap, /set local role authenticated/i);
+  assert.match(pgTap, /request\.jwt\.claims/i);
+  assert.match(pgTap, /crm\.can_access_student/i);
+  assert.match(pgTap, /inaccessible student existence is not disclosed/i);
+  assert.match(pgTap, /direct table access cannot bypass/i);
 });

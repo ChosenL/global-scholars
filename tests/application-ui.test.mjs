@@ -115,6 +115,7 @@ test("application list includes search, filters, pagination, and all data states
     "credentialLevel",
     "Application created.",
     "Creating...",
+    "initialSelection",
     "Student is required.",
     'role="search"',
     "Search applications",
@@ -137,6 +138,26 @@ test("application list includes search, filters, pagination, and all data states
   assert.match(source, /createApplication/);
   assert.match(source, /setQuery/);
   assert.match(source, /APPLICATION_STATUSES/);
+});
+
+test("a match can prefill the existing application workflow without creating automatically", () => {
+  const page = readFileSync(
+    path.join(workspaceRoot, "app/applications/page.tsx"),
+    "utf8",
+  );
+  const list = readFileSync(
+    path.join(
+      workspaceRoot,
+      "features/applications/components/ApplicationListPage.tsx",
+    ),
+    "utf8",
+  );
+  assert.match(page, /params\.start === "1"/);
+  assert.match(page, /studentProfileId/);
+  assert.match(page, /universityId/);
+  assert.match(page, /programId/);
+  assert.match(list, /Boolean\(initialSelection\)/);
+  assert.doesNotMatch(page, /createApplication|POST|supabase/i);
 });
 
 test("application details supports status, financial, timeline, and archive workflows", () => {

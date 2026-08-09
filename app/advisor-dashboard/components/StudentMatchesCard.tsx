@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertCircle, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import type { DeterministicMatchResult } from "@/lib/matching/deterministicMatching";
@@ -150,7 +151,7 @@ export default function StudentMatchesCard({
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 grid gap-4 text-sm md:grid-cols-2">
+                <div className="mt-4 grid gap-4 text-sm md:grid-cols-3">
                   <div>
                     <p className="font-black text-emerald-800">Why</p>
                     <ul className="mt-1 list-disc space-y-1 pl-5 text-slate-600">
@@ -169,10 +170,19 @@ export default function StudentMatchesCard({
                       {result.unknowns.map((unknown) => (
                         <li key={unknown}>{unknown}</li>
                       ))}
-                      {result.potentialBlockers.map((blocker) => (
-                        <li key={blocker}>{blocker}</li>
-                      ))}
                     </ul>
+                  </div>
+                  <div>
+                    <p className="font-black text-rose-800">Known blockers</p>
+                    {result.potentialBlockers.length ? (
+                      <ul className="mt-1 list-disc space-y-1 pl-5 text-slate-600">
+                        {result.potentialBlockers.map((blocker) => (
+                          <li key={blocker}>{blocker}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-1 text-slate-500">No known blockers.</p>
+                    )}
                   </div>
                 </div>
                 <div className="mt-4 grid gap-2 rounded-xl bg-slate-50 p-3 text-xs text-slate-600 md:grid-cols-2">
@@ -183,6 +193,25 @@ export default function StudentMatchesCard({
                     <strong>Scholarship:</strong> {result.scholarshipEvidence}
                   </p>
                 </div>
+                {!result.excluded && result.programId ? (
+                  <Link
+                    href={{
+                      pathname: "/applications",
+                      query: {
+                        start: "1",
+                        studentProfileId,
+                        universityId: result.institutionId,
+                        universityName: result.institutionName,
+                        programId: result.programId,
+                        programName: result.programName ?? "",
+                        credentialLevel: result.credentialLevel ?? "",
+                      },
+                    }}
+                    className="mt-4 inline-flex rounded-xl border border-[#C8A24A] px-4 py-2 text-sm font-black text-[#0F2747]"
+                  >
+                    Start Application
+                  </Link>
+                ) : null}
               </article>
             ))
           )}

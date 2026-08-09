@@ -128,16 +128,30 @@ union all
 select application_student_participant_id, application_conversation_id,
        application_student_id, 'student'
 from preview_e2e_context
+union all
+select pg_temp.preview_e2e_uuid(fixture.prefix || ':application-conversation:admin'),
+       fixture.application_conversation_id, profile.id, 'admin'
+from preview_e2e_context as fixture
+join crm.profiles as profile on lower(profile.email) = lower(:'admin_email')
+  and profile.role = 'admin' and profile.deleted_at is null
 on conflict (conversation_id, profile_id) do update set
   participant_role = excluded.participant_role,
   deleted_at = null,
   updated_at = now();
 
-insert into crm.student_profiles (profile_id, deleted_at)
-select organization_student_id, null::timestamptz from preview_e2e_context
+insert into crm.student_profiles (
+  profile_id, preferred_destination_country, preferred_degree,
+  preferred_program, deleted_at
+)
+select organization_student_id, null, null, null, null::timestamptz
+from preview_e2e_context
 union all
-select application_student_id, null::timestamptz from preview_e2e_context
+select application_student_id, 'US', 'bachelor', 'Computer Science', null::timestamptz
+from preview_e2e_context
 on conflict (profile_id) do update set
+  preferred_destination_country = excluded.preferred_destination_country,
+  preferred_degree = excluded.preferred_degree,
+  preferred_program = excluded.preferred_program,
   deleted_at = null,
   updated_at = now();
 

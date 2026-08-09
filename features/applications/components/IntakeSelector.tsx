@@ -91,7 +91,8 @@ export default function IntakeSelector({
         </span>
       ) : !loading && programId && options.length === 0 ? (
         <span className="mt-2 block text-slate-500">
-          No open intakes found.
+          No open intakes found in the verified catalog. This does not mean the
+          institution has no available intake.
         </span>
       ) : null}
     </label>

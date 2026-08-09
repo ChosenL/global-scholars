@@ -19,7 +19,7 @@ import {
 } from "../lib/scholarship-governance.mjs";
 
 const SOURCE_SYSTEM = "official_university_catalog";
-const VERSION = "us_official_catalog@1.0.0";
+const VERSION = "us_official_catalog@2.0.0";
 const entity = (entityType, naturalKey, material) => {
   const record = {
     entityType,
@@ -30,15 +30,44 @@ const entity = (entityType, naturalKey, material) => {
 };
 const sourceFile = (config) =>
   path.join(ROOT, "config", "sources", "us", config.datasetFile);
-const provenance = (config, snapshot, sourceEntityId, sourceUrl) => ({
+const provenance = (
+  config,
+  snapshot,
+  sourceEntityId,
+  sourceUrl,
+  evidenceChecksum = snapshot.artifacts[0].sha256,
+) => ({
   sourceSystem: SOURCE_SYSTEM,
   sourceEntityId,
   sourceUrl,
   sourceVersion: config.releaseVersion,
   retrievedAt: snapshot.retrievedAt,
-  rawChecksum: snapshot.artifacts[0].sha256,
+  rawChecksum: evidenceChecksum,
   mappingVersion: config.mappingVersion,
 });
+
+export function buildOfficialProgramSourceRegistry(dataset, config) {
+  return [...dataset.programs]
+    .map((item) => ({
+      institutionIdentity: { system: "IPEDS", unitid: item.unitid },
+      sourceIdentifier: item.sourceId,
+      officialSourceUrl: item.programUrl,
+      sourceType: item.sourceType ?? "official_program_page",
+      sourceVersion: item.sourceVersion ?? config.releaseVersion,
+      retrievedAt: dataset.retrievedAt,
+      evidenceChecksum: sha256(stableStringify(item)),
+      adapterVersion: VERSION,
+      acquisitionStatus: "verified",
+      attemptCount: 1,
+      lastVerifiedAt: dataset.retrievedAt,
+    }))
+    .sort(
+      (a, b) =>
+        a.institutionIdentity.unitid.localeCompare(
+          b.institutionIdentity.unitid,
+        ) || a.sourceIdentifier.localeCompare(b.sourceIdentifier),
+    );
+}
 
 export const officialCatalogAdapter = {
   name: "us_official_catalog",
@@ -53,6 +82,18 @@ export const officialCatalogAdapter = {
     const file = sourceFile(config);
     const bytes = await readFile(file);
     const dataset = JSON.parse(bytes);
+    const sourceRegistry = buildOfficialProgramSourceRegistry(dataset, config);
+    if (
+      new Set(sourceRegistry.map((item) => item.sourceIdentifier)).size !==
+      sourceRegistry.length
+    )
+      throw new Error("Official program source identifiers must be unique.");
+    if (
+      sourceRegistry.some(
+        (item) => !item.officialSourceUrl.startsWith("https://"),
+      )
+    )
+      throw new Error("Official program sources must use HTTPS.");
     return {
       sourceName: config.sourceName,
       releaseVersion: config.releaseVersion,
@@ -67,6 +108,7 @@ export const officialCatalogAdapter = {
           file,
         },
       ],
+      sourceRegistry,
     };
   },
   async normalize({ config, snapshot }) {
@@ -84,7 +126,13 @@ export const officialCatalogAdapter = {
         r.entityType === "campus",
     );
     const records = [...parents];
+    const registryBySourceId = new Map(
+      snapshot.sourceRegistry.map((item) => [item.sourceIdentifier, item]),
+    );
     for (const item of dataset.programs) {
+      const sourceRegistration = registryBySourceId.get(item.sourceId);
+      if (!sourceRegistration)
+        throw new Error(`Program source ${item.sourceId} is not registered.`);
       const university = parents.find(
         (r) =>
           r.entityType === "university" &&
@@ -112,6 +160,7 @@ export const officialCatalogAdapter = {
             snapshot,
             `${item.sourceId}:faculty`,
             item.programUrl,
+            sourceRegistration.evidenceChecksum,
           ),
           universityCanonicalId: university.canonicalId,
           name: item.faculty,
@@ -131,6 +180,7 @@ export const officialCatalogAdapter = {
             snapshot,
             item.sourceId,
             item.programUrl,
+            sourceRegistration.evidenceChecksum,
           ),
           universityCanonicalId: university.canonicalId,
           facultyCanonicalId: faculty.canonicalId,
@@ -154,6 +204,7 @@ export const officialCatalogAdapter = {
             snapshot,
             `${item.sourceId}:main-campus`,
             item.programUrl,
+            sourceRegistration.evidenceChecksum,
           ),
           programCanonicalId: program.canonicalId,
           campusCanonicalId: campus.canonicalId,
@@ -176,6 +227,7 @@ export const officialCatalogAdapter = {
                 snapshot,
                 item.intake.sourceId,
                 item.intake.admissionsUrl,
+                sourceRegistration.evidenceChecksum,
               ),
               programCanonicalId: program.canonicalId,
               campusCanonicalId: campus.canonicalId,
@@ -250,6 +302,7 @@ export const officialCatalogAdapter = {
     );
   },
   async validate({ config, records, runId, snapshot }) {
+    const evidence = JSON.parse(await readFile(sourceFile(config), "utf8"));
     const issues = [
       ...records.flatMap((r) => validateCanonicalRecord(r, { runId })),
       ...validateRelationships(records, { runId }),
@@ -268,7 +321,38 @@ export const officialCatalogAdapter = {
         fieldPath: null,
         quarantine: true,
       });
-    const evidence = JSON.parse(await readFile(sourceFile(config), "utf8"));
+    const registeredSources = snapshot?.sourceRegistry ?? [];
+    if (registeredSources.length !== evidence.programs.length)
+      issues.push({
+        runId,
+        category: "provenance",
+        severity: "fatal",
+        code: "SOURCE_REGISTRY_INCOMPLETE",
+        message:
+          "Every application-ready program must have one source-registry entry.",
+        entityType: "program",
+        sourceEntityId: null,
+        fieldPath: "sourceRegistry",
+        quarantine: true,
+      });
+    for (const item of registeredSources) {
+      if (
+        item.acquisitionStatus !== "verified" ||
+        !/^https:\/\//.test(item.officialSourceUrl) ||
+        !/^[a-f0-9]{64}$/.test(item.evidenceChecksum)
+      )
+        issues.push({
+          runId,
+          category: "provenance",
+          severity: "error",
+          code: "SOURCE_REGISTRY_INVALID",
+          message: `Official source registration ${item.sourceIdentifier} is incomplete.`,
+          entityType: "program",
+          sourceEntityId: item.sourceIdentifier,
+          fieldPath: "sourceRegistry",
+          quarantine: true,
+        });
+    }
     const governance = await loadScholarshipGovernance();
     for (const record of evidence.scholarships ?? []) {
       const evidenceIssues = validateScholarshipEvidence(
@@ -377,6 +461,6 @@ export const officialCatalogAdapter = {
 };
 export const officialCatalogVersions = {
   adapter: "us_official_catalog",
-  mapping: "1.0.0",
-  pipeline: "1.1.0",
+  mapping: "2.0.0",
+  pipeline: "1.2.0",
 };

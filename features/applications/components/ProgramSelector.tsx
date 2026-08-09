@@ -137,7 +137,11 @@ export default function ProgramSelector({
           ) : loading ? (
             <div className="p-3 text-slate-500">Searching programs…</div>
           ) : options.length === 0 ? (
-            <div className="p-3 text-slate-500">No programs found.</div>
+            <div className="p-3 text-slate-500">
+              No programs found. This institution is available for discovery,
+              but Global Scholars does not yet have verified program information
+              for this search.
+            </div>
           ) : (
             options.map((option, index) => (
               <button
