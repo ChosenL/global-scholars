@@ -146,11 +146,21 @@ select country_id, 'XZ', 'E2E Preview Synthetic Country', 'USD', true
 from preview_e2e_context
 on conflict (id) do update set is_active = true, updated_at = now();
 
-insert into crm.universities (id, country_id, name, slug, institution_type, is_active)
+insert into crm.universities (
+  id, country_id, name, slug, institution_type, catalog_classification,
+  degree_granting, accepts_direct_applications, search_eligible, is_active
+)
 select university_id, country_id, prefix || ' University', prefix || '-university',
-       'synthetic test institution', true
+       'synthetic test institution', 'degree_granting_institution',
+       true, true, true, true
 from preview_e2e_context
-on conflict (id) do update set is_active = true, updated_at = now();
+on conflict (id) do update set
+  catalog_classification = excluded.catalog_classification,
+  degree_granting = excluded.degree_granting,
+  accepts_direct_applications = excluded.accepts_direct_applications,
+  search_eligible = excluded.search_eligible,
+  is_active = true,
+  updated_at = now();
 
 insert into crm.campuses (id, university_id, name, city, region, is_primary, is_active)
 select campus_id, university_id, prefix || ' Campus', 'Preview City',
