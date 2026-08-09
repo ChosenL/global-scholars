@@ -142,6 +142,7 @@ export async function verifyCanadaFoundation({
       universityRows,
       campusRows,
       designated,
+      searchEligible,
       missingDli,
       broken,
       duplicates,
@@ -149,7 +150,8 @@ export async function verifyCanadaFoundation({
       sql`select count(*)::int as count from crm.countries where id in ${sql(ids)}`,
       sql`select count(*)::int as count from crm.universities where id in ${sql(ids)}`,
       sql`select count(*)::int as count from crm.campuses where id in ${sql(ids)}`,
-      sql`select count(*)::int as count from crm.universities where id in ${sql(ids)} and is_active and search_eligible and international_student_status='designated'`,
+      sql`select count(*)::int as count from crm.universities where id in ${sql(ids)} and is_active and international_student_status='designated'`,
+      sql`select count(*)::int as count from crm.universities where id in ${sql(ids)} and is_active and search_eligible`,
       sql`select count(*)::int as count from crm.universities where id in ${sql(ids)} and dli_number is null`,
       sql`select count(*)::int as count from crm.campuses c left join crm.universities u on u.id=c.university_id where c.id in ${sql(ids)} and u.id is null`,
       sql`select count(*)::int as count from (select dli_number from crm.universities where dli_number is not null group by dli_number having count(*)>1) d`,
@@ -168,12 +170,14 @@ export async function verifyCanadaFoundation({
         university: universities.length,
         campus: campuses.length,
       },
-      designatedSearchEligible: designated[0].count,
-      expectedDesignatedSearchEligible: universities.filter(
-        ({ isActive, searchEligible, internationalStudentStatus }) =>
-          isActive &&
-          searchEligible &&
-          internationalStudentStatus === "designated",
+      designatedInstitutions: designated[0].count,
+      expectedDesignatedInstitutions: universities.filter(
+        ({ isActive, internationalStudentStatus }) =>
+          isActive && internationalStudentStatus === "designated",
+      ).length,
+      searchEligibleInstitutions: searchEligible[0].count,
+      expectedSearchEligibleInstitutions: universities.filter(
+        ({ isActive, searchEligible }) => isActive && searchEligible,
       ).length,
       missingDliNumbers: missingDli[0].count,
       brokenForeignKeys: broken[0].count,
@@ -188,8 +192,9 @@ export async function verifyCanadaFoundation({
     report.accepted =
       stableStringify(report.counts) ===
         stableStringify(report.expectedCounts) &&
-      report.designatedSearchEligible ===
-        report.expectedDesignatedSearchEligible &&
+      report.designatedInstitutions === report.expectedDesignatedInstitutions &&
+      report.searchEligibleInstitutions ===
+        report.expectedSearchEligibleInstitutions &&
       report.missingDliNumbers === 0 &&
       report.brokenForeignKeys === 0 &&
       report.duplicateDliIdentities === 0 &&
@@ -377,7 +382,7 @@ if (
         `PHASE_E_VERIFY accepted=${official.accepted} universities=${official.counts.universitiesCovered} programs=${official.counts.program} openIntakes=${official.counts.openIntake} scholarships=${official.counts.scholarship} checksum=${official.checksumVerified}`,
       );
       console.log(
-        `CANADA_VERIFY accepted=${canada.accepted} university=${canada.counts.university} campus=${canada.counts.campus} designated=${canada.designatedSearchEligible} checksum=${canada.checksumVerified}`,
+        `CANADA_VERIFY accepted=${canada.accepted} university=${canada.counts.university} campus=${canada.counts.campus} designated=${canada.designatedInstitutions} searchEligible=${canada.searchEligibleInstitutions} checksum=${canada.checksumVerified}`,
       );
       if (!report.accepted || !official.accepted || !canada.accepted)
         process.exitCode = 1;
