@@ -1,0 +1,13 @@
+{
+  "sourceName": "Official university program and admissions catalogs",
+  "jurisdiction": "US",
+  "sourceUrl": "https://www.uah.edu/",
+  "releaseVersion": "2026-08-09",
+  "retrievalMethod": "manual",
+  "licensingTermsNote": "Facts transcribed from linked official institutional pages; page content is not redistributed.",
+  "adapterName": "us_official_catalog",
+  "enabled": true,
+  "checksumRequired": true,
+  "datasetFile": "official-program-catalog-2026-08-09.json",
+  "mappingVersion": "1.0.0"
+}

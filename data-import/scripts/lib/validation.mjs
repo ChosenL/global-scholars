@@ -257,6 +257,30 @@ export function validateDeterministicRecords(records, { runId } = {}) {
         universityCanonicalId: record.universityCanonicalId,
         sourceEntityId: record.provenance?.sourceEntityId,
       });
+    else if (record.entityType === "faculty")
+      expected = deterministicIdentity("faculty", {
+        universityCanonicalId: record.universityCanonicalId,
+        sourceSystem: record.provenance?.sourceSystem,
+        sourceEntityId: record.provenance?.sourceEntityId,
+      });
+    else if (record.entityType === "program")
+      expected = deterministicIdentity("program", {
+        universityCanonicalId: record.universityCanonicalId,
+        sourceSystem: record.provenance?.sourceSystem,
+        sourceEntityId: record.provenance?.sourceEntityId,
+      });
+    else if (record.entityType === "program-campus")
+      expected = deterministicIdentity("program-campus", {
+        programCanonicalId: record.programCanonicalId,
+        campusCanonicalId: record.campusCanonicalId,
+      });
+    else if (record.entityType === "intake")
+      expected = deterministicIdentity("intake", {
+        programCanonicalId: record.programCanonicalId,
+        campusCanonicalId: record.campusCanonicalId,
+        sourceSystem: record.provenance?.sourceSystem,
+        sourceEntityId: record.provenance?.sourceEntityId,
+      });
     const expectedHash = recordHash(record);
     return [
       expected && expected !== record.canonicalId

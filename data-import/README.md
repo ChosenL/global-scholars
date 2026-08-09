@@ -1,5 +1,11 @@
 # Admissions catalog import framework
 
+## Official program and intake enrichment
+
+`us_official_catalog` layers source-traceable facts onto the certified 50-school IPEDS pilot. Its dated evidence file contains facts supported by linked official catalogs, admissions pages, and calendars. Run the CLI `acquire`, `normalize`, `validate`, `plan`, and `publish` stages with `--source us_official_catalog`. Publication preserves country → university → campus → faculty → program → program-campus → intake order.
+
+An intake is `open` only when an official admissions page supports current application availability and an official calendar supplies an exact start date. Term-only and not-yet-open candidates are retained as evidence quarantine entries and never normalized. Refresh by adding a newly dated evidence file, updating the release, rechecking every official link, then running the complete pipeline. Every normalized fact carries its source identifier/URL, retrieval time, evidence checksum, release, and mapping version.
+
 This directory contains the source-adapter ETL framework for publishing public
 university information into the existing normalized `crm` admissions catalog.
 It does not connect to Supabase, write to a database, or contain real source data.

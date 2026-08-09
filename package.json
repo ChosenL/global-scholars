@@ -21,7 +21,7 @@
     "data:test": "node --test data-import/tests/contracts/*.test.mjs data-import/tests/integration/*.test.mjs",
     "data:validate": "node data-import/scripts/cli.mjs validate",
     "data:plan": "node data-import/scripts/cli.mjs plan",
-    "data:publish": "node data-import/scripts/cli.mjs publish --source us_ipeds --environment preview",
+    "data:publish": "node data-import/scripts/cli.mjs publish --source us_official_catalog --environment preview",
     "data:verify-preview": "node data-import/scripts/verify-preview.mjs",
     "typecheck": "tsc --noEmit",
     "verify:release": "npx tsc --noEmit && npm run lint && npm test && npm run build && git diff --check"

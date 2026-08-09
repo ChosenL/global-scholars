@@ -5,8 +5,12 @@ const TABLE = {
   country: "countries",
   university: "universities",
   campus: "campuses",
+  faculty: "faculties",
+  program: "programs",
+  "program-campus": "programCampuses",
+  intake: "intakes",
 };
-
+const TYPES = Object.keys(TABLE);
 export class MemoryCatalogRepository {
   constructor(seed = {}) {
     this.state = {
@@ -14,6 +18,8 @@ export class MemoryCatalogRepository {
       universities: clone(seed.universities ?? []),
       campuses: clone(seed.campuses ?? []),
     };
+    for (const table of ["faculties", "programs", "programCampuses", "intakes"])
+      if (seed[table]) this.state[table] = clone(seed[table]);
   }
   async transaction(callback, { dryRun = false } = {}) {
     const original = clone(this.state);
@@ -28,34 +34,51 @@ export class MemoryCatalogRepository {
   }
   #catalog() {
     return {
-      find: async (type, desired) => {
-        const rows = this.state[TABLE[type]];
+      find: async (type, d) => {
+        const rows = this.state[TABLE[type]] ?? [];
         if (type === "country")
           return (
             rows.find(
-              (row) =>
-                row.iso_code === desired.iso_code ||
-                row.name.toLowerCase() === desired.name.toLowerCase(),
+              (r) =>
+                r.iso_code === d.iso_code ||
+                r.name.toLowerCase() === d.name.toLowerCase(),
             ) ?? null
           );
         if (type === "university")
           return (
             rows.find(
-              (row) =>
-                row.country_id === desired.country_id &&
-                (row.slug === desired.slug ||
-                  row.name.toLowerCase() === desired.name.toLowerCase()),
+              (r) =>
+                r.country_id === d.country_id &&
+                (r.slug === d.slug ||
+                  r.name.toLowerCase() === d.name.toLowerCase()),
+            ) ?? null
+          );
+        if (type === "campus" || type === "faculty" || type === "program")
+          return (
+            rows.find(
+              (r) =>
+                r.university_id === d.university_id &&
+                r.name.toLowerCase() === d.name.toLowerCase(),
+            ) ?? null
+          );
+        if (type === "program-campus")
+          return (
+            rows.find(
+              (r) =>
+                r.program_id === d.program_id && r.campus_id === d.campus_id,
             ) ?? null
           );
         return (
           rows.find(
-            (row) =>
-              row.university_id === desired.university_id &&
-              row.name.toLowerCase() === desired.name.toLowerCase(),
+            (r) =>
+              r.program_id === d.program_id &&
+              r.campus_id === d.campus_id &&
+              r.start_date === d.start_date,
           ) ?? null
         );
       },
       insert: async (type, row) => {
+        this.state[TABLE[type]] ??= [];
         this.state[TABLE[type]].push(clone(row));
       },
       update: async (type, id, values) => {
@@ -66,43 +89,67 @@ export class MemoryCatalogRepository {
       verify: async ({ expected, dryRun, actions }) => {
         const effective = dryRun
           ? actions
-              .filter(({ operation }) => operation !== "skipped")
-              .map(({ entityType, after }) => ({ entityType, ...after }))
+              .filter((a) => a.operation !== "skipped")
+              .map((a) => ({ entityType: a.entityType, ...a.after }))
           : expected.map((record) => ({
               entityType: record.entityType,
-              id: actions.find(
-                (action) => action.canonicalId === record.canonicalId,
-              )?.catalogId,
+              id: actions.find((a) => a.canonicalId === record.canonicalId)
+                ?.catalogId,
             }));
+        const present = TYPES.filter((type) =>
+          expected.some((r) => r.entityType === type),
+        );
         const rowCounts = Object.fromEntries(
-          ["country", "university", "campus"].map((type) => [
+          present.map((type) => [
             type,
-            effective.filter((row) => row.entityType === type).length,
+            effective.filter((r) => r.entityType === type).length,
           ]),
         );
-        const countries = dryRun
-          ? effective.filter((row) => row.entityType === "country")
-          : this.state.countries;
-        const universities = dryRun
-          ? effective.filter((row) => row.entityType === "university")
-          : this.state.universities;
-        const campuses = dryRun
-          ? effective.filter((row) => row.entityType === "campus")
-          : this.state.campuses;
+        if (dryRun)
+          return {
+            rowCounts,
+            foreignKeyIntegrity: true,
+            identityConsistency: true,
+          };
+        const s = {
+          faculties: [],
+          programs: [],
+          programCampuses: [],
+          intakes: [],
+          ...this.state,
+        };
         return {
           rowCounts,
           foreignKeyIntegrity:
-            universities.every((row) =>
-              countries.some((country) => country.id === row.country_id),
+            s.universities.every((r) =>
+              s.countries.some((p) => p.id === r.country_id),
             ) &&
-            campuses.every((row) =>
-              universities.some(
-                (university) => university.id === row.university_id,
+            s.campuses.every((r) =>
+              s.universities.some((p) => p.id === r.university_id),
+            ) &&
+            s.faculties.every((r) =>
+              s.universities.some((p) => p.id === r.university_id),
+            ) &&
+            s.programs.every(
+              (r) =>
+                s.universities.some((p) => p.id === r.university_id) &&
+                (!r.faculty_id ||
+                  s.faculties.some((p) => p.id === r.faculty_id)),
+            ) &&
+            s.programCampuses.every(
+              (r) =>
+                s.programs.some((p) => p.id === r.program_id) &&
+                s.campuses.some((p) => p.id === r.campus_id),
+            ) &&
+            s.intakes.every((r) =>
+              s.programCampuses.some(
+                (p) =>
+                  p.program_id === r.program_id && p.campus_id === r.campus_id,
               ),
             ),
           identityConsistency: actions
-            .filter(({ operation }) => operation !== "skipped")
-            .every(({ catalogId }) => typeof catalogId === "string"),
+            .filter((a) => a.operation !== "skipped")
+            .every((a) => typeof a.catalogId === "string"),
         };
       },
     };

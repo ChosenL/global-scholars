@@ -1,0 +1,146 @@
+{
+  "retrievedAt": "2026-08-09T12:00:00.000Z",
+  "programs": [
+    {
+      "unitid": "100706",
+      "sourceId": "uah-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Science",
+      "programUrl": "https://www.uah.edu/science/departments/computer-science/programs/undergraduate",
+      "intake": {
+        "sourceId": "uah-bs-cs-spring-2027",
+        "name": "Spring 2027",
+        "startDate": "2027-01-11",
+        "status": "open",
+        "applicationDeadline": null,
+        "admissionsUrl": "https://admissions.uah.edu/apply/",
+        "calendarUrl": "https://www.uah.edu/images/admissions/Registrar/Calendars/academic-calendar-overview-2026-2027.pdf"
+      }
+    },
+    {
+      "unitid": "104151",
+      "sourceId": "asu-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "Ira A. Fulton Schools of Engineering",
+      "programUrl": "https://degrees.apps.asu.edu/bachelors/major/ASU00/ESCSEBS/computer-science",
+      "intake": {
+        "sourceId": "asu-bs-cs-spring-2027",
+        "name": "Spring 2027",
+        "startDate": "2027-01-11",
+        "status": "open",
+        "applicationDeadline": "2026-11-01",
+        "internationalDeadline": "2026-11-01",
+        "admissionsUrl": "https://admission.asu.edu/apply/international/first-year",
+        "calendarUrl": "https://registrar.asu.edu/academic-calendar"
+      }
+    },
+    {
+      "unitid": "100858",
+      "sourceId": "auburn-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "Samuel Ginn College of Engineering",
+      "programUrl": "https://www.eng.auburn.edu/program/computer-science.html"
+    },
+    {
+      "unitid": "100663",
+      "sourceId": "uab-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Arts and Sciences",
+      "programUrl": "https://www.uab.edu/cas/computerscience/undergraduate/bs-computer-science"
+    },
+    {
+      "unitid": "101879",
+      "sourceId": "una-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Arts, Sciences, and Engineering",
+      "programUrl": "https://catalog.una.edu/undergraduate/arts-sciences-engineering/engineering-industrial-professions/computer-science-information-systems/computer-science-bs/"
+    },
+    {
+      "unitid": "102094",
+      "sourceId": "south-alabama-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "School of Computing",
+      "programUrl": "https://bulletin.southalabama.edu/programs-az/computing/computer-science-bs/"
+    },
+    {
+      "unitid": "102553",
+      "sourceId": "alabama-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Engineering",
+      "programUrl": "https://catalog.ua.edu/undergraduate/engineering/computer-science/bs/"
+    },
+    {
+      "unitid": "104179",
+      "sourceId": "arizona-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Science",
+      "programUrl": "https://degrees.arizona.edu/major/computer-science"
+    },
+    {
+      "unitid": "100751",
+      "sourceId": "alabama-am-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Engineering, Technology, and Physical Sciences",
+      "programUrl": "https://www.aamu.edu/academics/colleges/engineering-technology-physical-sciences/departments/electrical-engineering-computer-science/programs/computer-science.html"
+    },
+    {
+      "unitid": "102614",
+      "sourceId": "uaf-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Engineering and Mines",
+      "programUrl": "https://catalog.uaf.edu/bachelors/computer-science/"
+    }
+  ],
+  "quarantine": [
+    {
+      "unitid": "100858",
+      "entityType": "intake",
+      "reason": "Official Spring 2027 start date and deadline are published, but the application does not open until September 2026."
+    },
+    {
+      "unitid": "100663",
+      "entityType": "intake",
+      "reason": "Calendar supports an exact Spring 2027 start date, but current application availability was not established."
+    },
+    {
+      "unitid": "101879",
+      "entityType": "intake",
+      "reason": "Calendar supports an exact Spring 2027 start date, but current application availability was not established."
+    },
+    {
+      "unitid": "102094",
+      "entityType": "intake",
+      "reason": "Calendar supports an exact Spring 2027 start date, but current application availability was not established."
+    },
+    {
+      "unitid": "102553",
+      "entityType": "intake",
+      "reason": "No source-supported currently-open term with exact start date was established."
+    },
+    {
+      "unitid": "104179",
+      "entityType": "intake",
+      "reason": "No source-supported currently-open term with exact start date was established."
+    },
+    {
+      "unitid": "100751",
+      "entityType": "intake",
+      "reason": "No source-supported currently-open term with exact start date was established."
+    },
+    {
+      "unitid": "102614",
+      "entityType": "intake",
+      "reason": "No source-supported currently-open term with exact start date was established."
+    }
+  ]
+}

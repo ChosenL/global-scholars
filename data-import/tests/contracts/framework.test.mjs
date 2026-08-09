@@ -123,7 +123,7 @@ test("identical normalized input produces identical canonical identity", () => {
 
 test("all source templates validate and unsafe source configuration is rejected", async () => {
   const configs = await loadSourceConfigs();
-  assert.equal(configs.length, 5);
+  assert.equal(configs.length, 6);
   for (const { config } of configs)
     assert.deepEqual(validateSourceConfig(config), []);
   assert.ok(

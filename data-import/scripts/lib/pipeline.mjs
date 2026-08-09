@@ -7,12 +7,25 @@ import { createManifest, updateStage } from "./manifest.mjs";
 import { sha256, stableStringify } from "./identity.mjs";
 import { assertAdapter } from "../adapters/adapter.mjs";
 import { ipedsAdapter, ipedsVersions } from "../adapters/ipeds.mjs";
+import {
+  officialCatalogAdapter,
+  officialCatalogVersions,
+} from "../adapters/official-catalog.mjs";
 import { publishCatalog } from "../publish/catalog-publisher.mjs";
 import { MemoryCatalogRepository } from "../publish/memory-catalog.mjs";
 import { createPostgresCatalogRepository } from "../publish/postgres-catalog.mjs";
 
 const execFileAsync = promisify(execFile);
-const adapters = new Map([[ipedsAdapter.name, assertAdapter(ipedsAdapter)]]);
+const adapters = new Map(
+  [ipedsAdapter, officialCatalogAdapter].map((adapter) => [
+    adapter.name,
+    assertAdapter(adapter),
+  ]),
+);
+const versions = new Map([
+  [ipedsAdapter.name, ipedsVersions],
+  [officialCatalogAdapter.name, officialCatalogVersions],
+]);
 const pathsFor = (config) => {
   const base = path.join(
     config.jurisdiction.toLowerCase(),
@@ -61,6 +74,12 @@ const pathsFor = (config) => {
       "validation",
       "reports",
       `${config.adapterName}-${config.releaseVersion}-publication-summary.json`,
+    ),
+    quarantine: path.join(
+      ROOT,
+      "validation",
+      "quarantine",
+      `${config.adapterName}-${config.releaseVersion}.json`,
     ),
   };
 };
@@ -121,7 +140,7 @@ export async function normalize(config, { limit } = {}) {
         }),
       ),
     },
-    versions: ipedsVersions,
+    versions: versions.get(config.adapterName),
     gitCommit: await gitCommit(),
     targetEnvironment: "local",
   });
@@ -158,6 +177,16 @@ export async function validate(config) {
     report.counts,
   );
   await writeJson(paths.validation, { runId: normalized.runId, ...report });
+  const quarantined = report.issues.filter(({ quarantine }) => quarantine);
+  await writeJson(paths.quarantine, {
+    runId: normalized.runId,
+    records: normalized.records.filter((record) =>
+      quarantined.some(
+        (item) => item.sourceEntityId === record.provenance?.sourceEntityId,
+      ),
+    ),
+    issues: quarantined,
+  });
   await writeJson(paths.manifest, manifest);
   return { report, manifest, paths };
 }

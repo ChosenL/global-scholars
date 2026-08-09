@@ -10,7 +10,15 @@ const ENTITY_ORDER = [
   "intake",
   "scholarship",
 ];
-const IMPLEMENTED = new Set(["country", "university", "campus"]);
+const IMPLEMENTED = new Set([
+  "country",
+  "university",
+  "campus",
+  "faculty",
+  "program",
+  "program-campus",
+  "intake",
+]);
 
 export function deterministicUuid(canonicalId) {
   const hex = sha256(`crm-catalog:${canonicalId}`).slice(0, 32).split("");
@@ -44,6 +52,54 @@ function comparable(entityType, record, ids) {
       region: record.region ?? null,
       is_primary: record.isPrimary,
       is_active: record.isActive,
+    };
+  if (entityType === "faculty")
+    return {
+      university_id:
+        ids.get(record.universityCanonicalId) ??
+        deterministicUuid(record.universityCanonicalId),
+      name: record.name,
+      is_active: record.isActive,
+    };
+  if (entityType === "program")
+    return {
+      university_id:
+        ids.get(record.universityCanonicalId) ??
+        deterministicUuid(record.universityCanonicalId),
+      faculty_id: record.facultyCanonicalId
+        ? (ids.get(record.facultyCanonicalId) ??
+          deterministicUuid(record.facultyCanonicalId))
+        : null,
+      name: record.name,
+      program_code: record.programCode ?? null,
+      credential_level: record.credentialLevel,
+      duration_months: record.durationMonths ?? null,
+      description: record.description ?? null,
+      is_active: record.isActive,
+    };
+  if (entityType === "program-campus")
+    return {
+      program_id:
+        ids.get(record.programCanonicalId) ??
+        deterministicUuid(record.programCanonicalId),
+      campus_id:
+        ids.get(record.campusCanonicalId) ??
+        deterministicUuid(record.campusCanonicalId),
+    };
+  if (entityType === "intake")
+    return {
+      program_id:
+        ids.get(record.programCanonicalId) ??
+        deterministicUuid(record.programCanonicalId),
+      campus_id:
+        ids.get(record.campusCanonicalId) ??
+        deterministicUuid(record.campusCanonicalId),
+      name: record.name,
+      start_date: record.startDate,
+      application_deadline: record.applicationDeadline ?? null,
+      international_deadline: record.internationalDeadline ?? null,
+      capacity: record.capacity ?? null,
+      status: record.status,
     };
   return null;
 }
@@ -123,7 +179,10 @@ export async function publishCatalog({
           ? ids.get(record.countryCanonicalId)
           : record.universityCanonicalId
             ? ids.get(record.universityCanonicalId)
-            : true;
+            : record.programCanonicalId
+              ? (ids.get(record.programCanonicalId) ??
+                deterministicUuid(record.programCanonicalId))
+              : true;
         if (!parentId)
           throw new Error(
             `Unresolved publication dependency for ${record.entityType}:${record.canonicalId}`,
@@ -187,7 +246,11 @@ export async function publishCatalog({
         ...metadata,
         status: "reconciled",
         expectedCounts: Object.fromEntries(
-          ["country", "university", "campus"].map((type) => [
+          ENTITY_ORDER.filter(
+            (type) =>
+              IMPLEMENTED.has(type) &&
+              ordered.some((record) => record.entityType === type),
+          ).map((type) => [
             type,
             ordered.filter((record) => record.entityType === type).length,
           ]),

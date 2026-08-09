@@ -46,6 +46,7 @@ async function jsonFiles(directory) {
       entry.isDirectory()
         ? jsonFiles(path.join(directory, entry.name))
         : entry.name.endsWith(".json") &&
+            !/\d{4}-\d{2}-\d{2}\.json$/.test(entry.name) &&
             entry.name !== "source-config.schema.json"
           ? [path.join(directory, entry.name)]
           : [],
