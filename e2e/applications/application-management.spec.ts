@@ -1,4 +1,4 @@
-import { test } from "../fixtures/test";
+import { expect, test } from "../fixtures/test";
 
 import {
   applicationTestData,
@@ -22,6 +22,21 @@ test.describe("Student Application Management workflow", () => {
     const config = requireApplicationE2EConfig();
     const data = applicationTestData(config.runId, testInfo.retry);
     const applications = new ApplicationManagementPage(page);
+
+    await test.step("request deterministic matches for the authorized student", async () => {
+      const response = await page.request.get(
+        `/api/matching?studentProfileId=${config.studentProfileId}`,
+      );
+      expect(response.ok()).toBeTruthy();
+      const payload = await response.json();
+      expect(payload.ok).toBe(true);
+      expect([
+        "results",
+        "insufficient_evidence",
+        "no_catalog_evidence",
+      ]).toContain(payload.data.status);
+      expect(Array.isArray(payload.data.results)).toBe(true);
+    });
 
     await test.step("create application and open details", async () => {
       await applications.openList();
