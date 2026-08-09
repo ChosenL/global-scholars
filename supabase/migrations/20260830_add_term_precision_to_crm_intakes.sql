@@ -1,0 +1,10 @@
+begin;
+alter table crm.intakes add column start_date_precision text not null default 'exact';
+alter table crm.intakes alter column start_date drop not null;
+alter table crm.intakes drop constraint intakes_unique;
+alter table crm.intakes drop constraint intakes_deadline_check;
+alter table crm.intakes add constraint intakes_start_precision_check check ((start_date_precision='exact' and start_date is not null) or (start_date_precision='term' and start_date is null)), add constraint intakes_deadline_check check (start_date is null or ((application_deadline is null or application_deadline<=start_date) and (international_deadline is null or international_deadline<=start_date)));
+create unique index intakes_exact_unique on crm.intakes(program_id,campus_id,start_date) where start_date_precision='exact';
+create unique index intakes_term_unique on crm.intakes(program_id,campus_id,lower(name)) where start_date_precision='term';
+comment on column crm.intakes.start_date_precision is 'exact requires start_date; term preserves an authoritative named term without inventing a day.';
+commit;

@@ -6,6 +6,8 @@
 
 An intake is `open` only when an official admissions page supports current application availability and an official calendar supplies an exact start date. Term-only and not-yet-open candidates are retained as evidence quarantine entries and never normalized. Refresh by adding a newly dated evidence file, updating the release, rechecking every official link, then running the complete pipeline. Every normalized fact carries its source identifier/URL, retrieval time, evidence checksum, release, and mapping version.
 
+Term-only intakes use `startDatePrecision: "term"` with `startDate: null`; exact intakes use `"exact"` with an authoritative date. Rollback of the additive database migration requires first removing or closing every term-only row, then restoring `start_date NOT NULL`, the original exact-date unique constraint, and dropping the precision column and partial indexes. Never coerce term-only rows to placeholder dates during recovery.
+
 This directory contains the source-adapter ETL framework for publishing public
 university information into the existing normalized `crm` admissions catalog.
 It does not connect to Supabase, write to a database, or contain real source data.

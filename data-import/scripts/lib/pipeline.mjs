@@ -166,6 +166,7 @@ export async function validate(config) {
   const normalized = await readJson(paths.normalized);
   let manifest = await readJson(paths.manifest);
   const report = await adapter.validate({
+    config,
     records: normalized.records,
     runId: normalized.runId,
     snapshot,

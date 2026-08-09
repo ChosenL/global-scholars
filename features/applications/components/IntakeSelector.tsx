@@ -4,8 +4,11 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import { listOpenIntakes, type IntakeOption } from "../api";
 
-const formatIntake = (intake: IntakeOption) =>
-  `${intake.name} — ${new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${intake.start_date}T00:00:00Z`))}`;
+export const formatIntake = (intake: IntakeOption) => {
+  if (intake.start_date_precision === "term" || !intake.start_date)
+    return intake.name;
+  return `${intake.name} — ${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(`${intake.start_date}T00:00:00Z`))}`;
+};
 export default function IntakeSelector({
   programId,
   value,

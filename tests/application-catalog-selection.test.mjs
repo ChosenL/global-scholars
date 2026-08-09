@@ -138,7 +138,7 @@ test("intakes are program-scoped, open-only, and chronological", async () => {
   );
   assert.deepEqual(
     catalog.calls.filter((call) => call[0] === "order").map((call) => call[1]),
-    ["start_date", "id"],
+    ["start_date", "name", "id"],
   );
 });
 test("selectors implement cascading resets, catalog states, and keyboard contracts", () => {

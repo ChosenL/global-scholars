@@ -31,7 +31,7 @@ const REQUIRED = {
     "programCanonicalId",
     "campusCanonicalId",
     "name",
-    "startDate",
+    "startDatePrecision",
     "status",
   ],
   scholarship: [
@@ -189,6 +189,23 @@ export function validateCanonicalRecord(record, { runId } = {}) {
         message: "Application deadline cannot follow start date.",
         record,
         fieldPath: "applicationDeadline",
+      }),
+    );
+  if (
+    record.entityType === "intake" &&
+    ((record.startDatePrecision === "exact" && !record.startDate) ||
+      (record.startDatePrecision === "term" && record.startDate !== null))
+  )
+    issues.push(
+      issue({
+        runId,
+        category: "business-rule",
+        severity: "error",
+        code: "INVALID_START_DATE_PRECISION",
+        message:
+          "Exact intakes require a date and term-only intakes must not carry one.",
+        record,
+        fieldPath: "startDatePrecision",
       }),
     );
   return issues;

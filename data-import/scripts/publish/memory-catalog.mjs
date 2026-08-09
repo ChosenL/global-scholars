@@ -34,8 +34,10 @@ export class MemoryCatalogRepository {
   }
   #catalog() {
     return {
-      find: async (type, d) => {
+      find: async (type, d, deterministicId) => {
         const rows = this.state[TABLE[type]] ?? [];
+        const deterministic = rows.find((row) => row.id === deterministicId);
+        if (deterministic) return deterministic;
         if (type === "country")
           return (
             rows.find(
@@ -73,7 +75,10 @@ export class MemoryCatalogRepository {
             (r) =>
               r.program_id === d.program_id &&
               r.campus_id === d.campus_id &&
-              r.start_date === d.start_date,
+              (d.start_date
+                ? r.start_date === d.start_date
+                : r.start_date_precision === "term" &&
+                  r.name.toLowerCase() === d.name.toLowerCase()),
           ) ?? null
         );
       },

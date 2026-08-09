@@ -64,7 +64,8 @@ export interface Intake {
   program_id: string;
   campus_id: string;
   name: string;
-  start_date: string;
+  start_date: string | null;
+  start_date_precision: "exact" | "term";
   application_deadline: string | null;
   international_deadline: string | null;
   capacity: number | null;
@@ -140,7 +141,8 @@ export async function fetchOpenIntakes(
     .select("*")
     .eq("program_id", requireCrmUuid(programId, "Program"))
     .eq("status", "open")
-    .order("start_date");
+    .order("start_date", { nullsFirst: false })
+    .order("name");
   if (error) throw error;
   return (data ?? []) as Intake[];
 }
@@ -153,11 +155,12 @@ export async function listOpenIntakes(
     .schema("crm")
     .from("intakes")
     .select(
-      "id,name,program_id,campus_id,start_date,application_deadline,international_deadline,status",
+      "id,name,program_id,campus_id,start_date,start_date_precision,application_deadline,international_deadline,status",
     )
     .eq("program_id", requireCrmUuid(programId, "Program"))
     .eq("status", "open")
-    .order("start_date")
+    .order("start_date", { nullsFirst: false })
+    .order("name")
     .order("id")
     .limit(50);
   if (error) throw error;

@@ -96,6 +96,7 @@ function comparable(entityType, record, ids) {
         deterministicUuid(record.campusCanonicalId),
       name: record.name,
       start_date: record.startDate,
+      start_date_precision: record.startDatePrecision,
       application_deadline: record.applicationDeadline ?? null,
       international_deadline: record.internationalDeadline ?? null,
       capacity: record.capacity ?? null,
@@ -188,8 +189,13 @@ export async function publishCatalog({
             `Unresolved publication dependency for ${record.entityType}:${record.canonicalId}`,
           );
         const desired = comparable(record.entityType, record, ids);
-        const existing = await catalog.find(record.entityType, desired);
-        const catalogId = existing?.id ?? deterministicUuid(record.canonicalId);
+        const deterministicId = deterministicUuid(record.canonicalId);
+        const existing = await catalog.find(
+          record.entityType,
+          desired,
+          deterministicId,
+        );
+        const catalogId = existing?.id ?? deterministicId;
         ids.set(record.canonicalId, catalogId);
         let operation = "unchanged";
         let before = existing ? { ...existing } : null;

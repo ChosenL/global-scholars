@@ -134,6 +134,8 @@ export async function verifyOfficialCatalog({
       relations,
       intakes,
       openIntakes,
+      exactIntakes,
+      termIntakes,
       coverage,
       broken,
       duplicatePrograms,
@@ -144,6 +146,8 @@ export async function verifyOfficialCatalog({
       sql`select count(*)::int as count from crm.program_campuses where program_id in ${sql(ids.program)}`,
       sql`select count(*)::int as count from crm.intakes where id in ${sql(ids.intake)}`,
       sql`select count(*)::int as count from crm.intakes where id in ${sql(ids.intake)} and status = 'open'`,
+      sql`select count(*)::int as count from crm.intakes where id in ${sql(ids.intake)} and start_date_precision='exact'`,
+      sql`select count(*)::int as count from crm.intakes where id in ${sql(ids.intake)} and start_date_precision='term'`,
       sql`select count(distinct university_id)::int as count from crm.programs where id in ${sql(ids.program)} and is_active`,
       sql`select count(*)::int as count from crm.intakes i left join crm.programs p on p.id=i.program_id left join crm.campuses c on c.id=i.campus_id left join crm.program_campuses pc on pc.program_id=i.program_id and pc.campus_id=i.campus_id where i.id in ${sql(ids.intake)} and (p.id is null or c.id is null or pc.program_id is null)`,
       sql`select count(*)::int as count from (select university_id,lower(name) from crm.programs where id in ${sql(ids.program)} group by university_id,lower(name) having count(*)>1) duplicate`,
@@ -159,15 +163,28 @@ export async function verifyOfficialCatalog({
         "program-campus": relations[0].count,
         intake: intakes[0].count,
         openIntake: openIntakes[0].count,
+        exactIntake: exactIntakes[0].count,
+        termIntake: termIntakes[0].count,
         universitiesCovered: coverage[0].count,
       },
       expectedCounts: {
-        faculty: 10,
-        program: 10,
-        "program-campus": 10,
-        intake: 2,
-        openIntake: 2,
-        universitiesCovered: 10,
+        faculty: byType.faculty.length,
+        program: byType.program.length,
+        "program-campus": byType["program-campus"].length,
+        intake: byType.intake.length,
+        openIntake: byType.intake.filter(({ status }) => status === "open")
+          .length,
+        exactIntake: byType.intake.filter(
+          ({ startDatePrecision }) => startDatePrecision === "exact",
+        ).length,
+        termIntake: byType.intake.filter(
+          ({ startDatePrecision }) => startDatePrecision === "term",
+        ).length,
+        universitiesCovered: new Set(
+          byType.program.map(
+            ({ universityCanonicalId }) => universityCanonicalId,
+          ),
+        ).size,
       },
       brokenForeignKeys: broken[0].count,
       duplicateNaturalKeys:

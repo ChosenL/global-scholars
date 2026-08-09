@@ -74,7 +74,14 @@
       "name": "Computer Science, BS",
       "credentialLevel": "bachelor",
       "faculty": "College of Engineering",
-      "programUrl": "https://catalog.ua.edu/undergraduate/engineering/computer-science/bs/"
+      "programUrl": "https://catalog.uaa.alaska.edu/undergraduateprograms/coeng/computerscieng/bs-computer-science/",
+      "intake": {
+        "sourceId": "uaa-bs-cs-spring-2027",
+        "name": "Spring 2027",
+        "status": "open",
+        "applicationDeadline": "2026-11-15",
+        "admissionsUrl": "https://www.uaa.alaska.edu/admissions/deadlines.cshtml"
+      }
     },
     {
       "unitid": "104179",
@@ -89,8 +96,8 @@
       "sourceId": "alabama-am-bs-cs",
       "name": "Computer Science, BS",
       "credentialLevel": "bachelor",
-      "faculty": "College of Engineering, Technology, and Physical Sciences",
-      "programUrl": "https://www.aamu.edu/academics/colleges/engineering-technology-physical-sciences/departments/electrical-engineering-computer-science/programs/computer-science.html"
+      "faculty": "College of Engineering",
+      "programUrl": "https://catalog.ua.edu/undergraduate/engineering/computer-science/bs/"
     },
     {
       "unitid": "102614",
@@ -99,6 +106,102 @@
       "credentialLevel": "bachelor",
       "faculty": "College of Engineering and Mines",
       "programUrl": "https://catalog.uaf.edu/bachelors/computer-science/"
+    },
+    {
+      "unitid": "101480",
+      "sourceId": "jsu-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Business and Industry",
+      "programUrl": "https://catalog.jsu.edu/undergraduate/business-industry/mathematical-computing-information-sciences/computer-science-bs/",
+      "intake": {
+        "sourceId": "jsu-bs-cs-spring-2027",
+        "name": "Spring 2027",
+        "startDate": "2027-01-06",
+        "status": "open",
+        "applicationDeadline": "2026-11-01",
+        "internationalDeadline": "2026-11-01",
+        "admissionsUrl": "https://www.jsu.edu/admissions/international-admissions/undergraduate.html"
+      }
+    },
+    {
+      "unitid": "102049",
+      "sourceId": "samford-mats",
+      "name": "Master of Arts in Theological Studies",
+      "credentialLevel": "master",
+      "faculty": "Beeson Divinity School",
+      "programUrl": "https://www.samford.edu/beeson/master-of-arts-in-theological-studies",
+      "intake": {
+        "sourceId": "samford-mats-spring-2027",
+        "name": "Spring 2027",
+        "status": "open",
+        "applicationDeadline": "2026-12-01",
+        "admissionsUrl": "https://graduateadmission.samford.edu/portal/divinity"
+      }
+    },
+    {
+      "unitid": "104717",
+      "sourceId": "gcu-bs-cs",
+      "name": "Bachelor of Science in Computer Science",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Engineering and Technology",
+      "programUrl": "https://www.gcu.edu/degree-programs/bachelor-science-computer-science"
+    },
+    {
+      "unitid": "102632",
+      "sourceId": "uas-bs-biology",
+      "name": "Biology, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "School of Arts and Sciences",
+      "programUrl": "https://catalog.uas.alaska.edu/undergraduate/degree-programs/bachelors-degrees/biology-bs/"
+    },
+    {
+      "unitid": "102669",
+      "sourceId": "apu-ba-business",
+      "name": "Business Administration, BA",
+      "credentialLevel": "bachelor",
+      "faculty": "Institute of Business and Public Policy",
+      "programUrl": "https://catalog.alaskapacific.edu/undergraduate/business-administration/"
+    },
+    {
+      "unitid": "100830",
+      "sourceId": "aum-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Sciences",
+      "programUrl": "https://catalog.aum.edu/undergraduate/college-sciences/computer-science/computer-science-bs/"
+    },
+    {
+      "unitid": "101709",
+      "sourceId": "montevallo-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Arts and Sciences",
+      "programUrl": "https://catalog.montevallo.edu/undergraduate/arts-sciences/behavioral-social-sciences/computer-science-bs/"
+    },
+    {
+      "unitid": "101587",
+      "sourceId": "uwa-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Natural Sciences and Mathematics",
+      "programUrl": "https://catalog.uwa.edu/undergraduate/college-natural-sciences-mathematics/computer-science/computer-science-bs/"
+    },
+    {
+      "unitid": "104586",
+      "sourceId": "erau-prescott-bs-aeronautical-science",
+      "name": "Aeronautical Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Aviation",
+      "programUrl": "https://prescott.erau.edu/degrees/bachelor/aeronautical-science"
+    },
+    {
+      "unitid": "101912",
+      "sourceId": "oakwood-bs-cs",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "School of Arts and Sciences",
+      "programUrl": "https://bulletin.oakwood.edu/preview_program.php?catoid=6&poid=619"
     }
   ],
   "quarantine": [
@@ -121,11 +224,6 @@
       "unitid": "102094",
       "entityType": "intake",
       "reason": "Calendar supports an exact Spring 2027 start date, but current application availability was not established."
-    },
-    {
-      "unitid": "102553",
-      "entityType": "intake",
-      "reason": "No source-supported currently-open term with exact start date was established."
     },
     {
       "unitid": "104179",

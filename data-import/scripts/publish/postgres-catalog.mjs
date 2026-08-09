@@ -31,7 +31,7 @@ export async function createPostgresCatalogRepository(connectionString) {
 
 function catalog(sql) {
   return {
-    async find(type, desired) {
+    async find(type, desired, deterministicId) {
       let rows;
       if (type === "country")
         rows =
@@ -44,16 +44,16 @@ function catalog(sql) {
           await sql`select id, university_id, name, city, region, is_primary, is_active from crm.campuses where university_id = ${desired.university_id} and lower(name) = lower(${desired.name}) limit 1`;
       else if (type === "faculty")
         rows =
-          await sql`select id, university_id, name, is_active from crm.faculties where university_id=${desired.university_id} and lower(name)=lower(${desired.name}) limit 1`;
+          await sql`select id, university_id, name, is_active from crm.faculties where id=${deterministicId} or (university_id=${desired.university_id} and lower(name)=lower(${desired.name})) order by (id=${deterministicId}) desc limit 1`;
       else if (type === "program")
         rows =
-          await sql`select id, university_id, faculty_id, name, program_code, credential_level, duration_months, description, is_active from crm.programs where university_id=${desired.university_id} and lower(name)=lower(${desired.name}) limit 1`;
+          await sql`select id, university_id, faculty_id, name, program_code, credential_level, duration_months, description, is_active from crm.programs where id=${deterministicId} or (university_id=${desired.university_id} and lower(name)=lower(${desired.name})) order by (id=${deterministicId}) desc limit 1`;
       else if (type === "program-campus")
         rows =
           await sql`select program_id, campus_id from crm.program_campuses where program_id=${desired.program_id} and campus_id=${desired.campus_id} limit 1`;
       else
         rows =
-          await sql`select id, program_id, campus_id, name, start_date::text, application_deadline::text, international_deadline::text, capacity, status from crm.intakes where program_id=${desired.program_id} and campus_id=${desired.campus_id} and start_date=${desired.start_date} limit 1`;
+          await sql`select id, program_id, campus_id, name, start_date::text, start_date_precision, application_deadline::text, international_deadline::text, capacity, status from crm.intakes where id=${deterministicId} or (program_id=${desired.program_id} and campus_id=${desired.campus_id} and ((start_date_precision='exact' and start_date=${desired.start_date}) or (start_date_precision='term' and lower(name)=lower(${desired.name})))) order by (id=${deterministicId}) desc limit 1`;
       return rows[0] ?? null;
     },
     async insert(type, row) {
@@ -70,7 +70,7 @@ function catalog(sql) {
       else if (type === "program-campus")
         await sql`insert into crm.program_campuses ${sql(row, "program_id", "campus_id")}`;
       else
-        await sql`insert into crm.intakes ${sql(row, "id", "program_id", "campus_id", "name", "start_date", "application_deadline", "international_deadline", "capacity", "status")}`;
+        await sql`insert into crm.intakes ${sql(row, "id", "program_id", "campus_id", "name", "start_date", "start_date_precision", "application_deadline", "international_deadline", "capacity", "status")}`;
     },
     async update(type, id, values) {
       if (type === "country")
@@ -84,7 +84,7 @@ function catalog(sql) {
       else if (type === "program")
         await sql`update crm.programs set ${sql(values, "university_id", "faculty_id", "name", "program_code", "credential_level", "duration_months", "description", "is_active")} where id=${id}`;
       else if (type === "intake")
-        await sql`update crm.intakes set ${sql(values, "program_id", "campus_id", "name", "start_date", "application_deadline", "international_deadline", "capacity", "status")} where id=${id}`;
+        await sql`update crm.intakes set ${sql(values, "program_id", "campus_id", "name", "start_date", "start_date_precision", "application_deadline", "international_deadline", "capacity", "status")} where id=${id}`;
     },
     async verify({ expected, actions, dryRun }) {
       if (dryRun) {

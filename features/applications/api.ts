@@ -23,7 +23,8 @@ export interface IntakeOption {
   name: string;
   program_id: string;
   campus_id: string;
-  start_date: string;
+  start_date: string | null;
+  start_date_precision: "exact" | "term";
   application_deadline: string | null;
   international_deadline: string | null;
   status: "open";

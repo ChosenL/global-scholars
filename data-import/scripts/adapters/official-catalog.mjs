@@ -173,7 +173,8 @@ export const officialCatalogAdapter = {
               programCanonicalId: program.canonicalId,
               campusCanonicalId: campus.canonicalId,
               name: item.intake.name,
-              startDate: item.intake.startDate,
+              startDate: item.intake.startDate ?? null,
+              startDatePrecision: item.intake.startDate ? "exact" : "term",
               applicationDeadline: item.intake.applicationDeadline ?? null,
               internationalDeadline: item.intake.internationalDeadline ?? null,
               capacity: null,
@@ -188,7 +189,7 @@ export const officialCatalogAdapter = {
         a.canonicalId.localeCompare(b.canonicalId),
     );
   },
-  async validate({ records, runId, snapshot }) {
+  async validate({ config, records, runId, snapshot }) {
     const issues = [
       ...records.flatMap((r) => validateCanonicalRecord(r, { runId })),
       ...validateRelationships(records, { runId }),
@@ -204,6 +205,19 @@ export const officialCatalogAdapter = {
         message: "Source snapshot metadata is incomplete.",
         entityType: "unknown",
         sourceEntityId: null,
+        fieldPath: null,
+        quarantine: true,
+      });
+    const evidence = JSON.parse(await readFile(sourceFile(config), "utf8"));
+    for (const candidate of evidence.quarantine ?? [])
+      issues.push({
+        runId,
+        category: "business-rule",
+        severity: "warning",
+        code: "SOURCE_EVIDENCE_QUARANTINED",
+        message: candidate.reason,
+        entityType: candidate.entityType,
+        sourceEntityId: candidate.unitid,
         fieldPath: null,
         quarantine: true,
       });
