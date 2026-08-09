@@ -184,6 +184,10 @@ test("malformed records are rejected and unresolved relationships are reported",
     countryCanonicalId: sha256("missing"),
     name: "Example University",
     slug: "example-university",
+    catalogClassification: "degree_granting_institution",
+    degreeGranting: true,
+    acceptsDirectApplications: true,
+    searchEligible: true,
     isActive: true,
   };
   assert.ok(

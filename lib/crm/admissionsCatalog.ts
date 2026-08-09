@@ -17,6 +17,10 @@ export interface University {
   slug: string;
   institution_type: string | null;
   website_url: string | null;
+  catalog_classification: string;
+  degree_granting: boolean | null;
+  accepts_direct_applications: boolean | null;
+  search_eligible: boolean;
   is_active: boolean;
 }
 
@@ -32,8 +36,11 @@ export async function searchUniversities(
   let request = supabase
     .schema("crm")
     .from("universities")
-    .select("id,country_id,name,slug,institution_type,website_url,is_active")
-    .eq("is_active", true);
+    .select(
+      "id,country_id,name,slug,institution_type,website_url,catalog_classification,degree_granting,accepts_direct_applications,search_eligible,is_active",
+    )
+    .eq("is_active", true)
+    .eq("search_eligible", true);
   if (normalized)
     request = request.ilike(
       "name",

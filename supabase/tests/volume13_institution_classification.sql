@@ -1,0 +1,13 @@
+begin;
+select plan(9);
+select col_not_null('crm','universities','catalog_classification','Classification is explicit');
+select col_not_null('crm','universities','search_eligible','Search eligibility is explicit');
+select col_is_nullable('crm','universities','degree_granting','Unknown degree status remains representable');
+select col_is_nullable('crm','universities','accepts_direct_applications','Unknown application status remains representable');
+select throws_ok($$insert into crm.universities(country_id,name,slug,catalog_classification,accepts_direct_applications,search_eligible) values(gen_random_uuid(),'Invalid system','invalid-system','system_or_administrative_office',false,true)$$,'23514',null,'System offices cannot be search eligible');
+select col_is_nullable('crm','intakes','open_status_evidence_url','Legacy intake evidence remains representable');
+select col_is_nullable('crm','intakes','term_evidence_url','Legacy intake term evidence remains representable');
+select col_is_nullable('crm','intakes','deadline_evidence_url','Legacy intake deadline evidence remains representable');
+select col_is_nullable('crm','intakes','last_verified_at','Legacy intake verification remains representable');
+select * from finish();
+rollback;

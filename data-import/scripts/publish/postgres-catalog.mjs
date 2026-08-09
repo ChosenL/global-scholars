@@ -38,7 +38,7 @@ function catalog(sql) {
           await sql`select id, iso_code, name, default_currency, is_active from crm.countries where iso_code = ${desired.iso_code} or lower(name) = lower(${desired.name}) order by (iso_code = ${desired.iso_code}) desc limit 1`;
       else if (type === "university")
         rows =
-          await sql`select id, country_id, name, slug, institution_type, website_url, is_active from crm.universities where country_id = ${desired.country_id} and (slug = ${desired.slug} or lower(name) = lower(${desired.name})) order by (slug = ${desired.slug}) desc limit 1`;
+          await sql`select id, country_id, name, slug, institution_type, website_url, catalog_classification, degree_granting, accepts_direct_applications, search_eligible, is_active from crm.universities where country_id = ${desired.country_id} and (slug = ${desired.slug} or lower(name) = lower(${desired.name})) order by (slug = ${desired.slug}) desc limit 1`;
       else if (type === "campus")
         rows =
           await sql`select id, university_id, name, city, region, is_primary, is_active from crm.campuses where university_id = ${desired.university_id} and lower(name) = lower(${desired.name}) limit 1`;
@@ -53,7 +53,7 @@ function catalog(sql) {
           await sql`select program_id, campus_id from crm.program_campuses where program_id=${desired.program_id} and campus_id=${desired.campus_id} limit 1`;
       else if (type === "intake")
         rows =
-          await sql`select id, program_id, campus_id, name, start_date::text, start_date_precision, application_deadline::text, international_deadline::text, capacity, status from crm.intakes where id=${deterministicId} or (program_id=${desired.program_id} and campus_id=${desired.campus_id} and ((start_date_precision='exact' and start_date=${desired.start_date}) or (start_date_precision='term' and lower(name)=lower(${desired.name})))) order by (id=${deterministicId}) desc limit 1`;
+          await sql`select id, program_id, campus_id, name, start_date::text, start_date_precision, application_deadline::text, international_deadline::text, capacity, open_status_evidence_url, term_evidence_url, deadline_evidence_url, to_char(last_verified_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as last_verified_at, status from crm.intakes where id=${deterministicId} or (program_id=${desired.program_id} and campus_id=${desired.campus_id} and ((start_date_precision='exact' and start_date=${desired.start_date}) or (start_date_precision='term' and lower(name)=lower(${desired.name})))) order by (id=${deterministicId}) desc limit 1`;
       else
         rows =
           await sql`select id,university_id,program_id,intake_id,name,award_type,amount::float8,currency,percentage::float8,eligibility,application_deadline::text,international_eligibility,verification_status,to_char(last_verified_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as last_verified_at,source_url,is_active from crm.scholarships where id=${deterministicId} or (university_id=${desired.university_id} and lower(name)=lower(${desired.name})) order by (id=${deterministicId}) desc limit 1`;
@@ -63,7 +63,7 @@ function catalog(sql) {
       if (type === "country")
         await sql`insert into crm.countries ${sql(row, "id", "iso_code", "name", "default_currency", "is_active")}`;
       else if (type === "university")
-        await sql`insert into crm.universities ${sql(row, "id", "country_id", "name", "slug", "institution_type", "website_url", "is_active")}`;
+        await sql`insert into crm.universities ${sql(row, "id", "country_id", "name", "slug", "institution_type", "website_url", "catalog_classification", "degree_granting", "accepts_direct_applications", "search_eligible", "is_active")}`;
       else if (type === "campus")
         await sql`insert into crm.campuses ${sql(row, "id", "university_id", "name", "city", "region", "is_primary", "is_active")}`;
       else if (type === "faculty")
@@ -73,7 +73,7 @@ function catalog(sql) {
       else if (type === "program-campus")
         await sql`insert into crm.program_campuses ${sql(row, "program_id", "campus_id")}`;
       else if (type === "intake")
-        await sql`insert into crm.intakes ${sql(row, "id", "program_id", "campus_id", "name", "start_date", "start_date_precision", "application_deadline", "international_deadline", "capacity", "status")}`;
+        await sql`insert into crm.intakes ${sql(row, "id", "program_id", "campus_id", "name", "start_date", "start_date_precision", "application_deadline", "international_deadline", "capacity", "open_status_evidence_url", "term_evidence_url", "deadline_evidence_url", "last_verified_at", "status")}`;
       else
         await sql`insert into crm.scholarships ${sql(row, "id", "university_id", "program_id", "intake_id", "name", "award_type", "amount", "currency", "percentage", "eligibility", "application_deadline", "international_eligibility", "verification_status", "last_verified_at", "source_url", "is_active")}`;
     },
@@ -81,7 +81,7 @@ function catalog(sql) {
       if (type === "country")
         await sql`update crm.countries set ${sql(values, "iso_code", "name", "default_currency", "is_active")} where id = ${id}`;
       else if (type === "university")
-        await sql`update crm.universities set ${sql(values, "country_id", "name", "slug", "institution_type", "website_url", "is_active")} where id = ${id}`;
+        await sql`update crm.universities set ${sql(values, "country_id", "name", "slug", "institution_type", "website_url", "catalog_classification", "degree_granting", "accepts_direct_applications", "search_eligible", "is_active")} where id = ${id}`;
       else if (type === "campus")
         await sql`update crm.campuses set ${sql(values, "university_id", "name", "city", "region", "is_primary", "is_active")} where id = ${id}`;
       else if (type === "faculty")
@@ -89,7 +89,7 @@ function catalog(sql) {
       else if (type === "program")
         await sql`update crm.programs set ${sql(values, "university_id", "faculty_id", "name", "program_code", "credential_level", "duration_months", "description", "is_active")} where id=${id}`;
       else if (type === "intake")
-        await sql`update crm.intakes set ${sql(values, "program_id", "campus_id", "name", "start_date", "start_date_precision", "application_deadline", "international_deadline", "capacity", "status")} where id=${id}`;
+        await sql`update crm.intakes set ${sql(values, "program_id", "campus_id", "name", "start_date", "start_date_precision", "application_deadline", "international_deadline", "capacity", "open_status_evidence_url", "term_evidence_url", "deadline_evidence_url", "last_verified_at", "status")} where id=${id}`;
       else if (type === "scholarship")
         await sql`update crm.scholarships set ${sql(values, "university_id", "program_id", "intake_id", "name", "award_type", "amount", "currency", "percentage", "eligibility", "application_deadline", "international_eligibility", "verification_status", "last_verified_at", "source_url", "is_active")} where id=${id}`;
     },

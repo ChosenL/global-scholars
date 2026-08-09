@@ -43,6 +43,10 @@ function comparable(entityType, record, ids) {
       slug: record.slug,
       institution_type: record.institutionType ?? null,
       website_url: record.websiteUrl ?? null,
+      catalog_classification: record.catalogClassification,
+      degree_granting: record.degreeGranting ?? null,
+      accepts_direct_applications: record.acceptsDirectApplications ?? null,
+      search_eligible: record.searchEligible,
       is_active: record.isActive,
     };
   if (entityType === "campus")
@@ -101,6 +105,10 @@ function comparable(entityType, record, ids) {
       application_deadline: record.applicationDeadline ?? null,
       international_deadline: record.internationalDeadline ?? null,
       capacity: record.capacity ?? null,
+      open_status_evidence_url: record.openStatusEvidenceUrl,
+      term_evidence_url: record.termEvidenceUrl,
+      deadline_evidence_url: record.deadlineEvidenceUrl ?? null,
+      last_verified_at: record.lastVerifiedAt,
       status: record.status,
     };
   if (entityType === "scholarship")

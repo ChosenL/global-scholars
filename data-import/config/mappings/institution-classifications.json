@@ -1,0 +1,39 @@
+{
+  "mappingVersion": "1.0.0",
+  "default": {
+    "classification": "degree_granting_institution",
+    "degreeGranting": true,
+    "acceptsDirectApplications": true,
+    "searchEligible": true
+  },
+  "overrides": {
+    "100733": {
+      "classification": "system_or_administrative_office",
+      "degreeGranting": false,
+      "acceptsDirectApplications": false,
+      "searchEligible": false,
+      "evidenceUrl": "https://www.uasystem.edu/"
+    },
+    "103529": {
+      "classification": "system_or_administrative_office",
+      "degreeGranting": false,
+      "acceptsDirectApplications": false,
+      "searchEligible": false,
+      "evidenceUrl": "https://www.alaska.edu/alaska/"
+    },
+    "105136": {
+      "classification": "system_or_administrative_office",
+      "degreeGranting": false,
+      "acceptsDirectApplications": false,
+      "searchEligible": false,
+      "evidenceUrl": "https://www.maricopa.edu/about/institutions"
+    },
+    "101116": { "classification": "branch_or_campus" },
+    "101365": { "classification": "branch_or_campus" },
+    "104090": { "classification": "branch_or_campus" },
+    "104151": { "classification": "branch_or_campus" },
+    "104586": { "classification": "branch_or_campus" },
+    "102395": { "classification": "non_degree_or_specialized_entity" },
+    "104665": { "classification": "non_degree_or_specialized_entity" }
+  }
+}

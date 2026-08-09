@@ -12,6 +12,10 @@
     "countryCanonicalId",
     "name",
     "slug",
+    "catalogClassification",
+    "degreeGranting",
+    "acceptsDirectApplications",
+    "searchEligible",
     "isActive"
   ],
   "properties": {
@@ -24,6 +28,18 @@
     "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "institutionType": { "type": ["string", "null"], "maxLength": 100 },
     "websiteUrl": { "type": ["string", "null"] },
+    "catalogClassification": {
+      "enum": [
+        "degree_granting_institution",
+        "system_or_administrative_office",
+        "branch_or_campus",
+        "non_degree_or_specialized_entity",
+        "classification_unknown"
+      ]
+    },
+    "degreeGranting": { "type": ["boolean", "null"] },
+    "acceptsDirectApplications": { "type": ["boolean", "null"] },
+    "searchEligible": { "type": "boolean" },
     "degreeLevels": {
       "type": "array",
       "uniqueItems": true,

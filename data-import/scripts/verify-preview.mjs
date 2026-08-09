@@ -35,6 +35,8 @@ export async function verifyPreview({
       inactive,
       duplicateUniversities,
       duplicateCampuses,
+      searchEligible,
+      exposedAdministrativeOffices,
     ] = await Promise.all([
       sql`select count(*)::int as count from crm.countries where id in ${sql(ids)}`,
       sql`select count(*)::int as count from crm.universities where id in ${sql(ids)}`,
@@ -44,6 +46,8 @@ export async function verifyPreview({
       sql`select count(*)::int as count from (select id,is_active from crm.countries union all select id,is_active from crm.universities union all select id,is_active from crm.campuses) entity where id in ${sql(ids)} and not is_active`,
       sql`select count(*)::int as count from (select country_id,slug from crm.universities group by country_id,slug having count(*) > 1) duplicate`,
       sql`select count(*)::int as count from (select university_id,name from crm.campuses group by university_id,name having count(*) > 1) duplicate`,
+      sql`select count(*)::int as count from crm.universities where id in ${sql(ids)} and is_active and search_eligible`,
+      sql`select count(*)::int as count from crm.universities where id in ${sql(ids)} and is_active and search_eligible and catalog_classification='system_or_administrative_office'`,
     ]);
     const report = {
       runId: normalized.runId,
@@ -60,6 +64,8 @@ export async function verifyPreview({
       inactivePilotRows: inactive[0].count,
       duplicateNaturalKeys:
         duplicateUniversities[0].count + duplicateCampuses[0].count,
+      searchEligibleUniversities: searchEligible[0].count,
+      exposedAdministrativeOffices: exposedAdministrativeOffices[0].count,
       publicationChecksum: publication.checksum,
       checksumVerified:
         publication.checksum === sha256(stableStringify(publication.actions)),
@@ -71,6 +77,8 @@ export async function verifyPreview({
       report.brokenForeignKeys === 0 &&
       report.inactivePilotRows === 0 &&
       report.duplicateNaturalKeys === 0 &&
+      report.searchEligibleUniversities === 47 &&
+      report.exposedAdministrativeOffices === 0 &&
       report.checksumVerified;
     await writeJson(
       path.join(

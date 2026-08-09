@@ -30,7 +30,20 @@ test("official facts normalize deterministically with valid relationships", asyn
   const a = await load(),
     b = await load();
   assert.deepEqual(a.records, b.records);
-  assert.equal(a.records.filter((r) => r.entityType === "program").length, 30);
+  assert.equal(a.records.filter((r) => r.entityType === "program").length, 47);
+  assert.equal(
+    a.records.filter((r) => r.entityType === "university" && r.searchEligible)
+      .length,
+    47,
+  );
+  assert.equal(
+    a.records.filter(
+      (r) =>
+        r.entityType === "university" &&
+        r.catalogClassification === "system_or_administrative_office",
+    ).length,
+    3,
+  );
   assert.equal(
     a.records.filter((r) => r.entityType === "scholarship").length,
     6,
@@ -57,8 +70,8 @@ test("extended publication is idempotent and dry-run is write-free", async () =>
   const repository = new MemoryCatalogRepository();
   const first = await publishCatalog({ repository, records, manifest });
   const repeat = await publishCatalog({ repository, records, manifest });
-  assert.equal(first.report.counts.insert, 162);
-  assert.equal(repeat.report.counts.unchanged, 162);
+  assert.equal(first.report.counts.insert, 253);
+  assert.equal(repeat.report.counts.unchanged, 253);
   const before = structuredClone(repository.state);
   const dry = await publishCatalog({
     repository,
@@ -66,6 +79,6 @@ test("extended publication is idempotent and dry-run is write-free", async () =>
     manifest,
     dryRun: true,
   });
-  assert.equal(dry.report.counts.unchanged, 162);
+  assert.equal(dry.report.counts.unchanged, 253);
   assert.deepEqual(repository.state, before);
 });

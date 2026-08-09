@@ -22,7 +22,14 @@ export const ENTITY_TYPES = [
 const HASH = /^[a-f0-9]{64}$/;
 const REQUIRED = {
   country: ["isoCode", "name", "isActive"],
-  university: ["countryCanonicalId", "name", "slug", "isActive"],
+  university: [
+    "countryCanonicalId",
+    "name",
+    "slug",
+    "catalogClassification",
+    "searchEligible",
+    "isActive",
+  ],
   campus: ["universityCanonicalId", "name", "city", "isPrimary", "isActive"],
   faculty: ["universityCanonicalId", "name", "isActive"],
   program: ["universityCanonicalId", "name", "credentialLevel", "isActive"],
@@ -32,6 +39,9 @@ const REQUIRED = {
     "campusCanonicalId",
     "name",
     "startDatePrecision",
+    "openStatusEvidenceUrl",
+    "termEvidenceUrl",
+    "lastVerifiedAt",
     "status",
   ],
   scholarship: [

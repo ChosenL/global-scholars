@@ -13,6 +13,9 @@
     "campusCanonicalId",
     "name",
     "startDatePrecision",
+    "openStatusEvidenceUrl",
+    "termEvidenceUrl",
+    "lastVerifiedAt",
     "status"
   ],
   "properties": {
@@ -28,6 +31,10 @@
     "applicationDeadline": { "type": ["string", "null"], "format": "date" },
     "internationalDeadline": { "type": ["string", "null"], "format": "date" },
     "capacity": { "type": ["integer", "null"], "minimum": 1 },
+    "openStatusEvidenceUrl": { "type": "string", "format": "uri" },
+    "termEvidenceUrl": { "type": "string", "format": "uri" },
+    "deadlineEvidenceUrl": { "type": ["string", "null"], "format": "uri" },
+    "lastVerifiedAt": { "type": "string", "format": "date-time" },
     "status": { "enum": ["planned", "open", "closed", "cancelled"] }
   }
 }

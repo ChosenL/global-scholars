@@ -20,6 +20,15 @@ const execFileAsync = promisify(execFile);
 const SOURCE_SYSTEM = "ipeds";
 const ADAPTER_VERSION = "us_ipeds@1.0.0";
 const PIPELINE_VERSION = "1.0.0";
+const CLASSIFICATIONS = JSON.parse(
+  await readFile(
+    new URL(
+      "../../config/mappings/institution-classifications.json",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+);
 const CONTROL = {
   1: "Public institution",
   2: "Private nonprofit institution",
@@ -183,6 +192,10 @@ export const ipedsAdapter = {
     for (const row of rows) {
       const unitid = row.UNITID.trim();
       const characteristic = ic.get(unitid) ?? {};
+      const classification = {
+        ...CLASSIFICATIONS.default,
+        ...(CLASSIFICATIONS.overrides[unitid] ?? {}),
+      };
       const university = withIdentity(
         "university",
         { sourceSystem: SOURCE_SYSTEM, sourceEntityId: unitid },
@@ -193,6 +206,10 @@ export const ipedsAdapter = {
           slug: slug(row.INSTNM, unitid),
           institutionType: CONTROL[row.CONTROL] ?? "Other institution",
           websiteUrl: url(row.WEBADDR),
+          catalogClassification: classification.classification,
+          degreeGranting: classification.degreeGranting,
+          acceptsDirectApplications: classification.acceptsDirectApplications,
+          searchEligible: classification.searchEligible,
           degreeLevels: [
             ...new Set(
               Object.entries(DEGREE_FLAGS)

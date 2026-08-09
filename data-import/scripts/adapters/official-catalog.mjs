@@ -77,18 +77,11 @@ export const officialCatalogAdapter = {
         "utf8",
       ),
     ).records;
-    const selected = new Set(
-      [...dataset.programs, ...(dataset.scholarships ?? [])].map(
-        ({ unitid }) => unitid,
-      ),
-    );
     const parents = base.filter(
       (r) =>
         r.entityType === "country" ||
-        (r.entityType === "university" &&
-          selected.has(r.provenance.sourceEntityId)) ||
-        (r.entityType === "campus" &&
-          selected.has(r.provenance.sourceEntityId.split(":")[0])),
+        r.entityType === "university" ||
+        r.entityType === "campus",
     );
     const records = [...parents];
     for (const item of dataset.programs) {
@@ -192,6 +185,15 @@ export const officialCatalogAdapter = {
               applicationDeadline: item.intake.applicationDeadline ?? null,
               internationalDeadline: item.intake.internationalDeadline ?? null,
               capacity: null,
+              openStatusEvidenceUrl: item.intake.admissionsUrl,
+              termEvidenceUrl:
+                item.intake.calendarUrl ?? item.intake.admissionsUrl,
+              deadlineEvidenceUrl:
+                item.intake.applicationDeadline ||
+                item.intake.internationalDeadline
+                  ? item.intake.admissionsUrl
+                  : null,
+              lastVerifiedAt: snapshot.retrievedAt,
               status: item.intake.status,
             },
           ),

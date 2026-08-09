@@ -96,6 +96,12 @@ test("university search is case-insensitive, active-only, and preserves duplicat
     ),
   );
   assert.ok(
+    catalog.calls.some(
+      (call) =>
+        call[0] === "eq" && call[1] === "search_eligible" && call[2] === true,
+    ),
+  );
+  assert.ok(
     catalog.calls.some((call) => call[0] === "ilike" && call[2] === "%sPrInG%"),
   );
   assert.notEqual(result[0].id, result[1].id);

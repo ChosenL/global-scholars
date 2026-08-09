@@ -282,6 +282,142 @@
       "credentialLevel": "associate",
       "faculty": "Information Technology",
       "programUrl": "https://www.gatewaycc.edu/degrees-certificates/information-technology"
+    },
+    {
+      "unitid": "102580",
+      "sourceId": "abc-ba-biblical-studies-ministry",
+      "name": "Biblical Studies and Christian Ministry, BA",
+      "credentialLevel": "bachelor",
+      "faculty": "Biblical Studies and Christian Ministry",
+      "programUrl": "https://www.akbible.edu/babibleandministry"
+    },
+    {
+      "unitid": "100690",
+      "sourceId": "amridge-bs-management",
+      "name": "Management, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Business and Leadership",
+      "programUrl": "https://www.amridgeuniversity.edu/academics/business/bsmanagement/"
+    },
+    {
+      "unitid": "101435",
+      "sourceId": "huntingdon-ba-business-administration",
+      "name": "Business Administration, BA",
+      "credentialLevel": "bachelor",
+      "faculty": "Department of Business, Accounting, and Mathematics",
+      "programUrl": "https://www.huntingdon.edu/academics/academic-programs/programs-of-study/accounting-and-business/"
+    },
+    {
+      "unitid": "104665",
+      "sourceId": "tsoa-march",
+      "name": "Architecture, MArch",
+      "credentialLevel": "master",
+      "faculty": "Architecture",
+      "programUrl": "https://www.tsoa.edu/"
+    },
+    {
+      "unitid": "104090",
+      "sourceId": "brookline-phoenix-bsn",
+      "name": "Nursing, BSN",
+      "credentialLevel": "bachelor",
+      "faculty": "Nursing",
+      "programUrl": "https://www.brooklinecollege.edu/programs/nursing/bachelor-of-science-in-nursing/phoenix/"
+    },
+    {
+      "unitid": "101453",
+      "sourceId": "hcu-ba-biblical-studies",
+      "name": "Biblical Studies, BA",
+      "credentialLevel": "bachelor",
+      "faculty": "Biblical Studies",
+      "programUrl": "https://www.hcu.edu/academics/undergraduate/"
+    },
+    {
+      "unitid": "101675",
+      "sourceId": "miles-bs-computer-science",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "Division of Natural Sciences and Mathematics",
+      "programUrl": "https://www.miles.edu/academics/academic-divisions/natural-sciences-and-mathematics"
+    },
+    {
+      "unitid": "104425",
+      "sourceId": "cochise-aas-cybersecurity",
+      "name": "Cybersecurity, AAS",
+      "credentialLevel": "associate",
+      "faculty": "Computer Information Systems",
+      "programUrl": "https://www.cochise.edu/degrees-certificates/cybersecurity/"
+    },
+    {
+      "unitid": "102395",
+      "sourceId": "ussa-bs-sports-management",
+      "name": "Sports Management, BSS",
+      "credentialLevel": "bachelor",
+      "faculty": "Sports Management",
+      "programUrl": "https://ussu.edu/academics/bachelors/sports-management/"
+    },
+    {
+      "unitid": "102298",
+      "sourceId": "talladega-bs-computer-science",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "Division of Natural Sciences and Mathematics",
+      "programUrl": "https://www.talladega.edu/academics/divisions/natural-sciences-and-mathematics/"
+    },
+    {
+      "unitid": "102845",
+      "sourceId": "charter-aas-business-management",
+      "name": "Business Management, AAS",
+      "credentialLevel": "associate",
+      "faculty": "Business",
+      "programUrl": "https://chartercollege.edu/programs/business/business-management-aas"
+    },
+    {
+      "unitid": "101116",
+      "sourceId": "south-montgomery-bsn",
+      "name": "Nursing, BSN",
+      "credentialLevel": "bachelor",
+      "faculty": "College of Nursing and Public Health",
+      "programUrl": "https://www.southuniversity.edu/montgomery/nursing-bsn"
+    },
+    {
+      "unitid": "102058",
+      "sourceId": "selma-ba-bible-theology",
+      "name": "Bible and Theology, BA",
+      "credentialLevel": "bachelor",
+      "faculty": "Bible and Theology",
+      "programUrl": "https://selmau.edu/academics/"
+    },
+    {
+      "unitid": "104577",
+      "sourceId": "eac-aas-computer-science",
+      "name": "Computer Science, AAS",
+      "credentialLevel": "associate",
+      "faculty": "Computer Science",
+      "programUrl": "https://www.eac.edu/Academics/Programs_of_Study/Computer_Science/"
+    },
+    {
+      "unitid": "101365",
+      "sourceId": "herzing-birmingham-bsn",
+      "name": "Nursing, BSN",
+      "credentialLevel": "bachelor",
+      "faculty": "School of Nursing",
+      "programUrl": "https://www.herzing.edu/nursing/bsn-degree/alabama/birmingham"
+    },
+    {
+      "unitid": "104708",
+      "sourceId": "glendale-aas-cybersecurity",
+      "name": "Cybersecurity, AAS",
+      "credentialLevel": "associate",
+      "faculty": "Computer and Information Technology",
+      "programUrl": "https://www.gccaz.edu/degrees-certificates/computer-and-information-technology/cybersecurity-3186-aas"
+    },
+    {
+      "unitid": "101693",
+      "sourceId": "mobile-bs-computer-science",
+      "name": "Computer Science, BS",
+      "credentialLevel": "bachelor",
+      "faculty": "School of Science and Engineering",
+      "programUrl": "https://umobile.edu/academics/academic-programs/computer-science/"
     }
   ],
   "quarantine": [
