@@ -18,7 +18,7 @@ import {
 
 const execFileAsync = promisify(execFile);
 const SOURCE_SYSTEM = "ipeds";
-const ADAPTER_VERSION = "us_ipeds@1.0.0";
+const ADAPTER_VERSION = "us_ipeds@2.0.0";
 const PIPELINE_VERSION = "1.0.0";
 const CLASSIFICATIONS = JSON.parse(
   await readFile(
@@ -207,6 +207,18 @@ export const ipedsAdapter = {
           : {}),
         ...(CLASSIFICATIONS.overrides[unitid] ?? {}),
       };
+      const hasApplicationUrl = Boolean(row.APPLURL?.trim());
+      const isAdministrative =
+        classification.classification === "system_or_administrative_office";
+      const acceptsDirectApplications = isAdministrative
+        ? false
+        : hasApplicationUrl
+          ? true
+          : classification.acceptsDirectApplications;
+      const searchEligible =
+        !isAdministrative &&
+        classification.degreeGranting !== false &&
+        acceptsDirectApplications === true;
       const university = withIdentity(
         "university",
         { sourceSystem: SOURCE_SYSTEM, sourceEntityId: unitid },
@@ -219,8 +231,37 @@ export const ipedsAdapter = {
           websiteUrl: url(row.WEBADDR),
           catalogClassification: classification.classification,
           degreeGranting: classification.degreeGranting,
-          acceptsDirectApplications: classification.acceptsDirectApplications,
-          searchEligible: classification.searchEligible,
+          acceptsDirectApplications,
+          searchEligible,
+          classificationRule: isAdministrative
+            ? "ipeds-2024-explicit-administrative-override"
+            : classification.classification === "branch_or_campus"
+              ? "ipeds-2024-explicit-branch-override"
+              : classification.classification ===
+                  "non_degree_or_specialized_entity"
+                ? "ipeds-2024-explicit-specialized-override"
+                : "ipeds-2024-active-four-year-degree-granting",
+          classificationEvidence: {
+            source: "IPEDS HD2024 and IC2024",
+            ruleVersion: CLASSIFICATIONS.mappingVersion,
+            sourceFields: {
+              CYACTIVE: row.CYACTIVE,
+              POSTSEC: row.POSTSEC,
+              DEGGRANT: row.DEGGRANT,
+              ICLEVEL: row.ICLEVEL,
+              SECTOR: row.SECTOR,
+              INSTCAT: row.INSTCAT,
+              HLOFFER: row.HLOFFER,
+              APPLURL: hasApplicationUrl ? row.APPLURL.trim() : null,
+            },
+          },
+          searchEligibilityEvidence: searchEligible
+            ? CERTIFIED_SEARCH_ELIGIBLE.has(unitid)
+              ? "confirmed"
+              : "inferred_from_authoritative_structure"
+            : isAdministrative
+              ? "confirmed_ineligible"
+              : "unknown",
           degreeLevels: [
             ...new Set(
               Object.entries(DEGREE_FLAGS)
@@ -353,6 +394,6 @@ export const ipedsAdapter = {
 
 export const ipedsVersions = {
   adapter: "us_ipeds",
-  mapping: "1.0.0",
+  mapping: "2.0.0",
   pipeline: PIPELINE_VERSION,
 };

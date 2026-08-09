@@ -166,6 +166,17 @@ export const canadaDliAdapter = {
             // DLI status proves international designation, not that the
             // institution accepts direct applications through this catalog.
             searchEligible: false,
+            classificationRule: "ircc-dli-designation-only",
+            classificationEvidence: {
+              source: "Government of Canada IRCC DLI list",
+              ruleVersion: "1.0.0",
+              sourceFields: {
+                dliNumber: row.dliNumber,
+                institutionType: row.institutionType,
+                province: row.province,
+              },
+            },
+            searchEligibilityEvidence: "unknown",
             internationalStudentStatus: "designated",
             dliNumber: row.dliNumber,
             degreeLevels: [],

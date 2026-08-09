@@ -21,6 +21,9 @@ export interface University {
   degree_granting: boolean | null;
   accepts_direct_applications: boolean | null;
   search_eligible: boolean;
+  classification_rule: string | null;
+  classification_evidence: unknown;
+  search_eligibility_evidence: string;
   international_student_status: "designated" | "not_designated" | "unknown";
   dli_number: string | null;
   is_active: boolean;
@@ -39,7 +42,7 @@ export async function searchUniversities(
     .schema("crm")
     .from("universities")
     .select(
-      "id,country_id,name,slug,institution_type,website_url,catalog_classification,degree_granting,accepts_direct_applications,search_eligible,international_student_status,dli_number,is_active",
+      "id,country_id,name,slug,institution_type,website_url,catalog_classification,degree_granting,accepts_direct_applications,search_eligible,classification_rule,classification_evidence,search_eligibility_evidence,international_student_status,dli_number,is_active",
     )
     .eq("is_active", true)
     .eq("search_eligible", true);

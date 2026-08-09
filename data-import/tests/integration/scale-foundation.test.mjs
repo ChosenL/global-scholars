@@ -59,14 +59,26 @@ test("full U.S. foundation is bounded, conservative, and deterministic", async (
   assert.equal(universities.length, 2825);
   assert.equal(
     universities.filter(({ searchEligible }) => searchEligible).length,
-    47,
+    2514,
   );
   assert.equal(
     universities.filter(
       ({ catalogClassification }) =>
         catalogClassification === "classification_unknown",
     ).length,
-    2775,
+    0,
+  );
+  assert.equal(
+    universities.filter(
+      ({ searchEligibilityEvidence }) =>
+        searchEligibilityEvidence === "inferred_from_authoritative_structure",
+    ).length,
+    2467,
+  );
+  assert.ok(
+    universities.every(({ classificationEvidence, classificationRule }) =>
+      Boolean(classificationEvidence?.sourceFields && classificationRule),
+    ),
   );
 });
 

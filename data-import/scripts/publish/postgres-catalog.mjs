@@ -39,10 +39,10 @@ function catalog(sql) {
       else if (type === "university") {
         if (desired.dli_number)
           rows =
-            await sql`select id, country_id, name, slug, institution_type, website_url, catalog_classification, degree_granting, accepts_direct_applications, search_eligible, international_student_status, dli_number, is_active from crm.universities where country_id = ${desired.country_id} and (id = ${deterministicId} or dli_number = ${desired.dli_number}) order by (id = ${deterministicId}) desc limit 1`;
+            await sql`select id, country_id, name, slug, institution_type, website_url, catalog_classification, degree_granting, accepts_direct_applications, search_eligible, classification_rule, classification_evidence, search_eligibility_evidence, international_student_status, dli_number, is_active from crm.universities where country_id = ${desired.country_id} and (id = ${deterministicId} or dli_number = ${desired.dli_number}) order by (id = ${deterministicId}) desc limit 1`;
         else
           rows =
-            await sql`select id, country_id, name, slug, institution_type, website_url, catalog_classification, degree_granting, accepts_direct_applications, search_eligible, international_student_status, dli_number, is_active from crm.universities where country_id = ${desired.country_id} and (id = ${deterministicId} or slug = ${desired.slug}) order by (id = ${deterministicId}) desc, (slug = ${desired.slug}) desc limit 1`;
+            await sql`select id, country_id, name, slug, institution_type, website_url, catalog_classification, degree_granting, accepts_direct_applications, search_eligible, classification_rule, classification_evidence, search_eligibility_evidence, international_student_status, dli_number, is_active from crm.universities where country_id = ${desired.country_id} and (id = ${deterministicId} or slug = ${desired.slug}) order by (id = ${deterministicId}) desc, (slug = ${desired.slug}) desc limit 1`;
       } else if (type === "campus")
         rows =
           await sql`select id, university_id, name, city, region, is_primary, is_active from crm.campuses where university_id = ${desired.university_id} and lower(name) = lower(${desired.name}) limit 1`;
@@ -67,7 +67,7 @@ function catalog(sql) {
       if (type === "country")
         await sql`insert into crm.countries ${sql(row, "id", "iso_code", "name", "default_currency", "is_active")}`;
       else if (type === "university")
-        await sql`insert into crm.universities ${sql(row, "id", "country_id", "name", "slug", "institution_type", "website_url", "catalog_classification", "degree_granting", "accepts_direct_applications", "search_eligible", "international_student_status", "dli_number", "is_active")}`;
+        await sql`insert into crm.universities ${sql(row, "id", "country_id", "name", "slug", "institution_type", "website_url", "catalog_classification", "degree_granting", "accepts_direct_applications", "search_eligible", "classification_rule", "classification_evidence", "search_eligibility_evidence", "international_student_status", "dli_number", "is_active")}`;
       else if (type === "campus")
         await sql`insert into crm.campuses ${sql(row, "id", "university_id", "name", "city", "region", "is_primary", "is_active")}`;
       else if (type === "faculty")
@@ -85,7 +85,7 @@ function catalog(sql) {
       if (type === "country")
         await sql`update crm.countries set ${sql(values, "iso_code", "name", "default_currency", "is_active")} where id = ${id}`;
       else if (type === "university")
-        await sql`update crm.universities set ${sql(values, "country_id", "name", "slug", "institution_type", "website_url", "catalog_classification", "degree_granting", "accepts_direct_applications", "search_eligible", "international_student_status", "dli_number", "is_active")} where id = ${id}`;
+        await sql`update crm.universities set ${sql(values, "country_id", "name", "slug", "institution_type", "website_url", "catalog_classification", "degree_granting", "accepts_direct_applications", "search_eligible", "classification_rule", "classification_evidence", "search_eligibility_evidence", "international_student_status", "dli_number", "is_active")} where id = ${id}`;
       else if (type === "campus")
         await sql`update crm.campuses set ${sql(values, "university_id", "name", "city", "region", "is_primary", "is_active")} where id = ${id}`;
       else if (type === "faculty")

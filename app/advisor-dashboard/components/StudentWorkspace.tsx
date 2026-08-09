@@ -9,6 +9,7 @@ import { useStudentReadiness } from "../hooks/useStudentReadiness";
 import StudentAppointmentsCard from "./StudentAppointmentsCard";
 import StudentDocumentsCard from "./StudentDocumentsCard";
 import StudentHeader from "./StudentHeader";
+import StudentMatchesCard from "./StudentMatchesCard";
 import StudentNotesCard from "./StudentNotesCard";
 import StudentProgressCard from "./StudentProgressCard";
 import StudentTasksCard from "./StudentTasksCard";
@@ -17,9 +18,7 @@ interface StudentWorkspaceProps {
   student: AdvisorStudent;
 }
 
-export default function StudentWorkspace({
-  student,
-}: StudentWorkspaceProps) {
+export default function StudentWorkspace({ student }: StudentWorkspaceProps) {
   const readiness = useStudentReadiness(student.profileId);
   const readinessScore = readiness?.total_score ?? 0;
 
@@ -43,9 +42,11 @@ export default function StudentWorkspace({
         </aside>
 
         <main className="w-full min-w-0 max-w-none space-y-6">
-          <StudentHeader
-            student={student}
-            progress={readinessScore}
+          <StudentHeader student={student} progress={readinessScore} />
+
+          <StudentMatchesCard
+            studentProfileId={student.profileId}
+            studentName={student.displayName}
           />
 
           <MessagesSection

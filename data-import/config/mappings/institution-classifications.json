@@ -1,8 +1,8 @@
 {
-  "mappingVersion": "1.0.0",
+  "mappingVersion": "2.0.0",
   "default": {
-    "classification": "classification_unknown",
-    "degreeGranting": null,
+    "classification": "degree_granting_institution",
+    "degreeGranting": true,
     "acceptsDirectApplications": null,
     "searchEligible": false
   },

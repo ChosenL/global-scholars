@@ -16,6 +16,9 @@
     "degreeGranting",
     "acceptsDirectApplications",
     "searchEligible",
+    "classificationRule",
+    "classificationEvidence",
+    "searchEligibilityEvidence",
     "isActive"
   ],
   "properties": {
@@ -40,6 +43,25 @@
     "degreeGranting": { "type": ["boolean", "null"] },
     "acceptsDirectApplications": { "type": ["boolean", "null"] },
     "searchEligible": { "type": "boolean" },
+    "classificationRule": { "type": "string", "minLength": 3 },
+    "classificationEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "ruleVersion", "sourceFields"],
+      "properties": {
+        "source": { "type": "string", "minLength": 3 },
+        "ruleVersion": { "type": "string", "minLength": 1 },
+        "sourceFields": { "type": "object" }
+      }
+    },
+    "searchEligibilityEvidence": {
+      "enum": [
+        "confirmed",
+        "inferred_from_authoritative_structure",
+        "confirmed_ineligible",
+        "unknown"
+      ]
+    },
     "internationalStudentStatus": {
       "enum": ["designated", "not_designated", "unknown"]
     },

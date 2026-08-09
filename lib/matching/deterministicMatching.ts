@@ -43,6 +43,7 @@ export interface DeterministicMatchResult {
   institutionName: string;
   programId: string | null;
   programName: string | null;
+  credentialLevel: string | null;
   label: MatchLabel;
   excluded: boolean;
   compatibility: number | null;
@@ -227,6 +228,7 @@ export function evaluateCandidate(
     institutionName: candidate.institutionName,
     programId: candidate.programId ?? null,
     programName: candidate.programName ?? null,
+    credentialLevel: candidate.credentialLevel ?? null,
     label: label(excluded, compatibility, evidenceCompleteness),
     excluded,
     compatibility,

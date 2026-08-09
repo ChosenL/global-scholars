@@ -34,7 +34,7 @@ test("official facts normalize deterministically with valid relationships", asyn
   assert.equal(
     a.records.filter((r) => r.entityType === "university" && r.searchEligible)
       .length,
-    47,
+    2514,
   );
   assert.equal(
     a.records.filter(
