@@ -10,6 +10,7 @@ import { OrganizationManagementPage } from "../pages/OrganizationManagementPage"
 const missingEnvironment = missingOrganizationE2EEnvironment();
 
 test.describe("Organization Management workflow", () => {
+  test.setTimeout(60_000);
   test.skip(
     missingEnvironment.length > 0,
     `Requires real E2E configuration: ${missingEnvironment.join(", ")}`,

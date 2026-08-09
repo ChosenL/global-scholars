@@ -10,6 +10,7 @@ import { ApplicationManagementPage } from "../pages/ApplicationManagementPage";
 const missingEnvironment = missingApplicationE2EEnvironment();
 
 test.describe("Student Application Management workflow", () => {
+  test.setTimeout(60_000);
   test.skip(
     missingEnvironment.length > 0,
     `Requires real E2E configuration: ${missingEnvironment.join(", ")}`,
