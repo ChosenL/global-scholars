@@ -4,6 +4,31 @@ import type {
   StudentApplication,
 } from "./types";
 
+export interface UniversityOption {
+  id: string;
+  name: string;
+  country_id: string;
+  institution_type: string | null;
+}
+export interface ProgramOption {
+  id: string;
+  name: string;
+  program_code: string | null;
+  credential_level: string;
+  university_id: string;
+  duration_months: number | null;
+}
+export interface IntakeOption {
+  id: string;
+  name: string;
+  program_id: string;
+  campus_id: string;
+  start_date: string;
+  application_deadline: string | null;
+  international_deadline: string | null;
+  status: "open";
+}
+
 interface SuccessResponse<T> {
   ok: true;
   data: T;
@@ -61,12 +86,37 @@ export function listApplications(options: {
 }
 export function createApplication(input: {
   studentProfileId: string;
+  universityId: string;
+  programId: string;
   intakeId: string;
   advisorProfileId?: string | null;
 }) {
   return apiRequest<StudentApplication>("/api/applications", {
     method: "POST",
     body: JSON.stringify(input),
+  });
+}
+export function searchUniversities(query: string, signal?: AbortSignal) {
+  const params = new URLSearchParams({ query });
+  return apiRequest<UniversityOption[]>(
+    `/api/applications/universities?${params}`,
+    { signal },
+  );
+}
+export function searchPrograms(
+  universityId: string,
+  query: string,
+  signal?: AbortSignal,
+) {
+  const params = new URLSearchParams({ universityId, query });
+  return apiRequest<ProgramOption[]>(`/api/applications/programs?${params}`, {
+    signal,
+  });
+}
+export function listOpenIntakes(programId: string, signal?: AbortSignal) {
+  const params = new URLSearchParams({ programId });
+  return apiRequest<IntakeOption[]>(`/api/applications/intakes?${params}`, {
+    signal,
   });
 }
 export function getApplication(id: string) {

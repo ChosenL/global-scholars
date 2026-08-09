@@ -26,10 +26,9 @@ test.describe("Student Application Management workflow", () => {
       await applications.openList();
       await applications.createApplication({
         studentProfileId: config.studentProfileId,
-        intakeId: config.intakeId,
         university: data.university,
         program: data.program,
-        degreeLevel: data.degreeLevel,
+        intake: data.intake,
       });
       await applications.verifyApplicationAppearsInList();
       await applications.openCreatedDetails();

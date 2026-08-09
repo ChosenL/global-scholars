@@ -36,21 +36,18 @@ export function requireApplicationE2EConfig(): ApplicationE2EConfig {
 }
 
 export function applicationTestData(runId: string, retry: number) {
-  const suffix = `${runId}-${retry}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(-80);
+  void retry;
+  const prefix = `e2e-preview-${runId}`;
 
   return {
-    university: `E2E University ${suffix}`,
-    program: `E2E Program ${suffix}`,
-    degreeLevel: "Bachelor",
+    university: `${prefix} University`,
+    program: `${prefix} Program`,
+    intake: `${prefix} Intake`,
     tuitionAmount: "14500",
     updatedTuitionAmount: "15750",
     currency: "USD",
     updatedCurrency: "CAD",
-    financialSource: `E2E offer ${suffix}`,
-    updatedFinancialSource: `E2E revised offer ${suffix}`,
+    financialSource: `E2E offer ${runId}`,
+    updatedFinancialSource: `E2E revised offer ${runId}`,
   };
 }

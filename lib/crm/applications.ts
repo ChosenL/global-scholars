@@ -79,6 +79,8 @@ interface SupabaseFailure {
 
 export interface CreateApplicationInput {
   studentProfileId: string;
+  universityId: string;
+  programId: string;
   intakeId: string;
   advisorProfileId?: string | null;
 }
@@ -206,6 +208,24 @@ export async function createApplication(
   input: CreateApplicationInput,
 ): Promise<StudentApplication> {
   return execute(async () => {
+    const universityId = requireCrmUuid(input.universityId, "University");
+    const programId = requireCrmUuid(input.programId, "Program");
+    const intakeId = requireCrmUuid(input.intakeId, "Intake");
+    const { data: matchingIntake, error: matchingError } = await supabase
+      .schema("crm")
+      .from("intakes")
+      .select("id,program_id,status,programs!inner(id,university_id,is_active)")
+      .eq("id", intakeId)
+      .eq("program_id", programId)
+      .eq("status", "open")
+      .eq("programs.university_id", universityId)
+      .eq("programs.is_active", true)
+      .maybeSingle();
+    if (matchingError) throw matchingError;
+    if (!matchingIntake)
+      failValidation(
+        "Selected university, program, and intake are not an active catalog hierarchy.",
+      );
     const { data, error } = await supabase
       .schema("crm")
       .rpc("create_student_application", {
@@ -213,7 +233,7 @@ export async function createApplication(
           input.studentProfileId,
           "Student profile",
         ),
-        target_intake_id: requireCrmUuid(input.intakeId, "Intake"),
+        target_intake_id: intakeId,
         target_advisor_profile_id: input.advisorProfileId
           ? requireCrmUuid(input.advisorProfileId, "Advisor profile")
           : null,

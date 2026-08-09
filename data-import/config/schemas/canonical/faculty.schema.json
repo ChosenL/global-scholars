@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "faculty.schema.json",
+  "title": "Canonical faculty",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entityType",
+    "canonicalId",
+    "recordHash",
+    "provenance",
+    "universityCanonicalId",
+    "name",
+    "isActive"
+  ],
+  "properties": {
+    "entityType": { "const": "faculty" },
+    "canonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "recordHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "provenance": { "$ref": "common.schema.json#/$defs/provenance" },
+    "universityCanonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "name": { "type": "string", "minLength": 2, "maxLength": 200 },
+    "isActive": { "type": "boolean" }
+  }
+}

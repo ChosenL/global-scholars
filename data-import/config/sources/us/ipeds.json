@@ -1,0 +1,26 @@
+{
+  "sourceName": "US IPEDS",
+  "jurisdiction": "US",
+  "sourceUrl": "https://nces.ed.gov/ipeds/datacenter/DataFiles.aspx",
+  "releaseVersion": "2024",
+  "retrievalMethod": "download",
+  "licensingTermsNote": "Review current NCES terms and dataset documentation before acquisition and redistribution.",
+  "adapterName": "us_ipeds",
+  "enabled": true,
+  "checksumRequired": true,
+  "pilotLimit": 50,
+  "artifacts": [
+    {
+      "name": "directory",
+      "url": "https://nces.ed.gov/ipeds/datacenter/data/HD2024.zip",
+      "fileName": "HD2024.zip",
+      "sha256": "d98425c123d7c0e872aec6e83960dfb501884818bf17385c340790f3d1f28345"
+    },
+    {
+      "name": "institutional-characteristics",
+      "url": "https://nces.ed.gov/ipeds/datacenter/data/IC2024.zip",
+      "fileName": "IC2024.zip",
+      "sha256": "924f04f0afd953633a34bbc2ad1beaa65fdbf2a7ba25ebe364bac7469a976288"
+    }
+  ]
+}

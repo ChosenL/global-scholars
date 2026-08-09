@@ -1,0 +1,5 @@
+UNITID,INSTNM,CITY,STABBR,WEBADDR,CONTROL,ICLEVEL,DEGGRANT,CYACTIVE,POSTSEC
+100001,Alpha State University,Alpha City,AL,alpha.example.edu,1,1,1,1,1
+100002,Beta College,Beta Town,AL,https://beta.example.edu,2,1,1,1,1
+100003,Gamma Technical University,Gamma City,GA,,3,1,1,1,1
+100004,Inactive University,Nowhere,GA,,1,1,1,0,1

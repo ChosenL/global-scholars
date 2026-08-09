@@ -1,0 +1,11 @@
+{
+  "sourceName": "Canada IRCC DLI",
+  "jurisdiction": "CA",
+  "sourceUrl": "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/study-permit/prepare/designated-learning-institutions-list.html",
+  "releaseVersion": "SET_AT_RUN_TIME",
+  "retrievalMethod": "html",
+  "licensingTermsNote": "Review current Government of Canada terms, attribution, and automated-access requirements.",
+  "adapterName": "ca_ircc_dli",
+  "enabled": false,
+  "checksumRequired": true
+}

@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "import-manifest.schema.json",
+  "title": "Import run manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "runId",
+    "createdAt",
+    "source",
+    "versions",
+    "gitCommit",
+    "targetEnvironment",
+    "stages"
+  ],
+  "properties": {
+    "runId": {
+      "type": "string",
+      "pattern": "^[0-9]{8}T[0-9]{6}Z-[a-z0-9_]+-[a-f0-9]{12}$"
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "jurisdiction",
+        "url",
+        "releaseVersion",
+        "retrievedAt",
+        "sha256"
+      ],
+      "properties": {
+        "name": { "type": "string" },
+        "jurisdiction": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "url": { "type": "string", "pattern": "^https://" },
+        "releaseVersion": { "type": "string" },
+        "retrievedAt": { "type": "string", "format": "date-time" },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "fileName", "sha256", "bytes"],
+            "properties": {
+              "name": { "type": "string" },
+              "fileName": { "type": "string" },
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+              "bytes": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "versions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter", "mapping", "pipeline"],
+      "properties": {
+        "adapter": { "type": "string" },
+        "mapping": { "type": "string" },
+        "pipeline": { "type": "string" }
+      }
+    },
+    "gitCommit": { "type": "string", "pattern": "^[a-f0-9]{7,40}$" },
+    "targetEnvironment": {
+      "enum": ["local", "test", "preview", "staging", "production"]
+    },
+    "stages": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "counts"],
+        "properties": {
+          "status": {
+            "enum": ["pending", "running", "completed", "failed", "blocked"]
+          },
+          "counts": {
+            "type": "object",
+            "additionalProperties": { "type": "integer", "minimum": 0 }
+          },
+          "startedAt": { "type": ["string", "null"], "format": "date-time" },
+          "completedAt": { "type": ["string", "null"], "format": "date-time" }
+        }
+      }
+    }
+  }
+}

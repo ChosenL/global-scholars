@@ -53,6 +53,8 @@ test("application browser client uses only the authenticated Application API", a
   try {
     await api.createApplication({
       studentProfileId: "student-id",
+      universityId: "university-id",
+      programId: "program-id",
       intakeId: "intake-id",
       advisorProfileId: null,
     });
@@ -75,6 +77,7 @@ test("application browser client uses only the authenticated Application API", a
   }
 
   assert.equal(calls[0].path, "/api/applications");
+  assert.match(calls[0].body, /"universityId":"university-id"/);
   assert.match(
     calls[1].path,
     /^\/api\/applications\?limit=10&offset=20&status=submitted$/,
@@ -107,9 +110,9 @@ test("application list includes search, filters, pagination, and all data states
     "Create application",
     "Student selector",
     "University selector",
-    "Intake field",
-    "Program field",
-    "Degree level field",
+    "IntakeSelector",
+    "ProgramSelector",
+    "credentialLevel",
     "Application created.",
     "Creating...",
     "Student is required.",

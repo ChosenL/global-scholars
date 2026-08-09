@@ -1,0 +1,11 @@
+{
+  "mappingVersion": "1.0.0",
+  "values": {
+    "US": {
+      "isoCode": "US",
+      "name": "United States",
+      "defaultCurrency": "USD"
+    },
+    "CA": { "isoCode": "CA", "name": "Canada", "defaultCurrency": "CAD" }
+  }
+}

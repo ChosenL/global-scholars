@@ -1,0 +1,10 @@
+{
+  "mappingVersion": "1.0.0",
+  "unmappedPolicy": "quarantine",
+  "values": {
+    "public": "Public institution",
+    "private_nonprofit": "Private nonprofit institution",
+    "private_for_profit": "Private for-profit institution",
+    "other": "Other institution"
+  }
+}

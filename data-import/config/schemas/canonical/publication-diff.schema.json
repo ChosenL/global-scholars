@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "publication-diff.schema.json",
+  "title": "Catalog publication diff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "runId",
+    "entityType",
+    "canonicalId",
+    "operation",
+    "before",
+    "after",
+    "recordHash"
+  ],
+  "properties": {
+    "runId": { "type": "string" },
+    "entityType": { "type": "string" },
+    "canonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "catalogId": { "type": ["string", "null"], "format": "uuid" },
+    "operation": {
+      "enum": [
+        "insert",
+        "update",
+        "unchanged",
+        "skipped",
+        "deactivate",
+        "reject"
+      ]
+    },
+    "before": { "type": ["object", "null"] },
+    "after": { "type": ["object", "null"] },
+    "recordHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}

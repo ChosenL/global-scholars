@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "crosswalk.schema.json",
+  "title": "Source-to-catalog crosswalk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceSystem",
+    "entityType",
+    "sourceEntityId",
+    "canonicalId",
+    "recordHash",
+    "resolutionMethod"
+  ],
+  "properties": {
+    "sourceSystem": { "type": "string", "minLength": 2 },
+    "entityType": {
+      "enum": [
+        "country",
+        "university",
+        "campus",
+        "faculty",
+        "program",
+        "program-campus",
+        "intake",
+        "scholarship"
+      ]
+    },
+    "sourceEntityId": { "type": "string", "minLength": 1 },
+    "canonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "catalogId": { "type": ["string", "null"], "format": "uuid" },
+    "recordHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "resolutionMethod": {
+      "enum": ["source-id", "exact-natural-key", "manual"]
+    },
+    "resolvedAt": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

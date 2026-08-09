@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "validation-issue.schema.json",
+  "title": "Validation issue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "runId",
+    "category",
+    "severity",
+    "code",
+    "message",
+    "entityType",
+    "sourceEntityId",
+    "quarantine"
+  ],
+  "properties": {
+    "runId": { "type": "string" },
+    "category": {
+      "enum": ["structural", "identity", "relationship", "business-rule"]
+    },
+    "severity": { "enum": ["info", "warning", "error", "fatal"] },
+    "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+    "message": { "type": "string", "minLength": 1 },
+    "entityType": { "type": "string" },
+    "sourceEntityId": { "type": ["string", "null"] },
+    "fieldPath": { "type": ["string", "null"] },
+    "quarantine": { "type": "boolean" }
+  }
+}

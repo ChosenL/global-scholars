@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "university.schema.json",
+  "title": "Canonical university",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entityType",
+    "canonicalId",
+    "recordHash",
+    "provenance",
+    "countryCanonicalId",
+    "name",
+    "slug",
+    "isActive"
+  ],
+  "properties": {
+    "entityType": { "const": "university" },
+    "canonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "recordHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "provenance": { "$ref": "common.schema.json#/$defs/provenance" },
+    "countryCanonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "name": { "type": "string", "minLength": 2, "maxLength": 200 },
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "institutionType": { "type": ["string", "null"], "maxLength": 100 },
+    "websiteUrl": { "type": ["string", "null"] },
+    "degreeLevels": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "certificate",
+          "diploma",
+          "associate",
+          "bachelor",
+          "postgraduate_certificate",
+          "master",
+          "doctorate",
+          "other"
+        ]
+      }
+    },
+    "isActive": { "type": "boolean" }
+  }
+}

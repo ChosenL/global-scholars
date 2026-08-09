@@ -20,6 +20,33 @@ export interface University {
   is_active: boolean;
 }
 
+export async function searchUniversities(
+  supabase: SupabaseClient,
+  query: string,
+  limit = 20,
+): Promise<University[]> {
+  const normalized = query.trim().slice(0, 100);
+  const safeLimit = Number.isInteger(limit)
+    ? Math.min(Math.max(limit, 1), 50)
+    : 20;
+  let request = supabase
+    .schema("crm")
+    .from("universities")
+    .select("id,country_id,name,slug,institution_type,website_url,is_active")
+    .eq("is_active", true);
+  if (normalized)
+    request = request.ilike(
+      "name",
+      `%${normalized.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`,
+    );
+  const { data, error } = await request
+    .order("name")
+    .order("id")
+    .limit(safeLimit);
+  if (error) throw error;
+  return (data ?? []) as University[];
+}
+
 export interface Program {
   id: string;
   university_id: string;
@@ -47,8 +74,12 @@ export interface Intake {
 export async function fetchCountries(
   supabase: SupabaseClient,
 ): Promise<Country[]> {
-  const { data, error } = await supabase.schema("crm").from("countries")
-    .select("*").eq("is_active", true).order("name");
+  const { data, error } = await supabase
+    .schema("crm")
+    .from("countries")
+    .select("*")
+    .eq("is_active", true)
+    .order("name");
   if (error) throw error;
   return (data ?? []) as Country[];
 }
@@ -57,12 +88,44 @@ export async function fetchUniversityPrograms(
   supabase: SupabaseClient,
   universityId: string,
 ): Promise<Program[]> {
-  const { data, error } = await supabase.schema("crm").from("programs")
-    .select("*").eq(
-      "university_id",
-      requireCrmUuid(universityId, "University"),
+  const { data, error } = await supabase
+    .schema("crm")
+    .from("programs")
+    .select("*")
+    .eq("university_id", requireCrmUuid(universityId, "University"))
+    .eq("is_active", true)
+    .order("name");
+  if (error) throw error;
+  return (data ?? []) as Program[];
+}
+
+export async function searchPrograms(
+  supabase: SupabaseClient,
+  universityId: string,
+  query: string,
+  limit = 20,
+): Promise<Program[]> {
+  const normalized = query.trim().slice(0, 100);
+  const safeLimit = Number.isInteger(limit)
+    ? Math.min(Math.max(limit, 1), 50)
+    : 20;
+  let request = supabase
+    .schema("crm")
+    .from("programs")
+    .select(
+      "id,name,program_code,credential_level,university_id,duration_months,is_active",
     )
-    .eq("is_active", true).order("name");
+    .eq("university_id", requireCrmUuid(universityId, "University"))
+    .eq("is_active", true);
+  if (normalized)
+    request = request.ilike(
+      "name",
+      `%${normalized.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`,
+    );
+  const { data, error } = await request
+    .order("name")
+    .order("id")
+    .limit(safeLimit);
   if (error) throw error;
   return (data ?? []) as Program[];
 }
@@ -71,9 +134,32 @@ export async function fetchOpenIntakes(
   supabase: SupabaseClient,
   programId: string,
 ): Promise<Intake[]> {
-  const { data, error } = await supabase.schema("crm").from("intakes")
-    .select("*").eq("program_id", requireCrmUuid(programId, "Program"))
-    .eq("status", "open").order("start_date");
+  const { data, error } = await supabase
+    .schema("crm")
+    .from("intakes")
+    .select("*")
+    .eq("program_id", requireCrmUuid(programId, "Program"))
+    .eq("status", "open")
+    .order("start_date");
+  if (error) throw error;
+  return (data ?? []) as Intake[];
+}
+
+export async function listOpenIntakes(
+  supabase: SupabaseClient,
+  programId: string,
+): Promise<Intake[]> {
+  const { data, error } = await supabase
+    .schema("crm")
+    .from("intakes")
+    .select(
+      "id,name,program_id,campus_id,start_date,application_deadline,international_deadline,status",
+    )
+    .eq("program_id", requireCrmUuid(programId, "Program"))
+    .eq("status", "open")
+    .order("start_date")
+    .order("id")
+    .limit(50);
   if (error) throw error;
   return (data ?? []) as Intake[];
 }

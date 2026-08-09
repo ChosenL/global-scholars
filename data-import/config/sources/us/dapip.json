@@ -1,0 +1,11 @@
+{
+  "sourceName": "US DAPIP",
+  "jurisdiction": "US",
+  "sourceUrl": "https://ope.ed.gov/dapip/",
+  "releaseVersion": "SET_AT_RUN_TIME",
+  "retrievalMethod": "download",
+  "licensingTermsNote": "Review current U.S. Department of Education terms and source disclaimers before acquisition.",
+  "adapterName": "us_dapip",
+  "enabled": false,
+  "checksumRequired": true
+}

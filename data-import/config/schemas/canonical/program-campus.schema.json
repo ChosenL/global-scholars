@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "program-campus.schema.json",
+  "title": "Canonical program-campus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entityType",
+    "canonicalId",
+    "recordHash",
+    "provenance",
+    "programCanonicalId",
+    "campusCanonicalId"
+  ],
+  "properties": {
+    "entityType": { "const": "program-campus" },
+    "canonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "recordHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "provenance": { "$ref": "common.schema.json#/$defs/provenance" },
+    "programCanonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "campusCanonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}

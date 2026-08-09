@@ -1,0 +1,11 @@
+{
+  "sourceName": "Canada CICIC",
+  "jurisdiction": "CA",
+  "sourceUrl": "https://www.cicic.ca/868/search_the_directory_of_educational_institutions_in_canada.canada",
+  "releaseVersion": "SET_AT_RUN_TIME",
+  "retrievalMethod": "html",
+  "licensingTermsNote": "Confirm CICIC access, caching, attribution, and redistribution terms before acquisition.",
+  "adapterName": "ca_cicic",
+  "enabled": false,
+  "checksumRequired": true
+}

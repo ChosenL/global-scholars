@@ -45,5 +45,21 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# University data-import runtime artifacts (retain only README/.gitkeep sentinels)
+/data-import/raw/**
+!/data-import/raw/.gitkeep
+/data-import/normalized/**
+!/data-import/normalized/.gitkeep
+/data-import/validation/reports/**
+!/data-import/validation/reports/.gitkeep
+/data-import/validation/quarantine/**
+!/data-import/validation/quarantine/.gitkeep
+/data-import/checkpoints/**
+!/data-import/checkpoints/.gitkeep
+/data-import/logs/**
+!/data-import/logs/.gitkeep
+/data-import/manifests/**
+!/data-import/manifests/README.md
+
 .vercel
 .env*

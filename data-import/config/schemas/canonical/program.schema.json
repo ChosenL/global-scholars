@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "program.schema.json",
+  "title": "Canonical program",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entityType",
+    "canonicalId",
+    "recordHash",
+    "provenance",
+    "universityCanonicalId",
+    "name",
+    "credentialLevel",
+    "isActive"
+  ],
+  "properties": {
+    "entityType": { "const": "program" },
+    "canonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "recordHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "provenance": { "$ref": "common.schema.json#/$defs/provenance" },
+    "universityCanonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "facultyCanonicalId": {
+      "type": ["string", "null"],
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "name": { "type": "string", "minLength": 2, "maxLength": 250 },
+    "programCode": { "type": ["string", "null"], "maxLength": 50 },
+    "credentialLevel": {
+      "enum": [
+        "certificate",
+        "diploma",
+        "associate",
+        "bachelor",
+        "postgraduate_certificate",
+        "master",
+        "doctorate",
+        "other"
+      ]
+    },
+    "durationMonths": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "maximum": 120
+    },
+    "description": { "type": ["string", "null"], "maxLength": 5000 },
+    "isActive": { "type": "boolean" }
+  }
+}

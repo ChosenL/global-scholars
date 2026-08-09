@@ -2,10 +2,9 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 interface ApplicationCreationData {
   studentProfileId: string;
-  intakeId: string;
   university: string;
   program: string;
-  degreeLevel: string;
+  intake: string;
 }
 
 export class ApplicationManagementPage {
@@ -31,9 +30,22 @@ export class ApplicationManagementPage {
     await expect(dialog).toBeVisible();
     await dialog.getByLabel("Student selector").fill(data.studentProfileId);
     await dialog.getByLabel("University selector").fill(data.university);
-    await dialog.getByLabel("Intake field").fill(data.intakeId);
-    await dialog.getByLabel("Program field").fill(data.program);
-    await dialog.getByLabel("Degree level field").fill(data.degreeLevel);
+    await dialog
+      .getByRole("option", { name: new RegExp(data.university, "i") })
+      .first()
+      .click();
+    await dialog.getByLabel("Program selector").fill(data.program);
+    await dialog
+      .getByRole("option", { name: new RegExp(data.program, "i") })
+      .first()
+      .click();
+    const intakeSelect = dialog.getByLabel("Intake selector");
+    const intakeValue = await intakeSelect
+      .locator("option")
+      .filter({ hasText: data.intake })
+      .getAttribute("value");
+    expect(intakeValue).toBeTruthy();
+    await intakeSelect.selectOption(intakeValue!);
     await dialog.getByRole("button", { name: "Create application" }).click();
     try {
       await expect(this.page.getByRole("status")).toContainText(

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "country.schema.json",
+  "title": "Canonical country",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entityType",
+    "canonicalId",
+    "recordHash",
+    "provenance",
+    "isoCode",
+    "name",
+    "defaultCurrency",
+    "isActive"
+  ],
+  "properties": {
+    "entityType": { "const": "country" },
+    "canonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "recordHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "provenance": { "$ref": "common.schema.json#/$defs/provenance" },
+    "isoCode": { "type": "string", "pattern": "^[A-Z]{2}$" },
+    "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+    "defaultCurrency": { "type": ["string", "null"], "pattern": "^[A-Z]{3}$" },
+    "isActive": { "type": "boolean" }
+  }
+}

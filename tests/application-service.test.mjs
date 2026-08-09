@@ -50,14 +50,34 @@ function loadTypeScriptModule(filePath, cache = new Map()) {
   return loadedModule.exports;
 }
 
-function rpcClient(result = { data: null, error: null }) {
+function rpcClient(
+  result = { data: null, error: null },
+  matchingData = { id: INTAKE_ID },
+) {
   const calls = [];
+  const queryCalls = [];
   return {
     calls,
     client: {
       schema(schemaName) {
         assert.equal(schemaName, "crm");
         return {
+          from() {
+            const chain = {
+              select(value) {
+                queryCalls.push({ operation: "select", value });
+                return this;
+              },
+              eq(column, value) {
+                queryCalls.push({ operation: "eq", column, value });
+                return this;
+              },
+              async maybeSingle() {
+                return { data: matchingData, error: null };
+              },
+            };
+            return chain;
+          },
           async rpc(name, args) {
             calls.push({ name, args });
             return result;
@@ -65,6 +85,7 @@ function rpcClient(result = { data: null, error: null }) {
         };
       },
     },
+    queryCalls,
   };
 }
 
@@ -122,6 +143,8 @@ const service = loadTypeScriptModule(servicePath);
 const APPLICATION_ID = "11111111-1111-4111-8111-111111111111";
 const STUDENT_ID = "22222222-2222-4222-8222-222222222222";
 const INTAKE_ID = "33333333-3333-4333-8333-333333333333";
+const UNIVERSITY_ID = "66666666-6666-4666-8666-666666666666";
+const PROGRAM_ID = "77777777-7777-4777-8777-777777777777";
 const ADVISOR_ID = "44444444-4444-4444-8444-444444444444";
 const ORGANIZATION_ID = "55555555-5555-4555-8555-555555555555";
 const application = {
@@ -146,9 +169,14 @@ const application = {
 };
 
 test("createApplication validates CRM identity and uses the existing creation RPC", async () => {
-  const { client, calls } = rpcClient({ data: application, error: null });
+  const { client, calls, queryCalls } = rpcClient({
+    data: application,
+    error: null,
+  });
   const result = await service.createApplication(client, {
     studentProfileId: STUDENT_ID,
+    universityId: UNIVERSITY_ID,
+    programId: PROGRAM_ID,
     intakeId: INTAKE_ID,
     advisorProfileId: ADVISOR_ID,
   });
@@ -162,6 +190,64 @@ test("createApplication validates CRM identity and uses the existing creation RP
       target_advisor_profile_id: ADVISOR_ID,
     },
   });
+  assert.ok(
+    queryCalls.some(
+      (call) =>
+        call.operation === "eq" &&
+        call.column === "program_id" &&
+        call.value === PROGRAM_ID,
+    ),
+  );
+  assert.ok(
+    queryCalls.some(
+      (call) =>
+        call.operation === "eq" &&
+        call.column === "status" &&
+        call.value === "open",
+    ),
+  );
+  assert.ok(
+    queryCalls.some(
+      (call) =>
+        call.operation === "eq" &&
+        call.column === "programs.university_id" &&
+        call.value === UNIVERSITY_ID,
+    ),
+  );
+  assert.ok(
+    queryCalls.some(
+      (call) =>
+        call.operation === "eq" &&
+        call.column === "programs.is_active" &&
+        call.value === true,
+    ),
+  );
+});
+
+test("application creation rejects mismatched or inactive catalog hierarchy", async () => {
+  for (const scenario of [
+    "university/program mismatch",
+    "program/intake mismatch",
+    "inactive program",
+    "closed intake",
+  ]) {
+    const { client, calls } = rpcClient(
+      { data: application, error: null },
+      null,
+    );
+    await assert.rejects(
+      service.createApplication(client, {
+        studentProfileId: STUDENT_ID,
+        universityId: UNIVERSITY_ID,
+        programId: PROGRAM_ID,
+        intakeId: INTAKE_ID,
+        advisorProfileId: null,
+      }),
+      /active catalog hierarchy/i,
+      scenario,
+    );
+    assert.equal(calls.length, 0);
+  }
 });
 
 test("general updates send only normalized supported fields to the new RPC", async () => {

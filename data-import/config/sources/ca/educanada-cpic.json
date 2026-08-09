@@ -1,0 +1,11 @@
+{
+  "sourceName": "Canada EduCanada CPIC",
+  "jurisdiction": "CA",
+  "sourceUrl": "https://w05.educanada.ca/",
+  "releaseVersion": "SET_AT_RUN_TIME",
+  "retrievalMethod": "manual",
+  "licensingTermsNote": "Confirm ESDC CPIC access and redistribution permission; institution facts require official-source confirmation.",
+  "adapterName": "ca_educanada_cpic",
+  "enabled": false,
+  "checksumRequired": true
+}

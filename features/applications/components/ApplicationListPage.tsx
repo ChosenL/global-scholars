@@ -20,6 +20,9 @@ import {
 } from "../types";
 import ApplicationShell from "./ApplicationShell";
 import ApplicationToast from "./ApplicationToast";
+import UniversitySelector from "./UniversitySelector";
+import ProgramSelector from "./ProgramSelector";
+import IntakeSelector from "./IntakeSelector";
 
 const PAGE_SIZE = 10;
 const label = (value: string) =>
@@ -50,10 +53,12 @@ export default function ApplicationListPage() {
   } | null>(null);
   const [form, setForm] = useState({
     studentProfileId: "",
-    university: "",
+    universityId: "",
+    universityName: "",
+    programId: "",
+    programName: "",
+    credentialLevel: "",
     intakeId: "",
-    program: "",
-    degreeLevel: "",
     advisorProfileId: "",
   });
 
@@ -86,10 +91,9 @@ export default function ApplicationListPage() {
 
   const validateCreateForm = () => {
     if (!form.studentProfileId.trim()) return "Student is required.";
-    if (!form.university.trim()) return "University is required.";
+    if (!form.universityId) return "University is required.";
     if (!form.intakeId.trim()) return "Intake is required.";
-    if (!form.program.trim()) return "Program is required.";
-    if (!form.degreeLevel.trim()) return "Degree level is required.";
+    if (!form.programId) return "Program is required.";
     return null;
   };
 
@@ -105,6 +109,8 @@ export default function ApplicationListPage() {
     try {
       const created = await createApplication({
         studentProfileId: form.studentProfileId.trim(),
+        universityId: form.universityId,
+        programId: form.programId,
         intakeId: form.intakeId.trim(),
         advisorProfileId: form.advisorProfileId.trim() || null,
       });
@@ -116,10 +122,12 @@ export default function ApplicationListPage() {
       setToast({ tone: "success", message: "Application created." });
       setForm({
         studentProfileId: "",
-        university: "",
+        universityId: "",
+        universityName: "",
+        programId: "",
+        programName: "",
+        credentialLevel: "",
         intakeId: "",
-        program: "",
-        degreeLevel: "",
         advisorProfileId: "",
       });
     } catch (cause) {
@@ -373,41 +381,60 @@ export default function ApplicationListPage() {
                 disabled={isCreating}
                 required
               />
-              <CreateField
-                labelText="University selector"
-                value={form.university}
-                onChange={(value) =>
-                  setForm((current) => ({ ...current, university: value }))
-                }
-                disabled={isCreating}
-                required
-              />
-              <CreateField
-                labelText="Intake field"
+              <div aria-label="University selector">
+                <UniversitySelector
+                  value={form.universityId}
+                  selectedName={form.universityName}
+                  onSelect={(university, inputName) =>
+                    setForm((current) => ({
+                      ...current,
+                      universityId: university?.id ?? "",
+                      universityName: inputName,
+                      programId: "",
+                      programName: "",
+                      credentialLevel: "",
+                      intakeId: "",
+                    }))
+                  }
+                  disabled={isCreating}
+                />
+              </div>
+              <div aria-label="Program selector">
+                <ProgramSelector
+                  key={form.universityId || "no-university"}
+                  universityId={form.universityId}
+                  value={form.programId}
+                  selectedName={form.programName}
+                  onSelect={(program, inputName) =>
+                    setForm((current) => ({
+                      ...current,
+                      programId: program?.id ?? "",
+                      programName: inputName,
+                      credentialLevel: program?.credential_level ?? "",
+                      intakeId: "",
+                    }))
+                  }
+                  disabled={isCreating}
+                />
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+                <span className="block font-bold">Degree</span>
+                <span className="mt-1 block capitalize text-slate-700">
+                  {form.credentialLevel
+                    ? form.credentialLevel.replaceAll("_", " ")
+                    : "Select a program"}
+                </span>
+              </div>
+              <IntakeSelector
+                programId={form.programId}
                 value={form.intakeId}
-                onChange={(value) =>
-                  setForm((current) => ({ ...current, intakeId: value }))
+                onSelect={(intake) =>
+                  setForm((current) => ({
+                    ...current,
+                    intakeId: intake?.id ?? "",
+                  }))
                 }
                 disabled={isCreating}
-                required
-              />
-              <CreateField
-                labelText="Program field"
-                value={form.program}
-                onChange={(value) =>
-                  setForm((current) => ({ ...current, program: value }))
-                }
-                disabled={isCreating}
-                required
-              />
-              <CreateField
-                labelText="Degree level field"
-                value={form.degreeLevel}
-                onChange={(value) =>
-                  setForm((current) => ({ ...current, degreeLevel: value }))
-                }
-                disabled={isCreating}
-                required
               />
               <CreateField
                 labelText="Advisor profile ID"

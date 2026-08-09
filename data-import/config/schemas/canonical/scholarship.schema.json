@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scholarship.schema.json",
+  "title": "Canonical scholarship",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entityType",
+    "canonicalId",
+    "recordHash",
+    "provenance",
+    "universityCanonicalId",
+    "name",
+    "awardType",
+    "eligibility",
+    "isActive"
+  ],
+  "properties": {
+    "entityType": { "const": "scholarship" },
+    "canonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "recordHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "provenance": { "$ref": "common.schema.json#/$defs/provenance" },
+    "universityCanonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "programCanonicalId": {
+      "type": ["string", "null"],
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "intakeCanonicalId": {
+      "type": ["string", "null"],
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "name": { "type": "string", "minLength": 2, "maxLength": 200 },
+    "awardType": { "enum": ["fixed", "percentage", "full", "other"] },
+    "amount": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+    "currency": { "type": ["string", "null"], "pattern": "^[A-Z]{3}$" },
+    "percentage": {
+      "type": ["number", "null"],
+      "exclusiveMinimum": 0,
+      "maximum": 100
+    },
+    "eligibility": { "type": "object" },
+    "applicationDeadline": { "type": ["string", "null"], "format": "date" },
+    "isActive": { "type": "boolean" }
+  }
+}

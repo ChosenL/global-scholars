@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "intake.schema.json",
+  "title": "Canonical intake",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entityType",
+    "canonicalId",
+    "recordHash",
+    "provenance",
+    "programCanonicalId",
+    "campusCanonicalId",
+    "name",
+    "startDate",
+    "status"
+  ],
+  "properties": {
+    "entityType": { "const": "intake" },
+    "canonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "recordHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "provenance": { "$ref": "common.schema.json#/$defs/provenance" },
+    "programCanonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "campusCanonicalId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+    "startDate": { "type": "string", "format": "date" },
+    "applicationDeadline": { "type": ["string", "null"], "format": "date" },
+    "internationalDeadline": { "type": ["string", "null"], "format": "date" },
+    "capacity": { "type": ["integer", "null"], "minimum": 1 },
+    "status": { "enum": ["planned", "open", "closed", "cancelled"] }
+  }
+}

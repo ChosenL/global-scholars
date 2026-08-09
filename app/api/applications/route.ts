@@ -35,6 +35,8 @@ export async function POST(request: Request) {
       const payload = await parseJsonObject(request);
       const input: CreateApplicationInput = {
         studentProfileId: requiredString(payload, "studentProfileId"),
+        universityId: requiredString(payload, "universityId"),
+        programId: requiredString(payload, "programId"),
         intakeId: requiredString(payload, "intakeId"),
         advisorProfileId: optionalString(payload, "advisorProfileId"),
       };
