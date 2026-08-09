@@ -87,17 +87,130 @@ export async function verifyPreview({
   }
 }
 
+export async function verifyOfficialCatalog({
+  connectionString = process.env.SUPABASE_DB_URL,
+} = {}) {
+  if (!connectionString)
+    throw new Error("SUPABASE_DB_URL is required for Preview verification.");
+  const normalized = await readJson(
+    path.join(
+      ROOT,
+      "normalized",
+      "us",
+      "official_catalog",
+      "2026-08-09",
+      "records.json",
+    ),
+  );
+  const publication = await readJson(
+    path.join(
+      ROOT,
+      "validation",
+      "reports",
+      "us_official_catalog-2026-08-09-publication.json",
+    ),
+  );
+  const byType = Object.fromEntries(
+    ["faculty", "program", "program-campus", "intake"].map((type) => [
+      type,
+      normalized.records.filter((record) => record.entityType === type),
+    ]),
+  );
+  const ids = Object.fromEntries(
+    Object.entries(byType).map(([type, records]) => [
+      type,
+      records.map((record) => deterministicUuid(record.canonicalId)),
+    ]),
+  );
+  const sql = postgres(connectionString, {
+    max: 1,
+    prepare: false,
+    idle_timeout: 5,
+  });
+  try {
+    const [
+      faculties,
+      programs,
+      relations,
+      intakes,
+      openIntakes,
+      coverage,
+      broken,
+      duplicatePrograms,
+      duplicateIntakes,
+    ] = await Promise.all([
+      sql`select count(*)::int as count from crm.faculties where id in ${sql(ids.faculty)}`,
+      sql`select count(*)::int as count from crm.programs where id in ${sql(ids.program)} and is_active`,
+      sql`select count(*)::int as count from crm.program_campuses where program_id in ${sql(ids.program)}`,
+      sql`select count(*)::int as count from crm.intakes where id in ${sql(ids.intake)}`,
+      sql`select count(*)::int as count from crm.intakes where id in ${sql(ids.intake)} and status = 'open'`,
+      sql`select count(distinct university_id)::int as count from crm.programs where id in ${sql(ids.program)} and is_active`,
+      sql`select count(*)::int as count from crm.intakes i left join crm.programs p on p.id=i.program_id left join crm.campuses c on c.id=i.campus_id left join crm.program_campuses pc on pc.program_id=i.program_id and pc.campus_id=i.campus_id where i.id in ${sql(ids.intake)} and (p.id is null or c.id is null or pc.program_id is null)`,
+      sql`select count(*)::int as count from (select university_id,lower(name) from crm.programs where id in ${sql(ids.program)} group by university_id,lower(name) having count(*)>1) duplicate`,
+      sql`select count(*)::int as count from (select program_id,campus_id,start_date from crm.intakes where id in ${sql(ids.intake)} group by program_id,campus_id,start_date having count(*)>1) duplicate`,
+    ]);
+    const report = {
+      runId: normalized.runId,
+      verifiedAt: new Date().toISOString(),
+      environment: "preview",
+      counts: {
+        faculty: faculties[0].count,
+        program: programs[0].count,
+        "program-campus": relations[0].count,
+        intake: intakes[0].count,
+        openIntake: openIntakes[0].count,
+        universitiesCovered: coverage[0].count,
+      },
+      expectedCounts: {
+        faculty: 10,
+        program: 10,
+        "program-campus": 10,
+        intake: 2,
+        openIntake: 2,
+        universitiesCovered: 10,
+      },
+      brokenForeignKeys: broken[0].count,
+      duplicateNaturalKeys:
+        duplicatePrograms[0].count + duplicateIntakes[0].count,
+      publicationChecksum: publication.checksum,
+      checksumVerified:
+        publication.checksum === sha256(stableStringify(publication.actions)),
+    };
+    report.accepted =
+      stableStringify(report.counts) ===
+        stableStringify(report.expectedCounts) &&
+      report.brokenForeignKeys === 0 &&
+      report.duplicateNaturalKeys === 0 &&
+      report.checksumVerified;
+    await writeJson(
+      path.join(
+        ROOT,
+        "validation",
+        "reports",
+        "us_official_catalog-2026-08-09-preview-verification.json",
+      ),
+      report,
+    );
+    return report;
+  } finally {
+    await sql.end({ timeout: 5 });
+  }
+}
+
 if (
   process.argv[1] &&
   import.meta.url ===
     new URL(`file://${process.argv[1].replace(/\\/g, "/")}`).href
 )
-  verifyPreview()
-    .then((report) => {
+  Promise.all([verifyPreview(), verifyOfficialCatalog()])
+    .then(([report, official]) => {
       console.log(
         `PREVIEW_VERIFY accepted=${report.accepted} country=${report.counts.country} university=${report.counts.university} campus=${report.counts.campus} checksum=${report.checksumVerified}`,
       );
-      if (!report.accepted) process.exitCode = 1;
+      console.log(
+        `PHASE_C_VERIFY accepted=${official.accepted} universities=${official.counts.universitiesCovered} programs=${official.counts.program} openIntakes=${official.counts.openIntake} checksum=${official.checksumVerified}`,
+      );
+      if (!report.accepted || !official.accepted) process.exitCode = 1;
     })
     .catch((error) => {
       console.error(`ERROR ${error.message}`);
