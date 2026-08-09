@@ -3,7 +3,7 @@
 ## Sources and evidence boundaries
 
 - U.S. institution identity comes from the immutable, checksum-verified IPEDS 2024 HD and IC archives. Run `node data-import/scripts/cli.mjs normalize --source us_ipeds --limit all`; omitting `--limit all` deliberately retains the 50-record pilot behavior.
-- Canadian institution and campus identity comes from the immutable acquisition snapshot of the Government of Canada IRCC designated learning institution list. DLI designation supports international-student designation and search eligibility, but does not prove degree level, direct institutional admissions, a current program, or an institution's official website. Those fields remain unknown; the authoritative listing URL is retained in provenance.
+- Canadian institution and campus identity comes from the immutable acquisition snapshot of the Government of Canada IRCC designated learning institution list. DLI designation supports international-student designation, but does not prove degree level, direct institutional admissions, a current program, or an institution's official website. Those fields remain unknown, the records remain outside normal selector search, and the authoritative listing URL is retained in provenance.
 - The U.S. official-catalog source remains the only application-ready program enrichment. Historical completion/CIP data was audited but is not published as a current admissions program in this version.
 
 Unknown classifications remain active foundation records but are not search eligible. The certified 47 U.S. institutions remain the only U.S. search-eligible set until stronger classification and admissions evidence is added.

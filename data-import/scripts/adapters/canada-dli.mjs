@@ -157,7 +157,9 @@ export const canadaDliAdapter = {
             catalogClassification: "classification_unknown",
             degreeGranting: null,
             acceptsDirectApplications: null,
-            searchEligible: true,
+            // DLI status proves international designation, not that the
+            // institution accepts direct applications through this catalog.
+            searchEligible: false,
             internationalStudentStatus: "designated",
             dliNumber: row.dliNumber,
             degreeLevels: [],

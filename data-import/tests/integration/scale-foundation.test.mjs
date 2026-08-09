@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { parseDliHtml } from "../../scripts/adapters/canada-dli.mjs";
+import {
+  canadaDliAdapter,
+  parseDliHtml,
+} from "../../scripts/adapters/canada-dli.mjs";
 import { partitionByInstitution } from "../../scripts/publish/batched-publisher.mjs";
 
 test("Canada DLI parser preserves authoritative identity and campus fields", () => {
@@ -18,6 +21,32 @@ test("Canada DLI parser preserves authoritative identity and campus fields", () 
       institutionType: "Public institution",
     },
   ]);
+});
+
+test("Canada DLI designation does not infer direct admissions eligibility", async () => {
+  const config = JSON.parse(
+    await readFile("data-import/config/sources/ca/ircc-dli.json", "utf8"),
+  );
+  const snapshot = await canadaDliAdapter.acquire({
+    config,
+    rawDirectory: "data-import/raw/ca/ircc_dli",
+  });
+  const records = await canadaDliAdapter.normalize({ config, snapshot });
+  const universities = records.filter(
+    ({ entityType }) => entityType === "university",
+  );
+  assert.equal(universities.length, 927);
+  assert.equal(
+    universities.filter(({ searchEligible }) => searchEligible).length,
+    0,
+  );
+  assert.ok(
+    universities.every(
+      ({ acceptsDirectApplications, internationalStudentStatus }) =>
+        acceptsDirectApplications === null &&
+        internationalStudentStatus === "designated",
+    ),
+  );
 });
 
 test("full U.S. foundation is bounded, conservative, and deterministic", async () => {

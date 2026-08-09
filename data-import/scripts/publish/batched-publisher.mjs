@@ -170,8 +170,9 @@ export async function publishScale({
 }
 
 if (
+  process.argv[1] &&
   import.meta.url ===
-  new URL(`file://${process.argv[1].replace(/\\/g, "/")}`).href
+    new URL(`file://${process.argv[1].replace(/\\/g, "/")}`).href
 ) {
   const dryRun = process.argv.includes("--dry-run");
   const batchFlag = process.argv.indexOf("--batch-size");
@@ -186,7 +187,7 @@ if (
       ),
     )
     .catch((error) => {
-      console.error(`ERROR ${error.message}`);
+      console.error(`ERROR ${error.message}`, error.detail ?? "");
       process.exitCode = 1;
     });
 }
