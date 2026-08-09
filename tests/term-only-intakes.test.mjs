@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 test("term-only migration is additive and never manufactures a date", () => {
   const sql = readFileSync(
-    "supabase/migrations/20260830_add_term_precision_to_crm_intakes.sql",
+    "supabase/migrations/20260831_add_term_precision_to_crm_intakes.sql",
     "utf8",
   );
   assert.match(sql, /start_date_precision text not null default 'exact'/i);
