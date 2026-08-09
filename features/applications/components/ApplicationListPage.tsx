@@ -381,7 +381,7 @@ export default function ApplicationListPage() {
                 disabled={isCreating}
                 required
               />
-              <div aria-label="University selector">
+              <div>
                 <UniversitySelector
                   value={form.universityId}
                   selectedName={form.universityName}
@@ -399,7 +399,7 @@ export default function ApplicationListPage() {
                   disabled={isCreating}
                 />
               </div>
-              <div aria-label="Program selector">
+              <div>
                 <ProgramSelector
                   key={form.universityId || "no-university"}
                   universityId={form.universityId}

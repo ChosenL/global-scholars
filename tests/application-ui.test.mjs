@@ -109,7 +109,7 @@ test("application list includes search, filters, pagination, and all data states
     "New Application",
     "Create application",
     "Student selector",
-    "University selector",
+    "UniversitySelector",
     "IntakeSelector",
     "ProgramSelector",
     "credentialLevel",
