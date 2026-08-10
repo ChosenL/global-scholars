@@ -20,6 +20,7 @@
     "data:normalize": "node data-import/scripts/cli.mjs normalize --source us_ipeds",
     "data:test": "node --test data-import/tests/contracts/*.test.mjs data-import/tests/integration/*.test.mjs",
     "data:test:matching-auth": "node data-import/scripts/test-matching-authorization.mjs",
+    "data:discover:programs": "node data-import/scripts/discover-official-catalogs.mjs --limit 100",
     "data:validate": "node data-import/scripts/cli.mjs validate",
     "data:plan": "node data-import/scripts/cli.mjs plan",
     "data:publish": "node data-import/scripts/cli.mjs publish --source us_official_catalog --environment preview",
