@@ -12,6 +12,7 @@ import StudentHeader from "./StudentHeader";
 import StudentMatchesCard from "./StudentMatchesCard";
 import StudentNotesCard from "./StudentNotesCard";
 import StudentProgressCard from "./StudentProgressCard";
+import StudentProfileSummary from "./StudentProfileSummary";
 import StudentTasksCard from "./StudentTasksCard";
 
 interface StudentWorkspaceProps {
@@ -43,6 +44,8 @@ export default function StudentWorkspace({ student }: StudentWorkspaceProps) {
 
         <main className="w-full min-w-0 max-w-none space-y-6">
           <StudentHeader student={student} progress={readinessScore} />
+
+          <StudentProfileSummary studentProfileId={student.profileId} />
 
           <StudentMatchesCard
             studentProfileId={student.profileId}

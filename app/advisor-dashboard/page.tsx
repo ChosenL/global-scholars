@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  SignOutButton,
-  UserButton,
-  useUser,
-} from "@clerk/nextjs";
+import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
 import {
   AlertCircle,
   GraduationCap,
@@ -21,11 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useCrmProfile } from "@/app/hooks/useCrmProfile";
 import { usePlatformRole } from "@/app/hooks/usePlatformRole";
@@ -36,6 +28,9 @@ import {
 } from "./hooks/useAdvisorStudents";
 
 type AdvisorSection = "overview" | "students" | "messages";
+
+const ADVISOR_WORKSPACE_STUDENT_KEY =
+  "global-scholars:advisor-workspace-student";
 
 const navigationItems: Array<{
   id: AdvisorSection;
@@ -107,8 +102,9 @@ export default function AdvisorDashboardPage() {
     useState<AdvisorSection>("overview");
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStudentId, setSelectedStudentId] =
-    useState<string | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!isLoaded || isLoadingRole) {
@@ -123,20 +119,12 @@ export default function AdvisorDashboardPage() {
     if (role === "student") {
       router.replace("/scholar-dashboard");
     }
-  }, [
-    isLoaded,
-    isLoadingRole,
-    isSignedIn,
-    role,
-    router,
-  ]);
+  }, [isLoaded, isLoadingRole, isSignedIn, role, router]);
 
   useEffect(() => {
     if (
       selectedStudentId &&
-      students.some(
-        (student) => student.profileId === selectedStudentId,
-      )
+      students.some((student) => student.profileId === selectedStudentId)
     ) {
       return;
     }
@@ -146,6 +134,22 @@ export default function AdvisorDashboardPage() {
     setSelectedStudentId(students[0]?.profileId ?? null);
   }, [selectedStudentId, students]);
 
+  useEffect(() => {
+    const workspaceStudentId = window.sessionStorage.getItem(
+      ADVISOR_WORKSPACE_STUDENT_KEY,
+    );
+    const timeoutId = window.setTimeout(() => {
+      if (
+        workspaceStudentId &&
+        students.some((student) => student.profileId === workspaceStudentId)
+      ) {
+        setSelectedStudentId(workspaceStudentId);
+        setActiveSection("messages");
+      }
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [students]);
+
   const filteredStudents = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
@@ -154,10 +158,7 @@ export default function AdvisorDashboardPage() {
     }
 
     return students.filter((student) => {
-      const searchableValue = [
-        student.displayName,
-        student.email ?? "",
-      ]
+      const searchableValue = [student.displayName, student.email ?? ""]
         .join(" ")
         .toLowerCase();
 
@@ -167,9 +168,8 @@ export default function AdvisorDashboardPage() {
 
   const selectedStudent = useMemo(
     () =>
-      students.find(
-        (student) => student.profileId === selectedStudentId,
-      ) ?? null,
+      students.find((student) => student.profileId === selectedStudentId) ??
+      null,
     [selectedStudentId, students],
   );
 
@@ -179,8 +179,7 @@ export default function AdvisorDashboardPage() {
     user?.primaryEmailAddress?.emailAddress ||
     "Advisor";
 
-  const advisorEmail =
-    user?.primaryEmailAddress?.emailAddress ?? "";
+  const advisorEmail = user?.primaryEmailAddress?.emailAddress ?? "";
 
   function navigateTo(section: AdvisorSection): void {
     setActiveSection(section);
@@ -193,11 +192,7 @@ export default function AdvisorDashboardPage() {
     setMenuOpen(false);
   }
 
-  if (
-    !isLoaded ||
-    isLoadingRole ||
-    (isSignedIn && role === null)
-  ) {
+  if (!isLoaded || isLoadingRole || (isSignedIn && role === null)) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#F4F7FA] px-6">
         <div className="text-center">
@@ -226,19 +221,14 @@ export default function AdvisorDashboardPage() {
         <aside className="hidden w-72 shrink-0 flex-col bg-[#071526] px-5 py-6 text-white lg:flex">
           <div className="flex items-center gap-3 px-2">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#C8A24A] text-[#071526]">
-              <GraduationCap
-                aria-hidden="true"
-                className="h-6 w-6"
-              />
+              <GraduationCap aria-hidden="true" className="h-6 w-6" />
             </div>
 
             <div>
               <p className="text-sm font-black text-[#C8A24A]">
                 Global Scholars
               </p>
-              <p className="text-xs text-white/60">
-                Advisor Dashboard
-              </p>
+              <p className="text-xs text-white/60">Advisor Dashboard</p>
             </div>
           </div>
 
@@ -253,20 +243,13 @@ export default function AdvisorDashboardPage() {
               />
 
               <div className="min-w-0">
-                <p className="truncate text-sm font-black">
-                  {advisorName}
-                </p>
-                <p className="truncate text-xs text-white/55">
-                  {advisorEmail}
-                </p>
+                <p className="truncate text-sm font-black">{advisorName}</p>
+                <p className="truncate text-xs text-white/55">{advisorEmail}</p>
               </div>
             </div>
 
             <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-200">
-              <ShieldCheck
-                aria-hidden="true"
-                className="h-4 w-4"
-              />
+              <ShieldCheck aria-hidden="true" className="h-4 w-4" />
               Advisor access verified
             </div>
           </div>
@@ -288,10 +271,7 @@ export default function AdvisorDashboardPage() {
                       : "text-white/75 hover:bg-white/10 hover:text-white",
                   ].join(" ")}
                 >
-                  <Icon
-                    aria-hidden="true"
-                    className="h-5 w-5"
-                  />
+                  <Icon aria-hidden="true" className="h-5 w-5" />
                   {item.label}
                 </button>
               );
@@ -300,9 +280,7 @@ export default function AdvisorDashboardPage() {
 
           <div className="mt-auto">
             <div className="rounded-3xl bg-white/10 p-5">
-              <p className="text-sm font-black">
-                Assigned caseload
-              </p>
+              <p className="text-sm font-black">Assigned caseload</p>
               <p className="mt-2 text-3xl font-black text-[#C8A24A]">
                 {students.length}
               </p>
@@ -317,10 +295,7 @@ export default function AdvisorDashboardPage() {
                 type="button"
                 className="mt-5 flex w-full items-center gap-3 rounded-2xl px-4 py-3 font-bold text-white/75 transition hover:bg-white/10 hover:text-white"
               >
-                <LogOut
-                  aria-hidden="true"
-                  className="h-5 w-5"
-                />
+                <LogOut aria-hidden="true" className="h-5 w-5" />
                 Log Out
               </button>
             </SignOutButton>
@@ -340,18 +315,13 @@ export default function AdvisorDashboardPage() {
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#C8A24A] text-[#071526]">
-                    <GraduationCap
-                      aria-hidden="true"
-                      className="h-6 w-6"
-                    />
+                    <GraduationCap aria-hidden="true" className="h-6 w-6" />
                   </div>
                   <div>
                     <p className="text-sm font-black text-[#C8A24A]">
                       Global Scholars
                     </p>
-                    <p className="text-xs text-white/60">
-                      Advisor Dashboard
-                    </p>
+                    <p className="text-xs text-white/60">Advisor Dashboard</p>
                   </div>
                 </div>
 
@@ -361,10 +331,7 @@ export default function AdvisorDashboardPage() {
                   className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10"
                   aria-label="Close advisor menu"
                 >
-                  <X
-                    aria-hidden="true"
-                    className="h-5 w-5"
-                  />
+                  <X aria-hidden="true" className="h-5 w-5" />
                 </button>
               </div>
 
@@ -378,9 +345,7 @@ export default function AdvisorDashboardPage() {
                     }}
                   />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-black">
-                      {advisorName}
-                    </p>
+                    <p className="truncate text-sm font-black">{advisorName}</p>
                     <p className="truncate text-xs text-white/55">
                       {advisorEmail}
                     </p>
@@ -405,10 +370,7 @@ export default function AdvisorDashboardPage() {
                           : "text-white/75",
                       ].join(" ")}
                     >
-                      <Icon
-                        aria-hidden="true"
-                        className="h-5 w-5"
-                      />
+                      <Icon aria-hidden="true" className="h-5 w-5" />
                       {item.label}
                     </button>
                   );
@@ -421,10 +383,7 @@ export default function AdvisorDashboardPage() {
                     type="button"
                     className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 font-bold text-white/75"
                   >
-                    <LogOut
-                      aria-hidden="true"
-                      className="h-5 w-5"
-                    />
+                    <LogOut aria-hidden="true" className="h-5 w-5" />
                     Log Out
                   </button>
                 </SignOutButton>
@@ -443,10 +402,7 @@ export default function AdvisorDashboardPage() {
                   className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 lg:hidden"
                   aria-label="Open advisor menu"
                 >
-                  <Menu
-                    aria-hidden="true"
-                    className="h-6 w-6"
-                  />
+                  <Menu aria-hidden="true" className="h-6 w-6" />
                 </button>
 
                 <div>
@@ -468,12 +424,8 @@ export default function AdvisorDashboardPage() {
                   }}
                 />
                 <div className="max-w-44 pr-2">
-                  <p className="truncate text-sm font-black">
-                    {advisorName}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    Advisor
-                  </p>
+                  <p className="truncate text-sm font-black">{advisorName}</p>
+                  <p className="text-xs text-slate-500">Advisor</p>
                 </div>
               </div>
             </div>
@@ -487,12 +439,8 @@ export default function AdvisorDashboardPage() {
                   className="mt-0.5 h-5 w-5 shrink-0"
                 />
                 <div>
-                  <p className="font-black">
-                    Role verification notice
-                  </p>
-                  <p className="mt-1 leading-6">
-                    {roleError}
-                  </p>
+                  <p className="font-black">Role verification notice</p>
+                  <p className="mt-1 leading-6">{roleError}</p>
                 </div>
               </div>
             ) : null}
@@ -505,12 +453,8 @@ export default function AdvisorDashboardPage() {
                     className="mt-0.5 h-5 w-5 shrink-0"
                   />
                   <div>
-                    <p className="font-black">
-                      Students could not be loaded
-                    </p>
-                    <p className="mt-1 leading-6">
-                      {studentsError}
-                    </p>
+                    <p className="font-black">Students could not be loaded</p>
+                    <p className="mt-1 leading-6">{studentsError}</p>
                   </div>
                 </div>
 
@@ -522,10 +466,7 @@ export default function AdvisorDashboardPage() {
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-rose-200 bg-white"
                   aria-label="Retry loading students"
                 >
-                  <RefreshCw
-                    aria-hidden="true"
-                    className="h-4 w-4"
-                  />
+                  <RefreshCw aria-hidden="true" className="h-4 w-4" />
                 </button>
               </div>
             ) : null}
@@ -540,18 +481,15 @@ export default function AdvisorDashboardPage() {
                     Manage your assigned scholars
                   </h2>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                    Review your active caseload and continue
-                    conversations with the students assigned to you.
+                    Review your active caseload and continue conversations with
+                    the students assigned to you.
                   </p>
                 </div>
 
                 <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                   <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEF3F8] text-[#0F2747]">
-                      <Users
-                        aria-hidden="true"
-                        className="h-6 w-6"
-                      />
+                      <Users aria-hidden="true" className="h-6 w-6" />
                     </div>
                     <p className="mt-5 text-sm font-bold text-slate-500">
                       Assigned students
@@ -563,10 +501,7 @@ export default function AdvisorDashboardPage() {
 
                   <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FFF4CF] text-[#8A6A1F]">
-                      <MessageCircle
-                        aria-hidden="true"
-                        className="h-6 w-6"
-                      />
+                      <MessageCircle aria-hidden="true" className="h-6 w-6" />
                     </div>
                     <p className="mt-5 text-sm font-bold text-slate-500">
                       Messaging access
@@ -581,10 +516,7 @@ export default function AdvisorDashboardPage() {
 
                   <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:col-span-2 xl:col-span-1">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
-                      <ShieldCheck
-                        aria-hidden="true"
-                        className="h-6 w-6"
-                      />
+                      <ShieldCheck aria-hidden="true" className="h-6 w-6" />
                     </div>
                     <p className="mt-5 text-sm font-bold text-slate-500">
                       Portal role
@@ -677,8 +609,8 @@ export default function AdvisorDashboardPage() {
                       Assigned Students
                     </h2>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                      Search your assignments and open a student’s
-                      complete advising workspace.
+                      Search your assignments and open a student’s complete
+                      advising workspace.
                     </p>
                   </div>
 
@@ -703,9 +635,7 @@ export default function AdvisorDashboardPage() {
 
                 <div className="mt-7 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm md:p-7">
                   <label className="relative block">
-                    <span className="sr-only">
-                      Search assigned students
-                    </span>
+                    <span className="sr-only">Search assigned students</span>
                     <Search
                       aria-hidden="true"
                       className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
@@ -713,9 +643,7 @@ export default function AdvisorDashboardPage() {
                     <input
                       type="search"
                       value={searchQuery}
-                      onChange={(event) =>
-                        setSearchQuery(event.target.value)
-                      }
+                      onChange={(event) => setSearchQuery(event.target.value)}
                       placeholder="Search by student name or email"
                       className="h-12 w-full rounded-2xl border border-slate-200 bg-[#F8FAFC] pl-12 pr-4 text-sm font-semibold outline-none transition focus:border-[#C8A24A] focus:ring-4 focus:ring-[#C8A24A]/10"
                     />
@@ -762,29 +690,21 @@ export default function AdvisorDashboardPage() {
                                 {student.displayName}
                               </h3>
                               <p className="mt-1 truncate text-sm text-slate-500">
-                                {student.email ??
-                                  "No email available"}
+                                {student.email ?? "No email available"}
                               </p>
                               <p className="mt-1 text-xs font-semibold text-slate-400">
                                 Assigned{" "}
-                                {formatAssignedDate(
-                                  student.assignedAt,
-                                )}
+                                {formatAssignedDate(student.assignedAt)}
                               </p>
                             </div>
                           </div>
 
                           <button
                             type="button"
-                            onClick={() =>
-                              openStudentWorkspace(student)
-                            }
+                            onClick={() => openStudentWorkspace(student)}
                             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0F2747] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#173B68]"
                           >
-                            <UserRound
-                              aria-hidden="true"
-                              className="h-4 w-4"
-                            />
+                            <UserRound aria-hidden="true" className="h-4 w-4" />
                             Open workspace
                           </button>
                         </article>
@@ -814,22 +734,16 @@ export default function AdvisorDashboardPage() {
                     </div>
 
                     <label className="block lg:w-80">
-                      <span className="sr-only">
-                        Select student
-                      </span>
+                      <span className="sr-only">Select student</span>
                       <select
                         value={selectedStudentId ?? ""}
                         onChange={(event) =>
-                          setSelectedStudentId(
-                            event.target.value || null,
-                          )
+                          setSelectedStudentId(event.target.value || null)
                         }
                         className="h-12 w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold text-[#071526] outline-none focus:border-[#C8A24A] focus:ring-4 focus:ring-[#C8A24A]/10"
                       >
                         {students.length === 0 ? (
-                          <option value="">
-                            No students assigned
-                          </option>
+                          <option value="">No students assigned</option>
                         ) : null}
 
                         {students.map((student) => (
@@ -857,8 +771,8 @@ export default function AdvisorDashboardPage() {
                       Select a student
                     </h3>
                     <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-                      Choose an assigned student before opening their
-                      advising workspace.
+                      Choose an assigned student before opening their advising
+                      workspace.
                     </p>
                   </div>
                 )}

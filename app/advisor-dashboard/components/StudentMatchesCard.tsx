@@ -21,6 +21,9 @@ interface MatchingPayload {
   error?: { message: string };
 }
 
+const ADVISOR_WORKSPACE_STUDENT_KEY =
+  "global-scholars:advisor-workspace-student";
+
 const LABELS = {
   strong_alignment: "Strong alignment",
   potential_match: "Potential match",
@@ -64,6 +67,13 @@ export default function StudentMatchesCard({
     } finally {
       setLoading(false);
     }
+  }
+
+  function rememberWorkspace(): void {
+    window.sessionStorage.setItem(
+      ADVISOR_WORKSPACE_STUDENT_KEY,
+      studentProfileId,
+    );
   }
 
   return (
@@ -120,8 +130,16 @@ export default function StudentMatchesCard({
           <p className="text-sm text-slate-600">{message}</p>
           {results.length === 0 ? (
             <div className="rounded-2xl bg-slate-50 p-5 text-sm text-slate-600">
-              Global Scholars does not yet have enough verified catalog evidence
-              to produce strong matches. Additional verification is required.
+              <p className="font-black text-[#071526]">
+                {message.includes("profile")
+                  ? "More profile information is needed"
+                  : "No verified catalog matches are currently available for this student."}
+              </p>
+              <p className="mt-1">
+                {message.includes("profile")
+                  ? "Missing profile information is separate from catalog evidence and does not indicate a mismatch."
+                  : "Additional verification is required before a match can be recommended."}
+              </p>
             </div>
           ) : (
             results.map((result) => (
@@ -195,6 +213,7 @@ export default function StudentMatchesCard({
                 </div>
                 {!result.excluded && result.programId ? (
                   <Link
+                    onClick={rememberWorkspace}
                     href={{
                       pathname: "/applications",
                       query: {
@@ -205,6 +224,7 @@ export default function StudentMatchesCard({
                         programId: result.programId,
                         programName: result.programName ?? "",
                         credentialLevel: result.credentialLevel ?? "",
+                        returnTo: "/advisor-dashboard",
                       },
                     }}
                     className="mt-4 inline-flex rounded-xl border border-[#C8A24A] px-4 py-2 text-sm font-black text-[#0F2747]"

@@ -42,6 +42,7 @@ export interface InitialApplicationSelection {
   programId: string;
   programName: string;
   credentialLevel: string;
+  returnTo?: string;
 }
 
 export default function ApplicationListPage({
@@ -312,7 +313,11 @@ export default function ApplicationListPage({
           <p className="text-sm text-slate-600">Page {page + 1}</p>
           {createdId ? (
             <Link
-              href={`/applications/${createdId}`}
+              href={
+                initialSelection?.returnTo
+                  ? `/applications/${createdId}?returnTo=${encodeURIComponent(initialSelection.returnTo)}`
+                  : `/applications/${createdId}`
+              }
               className="rounded-xl border border-[#C8A24A] px-3 py-2 text-sm font-black text-[#0F2747]"
             >
               Open new application

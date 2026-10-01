@@ -35,7 +35,13 @@ const formatDate = (value: string) =>
     timeStyle: "short",
   }).format(new Date(value));
 
-export default function ApplicationDetailsPage({ id }: { id: string }) {
+export default function ApplicationDetailsPage({
+  id,
+  returnTo,
+}: {
+  id: string;
+  returnTo?: string;
+}) {
   const [application, setApplication] = useState<StudentApplication | null>(
     null,
   );
@@ -219,7 +225,7 @@ export default function ApplicationDetailsPage({ id }: { id: string }) {
         `Application ${application.id.slice(0, 8)}`
       }
       description="Review the application aggregate and its auditable lifecycle."
-      backHref="/applications"
+      backHref={returnTo ?? "/applications"}
       actions={
         <button
           type="button"

@@ -28,6 +28,9 @@ export default async function ApplicationsPage({
           programId: value(params.programId),
           programName: value(params.programName),
           credentialLevel: value(params.credentialLevel),
+          returnTo: value(params.returnTo).startsWith("/advisor-dashboard")
+            ? value(params.returnTo)
+            : undefined,
         }
       : undefined;
   return <ApplicationListPage initialSelection={initialSelection} />;
