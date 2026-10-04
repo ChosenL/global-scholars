@@ -41,6 +41,7 @@ AI additionally requires:
 
 - `OPENAI_API_KEY`
 - `OPENAI_SAFETY_SALT`
+- `OPERATIONS_HASH_SALT`
 - `OPENAI_CRM_MODEL` (optional override)
 
 No service-role key is consumed by the browser application. Keep provider,

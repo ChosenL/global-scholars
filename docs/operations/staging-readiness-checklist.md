@@ -16,36 +16,38 @@ Current decision: **FAIL — do not promote to staging.**
 ## Required gates
 
 - [x] **PASS** — TypeScript, lint, application tests, production build, and
-  whitespace validation pass.
+      whitespace validation pass.
 - [x] **PASS** — Linked Supabase project is healthy and migration history matches.
 - [x] **PASS** — All CRM tables have enabled and forced RLS.
 - [x] **PASS** — Phase 2 migrations `20260820`–`20260822` parse successfully
-  against linked PostgreSQL in independent rollback-only transactions.
+      against linked PostgreSQL in independent rollback-only transactions.
 - [x] **PARTIAL** — Migration and tests remove unintended anonymous SECURITY
-  DEFINER execution; Preview application/advisor verification remains pending.
+      DEFINER execution; Preview application/advisor verification remains pending.
 - [x] **PARTIAL** — Migration assigns empty search paths to all SECURITY DEFINER
-  functions and flagged helpers; Preview advisor verification remains pending.
+      functions and flagged helpers; Preview advisor verification remains pending.
 - [ ] **PARTIAL** — Review authenticated SECURITY DEFINER allowlist and prove
-  authorization for each callable RPC.
+      authorization for each callable RPC.
 - [ ] **FAIL** — Provision an isolated staging Clerk/Supabase/OpenAI environment.
 - [x] **PARTIAL** — Distributed public-chat/AI limits and per-user AI quotas are
-  implemented; Preview load validation and wider mutation coverage remain.
+      implemented; Preview load validation and wider mutation coverage remain.
 - [x] **PARTIAL** — Provider-agnostic structured logging, correlation, PII
-  redaction, and error reporting are implemented; provider/synthetic alerts remain.
+      redaction, and error reporting are implemented; provider/synthetic alerts remain.
 - [ ] **NOT VERIFIED** — Backup/PITR and isolated restore procedures exist;
-  provider evidence and a timed restore remain.
+      provider evidence and a timed restore remain.
 - [ ] **FAIL** — Storage inventory/checksum/restore procedures exist; an
-  encrypted backup and sample restore remain.
+      encrypted backup and sample restore remain.
 - [ ] **PARTIAL** — Signed-link TTLs and expiry/cross-user procedures exist;
-  automated execution remains.
+      automated execution remains.
 - [ ] **FAIL** — Add clean-database migration and pgTAP CI.
 - [ ] **FAIL** — Add browser-level student and advisor journeys.
-- [ ] **BLOCKED** — Run approved dependency vulnerability scan.
-- [ ] **FAIL** — Add dependency review, SBOM, secret scanning, and SHA-pinned Actions.
+- [ ] **APPROVAL PENDING** — Production dependency audit is clean; full-tree
+      audit retains a development-only `braces` finding with no patched release.
+- [ ] **PARTIAL** — Dependency review, SBOM, secret scanning, and SHA-pinned
+      Actions exist; protected-branch enforcement and artifact provenance remain.
 - [ ] **PARTIAL** — `/api/health` supplies liveness and `/api/ready` supplies a
-  bounded database check; Preview access and failure tests remain.
+      bounded database check; Preview access and failure tests remain.
 - [ ] **PARTIAL** — Proposed RTO/RPO, operational RACI, SEV classification, and
-  recovery roles exist; named owners, approval, and an exercise remain.
+      recovery roles exist; named owners, approval, and an exercise remain.
 - [ ] **FAIL** — Test application rollback and AI kill switch.
 - [ ] **NOT VERIFIED** — Configure Vercel/Supabase/OpenAI usage and spend alerts.
 

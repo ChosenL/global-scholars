@@ -26,7 +26,9 @@ test("protected dashboard routes are enforced at the middleware boundary", async
 
 test("student and advisor surfaces render connected platform journeys", async () => {
   const scholar = await source("../app/scholar-dashboard/page.tsx");
-  const advisor = await source("../app/advisor-dashboard/components/StudentWorkspace.tsx");
+  const advisor = await source(
+    "../app/advisor-dashboard/components/StudentWorkspace.tsx",
+  );
   const journey = await source("../app/shared/PlatformJourneyPanel.tsx");
   assert.match(scholar, /PlatformJourneyPanel/);
   assert.match(advisor, /PlatformJourneyPanel/);
@@ -39,7 +41,9 @@ test("student and advisor surfaces render connected platform journeys", async ()
 });
 
 test("release migration keeps restricted timeline events away from students", async () => {
-  const sql = await source("../supabase/migrations/20260819_harden_release_integration.sql");
+  const sql = await source(
+    "../supabase/migrations/20260819_harden_release_integration.sql",
+  );
   assert.match(sql, /student_profile_id = crm\.current_profile_id\(\)/);
   assert.match(sql, /subject_type not in \('note', 'ai_invocation'\)/);
   assert.match(sql, /event_type not like 'note\.%'/);
@@ -48,7 +52,26 @@ test("release migration keeps restricted timeline events away from students", as
 
 test("CI runs the mandatory static release gates", async () => {
   const workflow = await source("../.github/workflows/release-gates.yml");
-  for (const command of ["npm ci", "npx tsc --noEmit", "npm run lint", "npm test", "npm run build", "git diff --check"]) {
-    assert.match(workflow, new RegExp(command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  for (const command of [
+    "npm ci",
+    "npx tsc --noEmit",
+    "npm run lint",
+    "npm test",
+    "npm run build",
+    "git diff --check",
+  ]) {
+    assert.match(
+      workflow,
+      new RegExp(command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    );
   }
+});
+
+test("supply-chain workflow adds dependency review secret scanning and SBOM", async () => {
+  const workflow = await source("../.github/workflows/supply-chain.yml");
+  assert.match(workflow, /dependency-review-action@[a-f0-9]{40}/);
+  assert.match(workflow, /gitleaks-action@[a-f0-9]{40}/);
+  assert.match(workflow, /sbom-action@[a-f0-9]{40}/);
+  assert.match(workflow, /actions\/checkout@[a-f0-9]{40}/);
+  assert.match(workflow, /format: cyclonedx-json/);
 });

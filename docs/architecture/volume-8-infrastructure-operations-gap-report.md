@@ -25,9 +25,9 @@ RLS, and authorized RPC/service mutation paths.
 
 - Vercel project `global-scholars`: Next.js, Node 24.x, standard build settings.
 - Existing Vercel Preview and Production deployments were listed read-only.
-- Vercel variables are encrypted; Clerk/Supabase variables currently span
-  Development, Preview, and Production. `OPENAI_SAFETY_SALT` exists only in
-  Preview.
+- Vercel variables are encrypted; Clerk/Supabase/OpenAI variables currently span
+  Development, Preview, and Production. `OPENAI_SAFETY_SALT` and
+  `OPERATIONS_HASH_SALT` exist only in Preview.
 - Preview and production deployment URLs returned HTTP 302 for `/api/health`,
   consistent with deployment protection; health payload was not externally
   verified.
@@ -40,38 +40,38 @@ RLS, and authorized RPC/service mutation paths.
 
 ## Findings
 
-| Area | Status | Finding |
-|---|---|---|
-| Vercel project/build configuration | PASS | Linked project uses Next.js, Node 24.x, and the repository build command. |
-| Vercel Preview configuration | PARTIAL | Preview deployments exist and deployment protection returns 302, but preview branch rules, domain, retention, function logs, and checks are not codified or fully verified. |
-| Supabase project health | PASS | Linked project reports `ACTIVE_HEALTHY`; migrations are synchronized. |
-| CRM schema and RLS | PASS | All 50 CRM tables have RLS enabled and forced. |
-| RPC authorization | PARTIAL | CRM RPCs generally revoke `public` and perform authorization, but the security advisor reports broad authenticated SECURITY DEFINER exposure requiring a per-function allowlist review. |
-| Legacy public RPC security | PARTIAL | Sprint 8.2 migration 20260820 revokes anonymous execution and assigns empty search paths without changing function bodies. Repository verification passes; provider advisor confirmation remains pending until Preview application. |
-| Storage security | PARTIAL | Buckets are private, constrained, and use five- or ten-minute signed URLs. Validation procedures now cover cross-user denial, expiry, checksums, and isolated restore, but automated evidence and legacy-policy cleanup remain. |
-| Clerk authentication | PARTIAL | Middleware protects dashboard routes and role redirects exist; Clerk origins, redirect allowlists, session policy, MFA, webhook verification, and role-sync operations were not verified in the Clerk control plane. |
-| OpenAI safety | PARTIAL | Auth, RLS context, moderation, structured output, citation allowlisting, pseudonymous safety IDs, token capture, and output limits exist. No request rate limit, daily budget, per-user quota, timeout, or circuit breaker exists. |
-| Environment validation | PARTIAL | Core presence checks exist, but URL/key pairing, environment identity, staging project separation, webhook variables, monitoring variables, and fail-fast startup validation are missing. |
-| Environment separation | FAIL | Clerk and Supabase variables are assigned across Development, Preview, and Production; distinct values/projects were not proven. There is no dedicated staging environment. |
-| GitHub Actions | PARTIAL | Static gates use `npm ci`, typecheck, lint, tests, build, and diff check. Actions are tag-pinned rather than SHA-pinned; no database, browser, dependency, secret, migration, or preview-health job exists. |
-| Health/readiness | PARTIAL | Secret-safe `/api/health` now provides liveness and `/api/ready` provides correlation-aware, bounded database readiness with optional AI degradation. Preview access and failure-injection evidence remain. |
-| Structured logging | PARTIAL | Sprint 8.3 adds shared request/correlation IDs and structured logging across all API routes. Server-action coverage and external collection remain pending. |
-| PII redaction | PASS | Central recursive redaction covers identity, credentials, prompts/context, signed URLs, storage paths, and common string patterns before operations logs/error reports. |
-| Error reporting/monitoring | PARTIAL | A provider-agnostic error reporter is integrated. External provider, release tagging, dashboards, SLOs, and synthetic monitoring remain pending. |
-| Alerts/escalation | FAIL | No alert rules, ownership schedule, severity matrix, paging channel, or tested escalation path exists. |
-| Database backup/PITR | NOT VERIFIED | Proposed RTO/RPO and an isolated restore procedure now exist. Plan entitlement, PITR state, retention, and an executed restore remain unavailable. |
-| Storage backup | FAIL | Manifest, checksum, encrypted-copy, and sample-restore procedures now exist, but no backup or restore has been executed. |
-| Signed-link security | PARTIAL | Private storage and expiring signed links are used; TTLs are finite. Expiry, revocation, cache leakage, and cross-user negative tests are not automated. |
-| Dependency security | BLOCKED | Lockfile and `npm ci` exist. Registry-backed `npm audit` was blocked because exporting the dependency graph was not approved. No Dependabot/Renovate, SBOM, license gate, provenance, or install-script policy exists. |
-| Supply-chain security | FAIL | GitHub Actions are not SHA-pinned; no dependency review, CodeQL, secret scanning evidence, artifact attestations, or SBOM generation exists. |
-| Rate limiting/abuse protection | PARTIAL | PostgreSQL-backed distributed limits protect public chat and CRM AI with hashed keys. Wider mutation routes and edge/WAF controls remain pending. |
-| AI usage/cost controls | PARTIAL | Sprint 8.3 adds timeouts, bounded retries, kill switch, per-user daily request/token quotas, usage metrics, and a shared failure circuit. Provider spend alerts and concurrency controls remain pending. |
-| Vercel cost monitoring | NOT VERIFIED | Usage budgets, spend alerts, function duration/error thresholds, and log retention were not visible in repository or inspected CLI output. |
-| Supabase cost monitoring | PARTIAL | Project/table size and bloat were inspected and are currently small. Quota alerts, egress/storage budgets, connection monitoring, and spend alerts were not verified. |
-| Database performance | PARTIAL | Indexing is extensive, but advisors report legacy RLS init-plan warnings, multiple permissive policies, and a duplicate audit index. |
-| Incident response | PARTIAL | The release runbook has service-specific outage and rollback guidance, but lacks named roles, contacts, severity targets, communications templates, evidence preservation, and exercise records. |
-| Rollback | PARTIAL | Additive migrations and application-first rollback are documented. No automated rollback rehearsal or last-known-good release record exists. |
-| Preview-to-staging promotion | FAIL | No separate staging project/environment, automated migration rehearsal, E2E journeys, acceptance approval, monitoring proof, or backup verification gate exists. |
+| Area                               | Status           | Finding                                                                                                                                                                                                                             |
+| ---------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vercel project/build configuration | PASS             | Linked project uses Next.js, Node 24.x, and the repository build command.                                                                                                                                                           |
+| Vercel Preview configuration       | PARTIAL          | Preview deployments exist and deployment protection returns 302, but preview branch rules, domain, retention, function logs, and checks are not codified or fully verified.                                                         |
+| Supabase project health            | PASS             | Linked project reports `ACTIVE_HEALTHY`; migrations are synchronized.                                                                                                                                                               |
+| CRM schema and RLS                 | PASS             | All 50 CRM tables have RLS enabled and forced.                                                                                                                                                                                      |
+| RPC authorization                  | PARTIAL          | CRM RPCs generally revoke `public` and perform authorization, but the security advisor reports broad authenticated SECURITY DEFINER exposure requiring a per-function allowlist review.                                             |
+| Legacy public RPC security         | PARTIAL          | Sprint 8.2 migration 20260820 revokes anonymous execution and assigns empty search paths without changing function bodies. Repository verification passes; provider advisor confirmation remains pending until Preview application. |
+| Storage security                   | PARTIAL          | Buckets are private, constrained, and use five- or ten-minute signed URLs. Validation procedures now cover cross-user denial, expiry, checksums, and isolated restore, but automated evidence and legacy-policy cleanup remain.     |
+| Clerk authentication               | PARTIAL          | Middleware protects dashboard routes and role redirects exist; Clerk origins, redirect allowlists, session policy, MFA, webhook verification, and role-sync operations were not verified in the Clerk control plane.                |
+| OpenAI safety                      | PARTIAL          | Auth, RLS context, moderation, structured output, citation allowlisting, pseudonymous safety IDs, token capture, and output limits exist. No request rate limit, daily budget, per-user quota, timeout, or circuit breaker exists.  |
+| Environment validation             | PARTIAL          | Core presence checks exist, but URL/key pairing, environment identity, staging project separation, webhook variables, monitoring variables, and fail-fast startup validation are missing.                                           |
+| Environment separation             | FAIL             | Clerk and Supabase variables are assigned across Development, Preview, and Production; distinct values/projects were not proven. There is no dedicated staging environment.                                                         |
+| GitHub Actions                     | PARTIAL          | Static gates use `npm ci`, typecheck, lint, tests, build, and diff check. Release and supply-chain workflows now SHA-pin configured third-party actions; protected-branch enforcement and preview-health jobs remain NOT VERIFIED.  |
+| Health/readiness                   | PARTIAL          | Secret-safe `/api/health` now provides liveness and `/api/ready` provides correlation-aware, bounded database readiness with optional AI degradation. Preview access and failure-injection evidence remain.                         |
+| Structured logging                 | PARTIAL          | Sprint 8.3 adds shared request/correlation IDs and structured logging across all API routes. Server-action coverage and external collection remain pending.                                                                         |
+| PII redaction                      | PASS             | Central recursive redaction covers identity, credentials, prompts/context, signed URLs, storage paths, and common string patterns before operations logs/error reports.                                                             |
+| Error reporting/monitoring         | PARTIAL          | A provider-agnostic error reporter is integrated. External provider, release tagging, dashboards, SLOs, and synthetic monitoring remain pending.                                                                                    |
+| Alerts/escalation                  | FAIL             | No alert rules, ownership schedule, severity matrix, paging channel, or tested escalation path exists.                                                                                                                              |
+| Database backup/PITR               | NOT VERIFIED     | Proposed RTO/RPO and an isolated restore procedure now exist. Plan entitlement, PITR state, retention, and an executed restore remain unavailable.                                                                                  |
+| Storage backup                     | FAIL             | Manifest, checksum, encrypted-copy, and sample-restore procedures now exist, but no backup or restore has been executed.                                                                                                            |
+| Signed-link security               | PARTIAL          | Private storage and expiring signed links are used; TTLs are finite. Expiry, revocation, cache leakage, and cross-user negative tests are not automated.                                                                            |
+| Dependency security                | APPROVAL PENDING | Production audit is clean after upgrading to Next.js 16.3.8 and targeted transitive overrides. Full audit retains a development-only `braces` finding with no patched release.                                                      |
+| Supply-chain security              | PARTIAL          | Dependency review, Gitleaks secret scanning, SBOM generation, and SHA-pinned workflow actions are present. CodeQL, protected-branch enforcement, artifact attestations, and license policy remain NOT VERIFIED.                     |
+| Rate limiting/abuse protection     | PARTIAL          | PostgreSQL-backed distributed limits protect public chat and CRM AI with hashed keys. Wider mutation routes and edge/WAF controls remain pending.                                                                                   |
+| AI usage/cost controls             | PARTIAL          | Sprint 8.3 adds timeouts, bounded retries, kill switch, per-user daily request/token quotas, usage metrics, and a shared failure circuit. Provider spend alerts and concurrency controls remain pending.                            |
+| Vercel cost monitoring             | NOT VERIFIED     | Usage budgets, spend alerts, function duration/error thresholds, and log retention were not visible in repository or inspected CLI output.                                                                                          |
+| Supabase cost monitoring           | PARTIAL          | Project/table size and bloat were inspected and are currently small. Quota alerts, egress/storage budgets, connection monitoring, and spend alerts were not verified.                                                               |
+| Database performance               | PARTIAL          | Indexing is extensive, but advisors report legacy RLS init-plan warnings, multiple permissive policies, and a duplicate audit index.                                                                                                |
+| Incident response                  | PARTIAL          | The release runbook has service-specific outage and rollback guidance, but lacks named roles, contacts, severity targets, communications templates, evidence preservation, and exercise records.                                    |
+| Rollback                           | PARTIAL          | Additive migrations and application-first rollback are documented. No automated rollback rehearsal or last-known-good release record exists.                                                                                        |
+| Preview-to-staging promotion       | FAIL             | No separate staging project/environment, automated migration rehearsal, E2E journeys, acceptance approval, monitoring proof, or backup verification gate exists.                                                                    |
 
 ## Gap remediation requirements
 

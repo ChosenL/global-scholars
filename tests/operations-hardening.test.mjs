@@ -23,7 +23,10 @@ test("logging and error reporting redact sensitive values", async () => {
   const redaction = await source("../lib/operations/redaction.ts");
   const logger = await source("../lib/operations/logger.ts");
   const reporter = await source("../lib/operations/errorReporter.ts");
-  assert.match(redaction, /authorization\|cookie\|token\|secret\|password\|passport/);
+  assert.match(
+    redaction,
+    /authorization\|cookie\|token\|secret\|password\|passport/,
+  );
   assert.match(redaction, /REDACTED_EMAIL/);
   assert.match(logger, /redactForLogging/);
   assert.match(reporter, /interface ErrorReporter/);
@@ -33,7 +36,9 @@ test("logging and error reporting redact sensitive values", async () => {
 test("AI routes enforce timeouts retries kill switch quotas and circuit protection", async () => {
   const resilience = await source("../lib/operations/aiResilience.ts");
   const aiRoute = await source("../app/api/ai/route.ts");
-  const migration = await source("../supabase/migrations/20260821_add_operational_controls.sql");
+  const migration = await source(
+    "../supabase/migrations/20260821_add_operational_controls.sql",
+  );
   assert.match(resilience, /AI_OPERATIONS_ENABLED/);
   assert.match(resilience, /AbortController/);
   assert.match(resilience, /maxRetries/);
@@ -45,9 +50,33 @@ test("AI routes enforce timeouts retries kill switch quotas and circuit protecti
 
 test("distributed rate limits store hashes rather than network or identity values", async () => {
   const rateLimit = await source("../lib/operations/rateLimit.ts");
-  const migration = await source("../supabase/migrations/20260821_add_operational_controls.sql");
+  const migration = await source(
+    "../supabase/migrations/20260821_add_operational_controls.sql",
+  );
   assert.match(rateLimit, /createHash\("sha256"\)/);
   assert.match(migration, /key_hash text not null/);
   assert.doesNotMatch(migration, /ip_address|clerk_user_id|email/);
   assert.match(migration, /rate_key_hash !~ '\^\[a-f0-9\]\{64\}\$'/);
+});
+
+test("readiness treats operational hashing as required server-only configuration", async () => {
+  const environment = await source("../lib/deployment/environment.ts");
+  const readiness = await source("../app/api/ready/route.ts");
+  const rateLimit = await source("../lib/operations/rateLimit.ts");
+
+  assert.match(environment, /name: "OPERATIONS_HASH_SALT"/);
+  assert.match(environment, /OPERATIONS_HASH_SALT.*OPENAI_SAFETY_SALT/s);
+  assert.match(environment, /scope: "server", requiredFor: "all"/);
+  assert.match(environment, /name: "OPENAI_SAFETY_SALT".*requiredFor: "ai"/s);
+  assert.match(
+    readiness,
+    /aiConfigured && aiEnabled \? "available" : "degraded"/,
+  );
+  assert.match(readiness, /required: false/);
+  assert.match(
+    rateLimit,
+    /throw new Error\("Operational hashing is not configured\."\)/,
+  );
+  assert.doesNotMatch(readiness, /process\.env\.OPENAI_SAFETY_SALT/);
+  assert.doesNotMatch(readiness, /process\.env\.OPERATIONS_HASH_SALT/);
 });
