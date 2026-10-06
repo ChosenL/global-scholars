@@ -1,5 +1,5 @@
 begin;
-select plan(6);
+select plan(8);
 
 select is(
   (
@@ -38,10 +38,29 @@ select is(
   'Every application SECURITY DEFINER function has an empty search path'
 );
 
-select function_privs_are(
-  'public', 'attach_assigned_advisors_to_conversation', array[]::text[],
-  'authenticated', array[]::text[],
-  'Conversation advisor trigger cannot be called directly'
+select is(
+  (
+    select count(*)::integer
+    from unnest(array[
+      'public.attach_assigned_advisors_to_conversation()',
+      'public.current_platform_role()',
+      'public.is_assigned_advisor(text)'
+    ]) as legacy(signature)
+    where to_regprocedure(legacy.signature) is not null
+      and (
+        has_function_privilege('anon', to_regprocedure(legacy.signature), 'EXECUTE')
+        or not coalesce(
+          (
+            select procedure.proconfig @> array['search_path=""']::text[]
+            from pg_proc as procedure
+            where procedure.oid = to_regprocedure(legacy.signature)
+          ),
+          false
+        )
+      )
+  ),
+  0,
+  'Optional legacy public functions are hardened whenever present'
 );
 select function_privs_are(
   'public', 'update_conversation_after_message', array[]::text[],
@@ -57,6 +76,17 @@ select function_privs_are(
   'public', 'is_conversation_participant', array['uuid'],
   'authenticated', array['EXECUTE'],
   'Signed-in participant authorization remains available'
+);
+
+select isnt(
+  to_regprocedure('public.current_clerk_user_id()'),
+  null,
+  'Repository-defined current_clerk_user_id remains required'
+);
+select isnt(
+  to_regprocedure('public.set_updated_at()'),
+  null,
+  'Repository-defined set_updated_at remains required'
 );
 
 select * from finish();

@@ -3,18 +3,32 @@ begin;
 -- Legacy public functions predate the CRM authorization layer. Their bodies
 -- already schema-qualify all application objects, so an empty search path is
 -- safe and prevents caller-controlled object resolution.
-alter function public.attach_assigned_advisors_to_conversation()
-  set search_path = '';
 alter function public.create_student_conversation(text)
-  set search_path = '';
-alter function public.current_platform_role()
-  set search_path = '';
-alter function public.is_assigned_advisor(text)
   set search_path = '';
 alter function public.is_conversation_participant(uuid)
   set search_path = '';
 alter function public.update_conversation_after_message()
   set search_path = '';
+
+do $legacy_public_functions$
+declare
+  legacy_function regprocedure;
+begin
+  foreach legacy_function in array array[
+    to_regprocedure('public.attach_assigned_advisors_to_conversation()'),
+    to_regprocedure('public.current_platform_role()'),
+    to_regprocedure('public.is_assigned_advisor(text)')
+  ]
+  loop
+    if legacy_function is not null then
+      execute format(
+        'alter function %s set search_path = ''''',
+        legacy_function
+      );
+    end if;
+  end loop;
+end;
+$legacy_public_functions$;
 
 -- These helpers are not SECURITY DEFINER, but explicitly hardening their
 -- search paths resolves the remaining mutable-path advisor findings.
@@ -24,8 +38,6 @@ alter function public.set_updated_at()
   set search_path = '';
 
 -- Trigger functions are invoked by their triggers, never directly by clients.
-revoke all on function public.attach_assigned_advisors_to_conversation()
-  from public, anon, authenticated;
 revoke all on function public.update_conversation_after_message()
   from public, anon, authenticated;
 
@@ -33,21 +45,46 @@ revoke all on function public.update_conversation_after_message()
 -- messaging and role behavior is preserved, but anonymous execution is denied.
 revoke all on function public.create_student_conversation(text)
   from public, anon;
-revoke all on function public.current_platform_role()
-  from public, anon;
-revoke all on function public.is_assigned_advisor(text)
-  from public, anon;
 revoke all on function public.is_conversation_participant(uuid)
   from public, anon;
 
 grant execute on function public.create_student_conversation(text)
   to authenticated;
-grant execute on function public.current_platform_role()
-  to authenticated;
-grant execute on function public.is_assigned_advisor(text)
-  to authenticated;
 grant execute on function public.is_conversation_participant(uuid)
   to authenticated;
+
+do $legacy_public_privileges$
+declare
+  legacy_function regprocedure;
+begin
+  foreach legacy_function in array array[
+    to_regprocedure('public.attach_assigned_advisors_to_conversation()'),
+    to_regprocedure('public.current_platform_role()'),
+    to_regprocedure('public.is_assigned_advisor(text)')
+  ]
+  loop
+    if legacy_function is not null then
+      execute format(
+        'revoke all on function %s from public, anon, authenticated',
+        legacy_function
+      );
+    end if;
+  end loop;
+
+  foreach legacy_function in array array[
+    to_regprocedure('public.current_platform_role()'),
+    to_regprocedure('public.is_assigned_advisor(text)')
+  ]
+  loop
+    if legacy_function is not null then
+      execute format(
+        'grant execute on function %s to authenticated',
+        legacy_function
+      );
+    end if;
+  end loop;
+end;
+$legacy_public_privileges$;
 
 -- Fail the migration if any application SECURITY DEFINER function can still be
 -- executed anonymously or lacks the approved empty search path.

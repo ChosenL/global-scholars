@@ -1,43 +1,81 @@
 begin;
 
-alter function public.attach_assigned_advisors_to_conversation()
-  set search_path = '';
 alter function public.create_student_conversation(text)
-  set search_path = '';
-alter function public.current_platform_role()
-  set search_path = '';
-alter function public.is_assigned_advisor(text)
   set search_path = '';
 alter function public.is_conversation_participant(uuid)
   set search_path = '';
 alter function public.update_conversation_after_message()
   set search_path = '';
+
+do $legacy_public_functions$
+declare
+  legacy_function regprocedure;
+begin
+  foreach legacy_function in array array[
+    to_regprocedure('public.attach_assigned_advisors_to_conversation()'),
+    to_regprocedure('public.current_platform_role()'),
+    to_regprocedure('public.is_assigned_advisor(text)')
+  ]
+  loop
+    if legacy_function is not null then
+      execute format(
+        'alter function %s set search_path = ''''',
+        legacy_function
+      );
+    end if;
+  end loop;
+end;
+$legacy_public_functions$;
+
 alter function public.current_clerk_user_id()
   set search_path = '';
 alter function public.set_updated_at()
   set search_path = '';
 
-revoke all on function public.attach_assigned_advisors_to_conversation()
-  from public, anon, authenticated;
 revoke all on function public.update_conversation_after_message()
   from public, anon, authenticated;
 revoke all on function public.create_student_conversation(text)
-  from public, anon;
-revoke all on function public.current_platform_role()
-  from public, anon;
-revoke all on function public.is_assigned_advisor(text)
   from public, anon;
 revoke all on function public.is_conversation_participant(uuid)
   from public, anon;
 
 grant execute on function public.create_student_conversation(text)
   to authenticated;
-grant execute on function public.current_platform_role()
-  to authenticated;
-grant execute on function public.is_assigned_advisor(text)
-  to authenticated;
 grant execute on function public.is_conversation_participant(uuid)
   to authenticated;
+
+do $legacy_public_privileges$
+declare
+  legacy_function regprocedure;
+begin
+  foreach legacy_function in array array[
+    to_regprocedure('public.attach_assigned_advisors_to_conversation()'),
+    to_regprocedure('public.current_platform_role()'),
+    to_regprocedure('public.is_assigned_advisor(text)')
+  ]
+  loop
+    if legacy_function is not null then
+      execute format(
+        'revoke all on function %s from public, anon, authenticated',
+        legacy_function
+      );
+    end if;
+  end loop;
+
+  foreach legacy_function in array array[
+    to_regprocedure('public.current_platform_role()'),
+    to_regprocedure('public.is_assigned_advisor(text)')
+  ]
+  loop
+    if legacy_function is not null then
+      execute format(
+        'grant execute on function %s to authenticated',
+        legacy_function
+      );
+    end if;
+  end loop;
+end;
+$legacy_public_privileges$;
 
 do $verification$
 declare
