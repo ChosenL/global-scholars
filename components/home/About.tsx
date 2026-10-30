@@ -59,7 +59,7 @@ const values = [
 
 export default function About() {
   return (
-    <section id="about" className="bg-white py-24">
+    <section id="about" className="bg-white py-24 dark:bg-[#0b1323]">
       <div className="mx-auto max-w-7xl px-6">
         <FadeIn>
           <div className="mx-auto max-w-4xl text-center">
@@ -67,11 +67,11 @@ export default function About() {
               Our Story
             </p>
 
-            <h2 className="mt-4 text-5xl font-black leading-tight text-[#0F2747] md:text-6xl">
+            <h2 className="mt-4 text-5xl font-black leading-tight text-[#0F2747] dark:text-[#F1F6FC] md:text-6xl">
               Our Story Didn’t End at Graduation. It Began There.
             </h2>
 
-            <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600">
+            <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600 dark:text-slate-300">
               Global Scholars Pathway Advisors was born from our own journey —
               from Jamaica, through uncertainty, research, faith, transfer
               planning, graduation, and the desire to help future students walk
@@ -99,25 +99,25 @@ export default function About() {
                 Why We Started
               </p>
 
-              <h3 className="mt-4 text-4xl font-black leading-tight text-[#0F2747]">
+              <h3 className="mt-4 text-4xl font-black leading-tight text-[#0F2747] dark:text-[#F1F6FC]">
                 We understand the journey because we lived it.
               </h3>
 
-              <p className="mt-6 text-lg leading-8 text-slate-600">
+              <p className="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300">
                 Dwayne always carried the dream of international education, but
                 like many students, he did not have the personalized guidance
                 needed to make that path clear.
               </p>
 
-              <p className="mt-6 text-lg leading-8 text-slate-600">
+              <p className="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300">
                 Britney began her studies at the University of the Commonwealth
                 Caribbean in Jamaica. Together, after marriage, research,
                 applications, transfer planning, and relocation, she completed
                 her degree in the United States with honors.
               </p>
 
-              <div className="mt-8 rounded-3xl border-l-4 border-[#C8A24A] bg-[#F8F9FB] p-8">
-                <p className="text-2xl font-bold leading-relaxed text-[#0F2747]">
+              <div className="mt-8 rounded-3xl border-l-4 border-[#C8A24A] bg-[#F8F9FB] p-8 dark:bg-[#131f32]">
+                <p className="text-2xl font-bold leading-relaxed text-[#0F2747] dark:text-[#F1F6FC]">
                   “Students don’t simply need information. They need guidance,
                   encouragement, and someone who understands the road.”
                 </p>
@@ -137,7 +137,7 @@ export default function About() {
                 Story Progression
               </p>
 
-              <h3 className="mt-4 text-4xl font-black text-[#0F2747] md:text-5xl">
+              <h3 className="mt-4 text-4xl font-black text-[#0F2747] dark:text-[#F1F6FC] md:text-5xl">
                 The Path That Shaped Our Purpose.
               </h3>
             </div>
@@ -147,7 +147,7 @@ export default function About() {
             {timeline.map((item, index) => (
               <FadeIn key={`${item.year}-${item.title}`} delay={index * 0.05}>
                 <div
-                  className={`h-full rounded-3xl border border-slate-200 bg-[#F8F9FB] p-7 shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-xl ${
+                  className={`gsp-glow h-full rounded-3xl border border-slate-200 bg-[#F8F9FB] p-7 shadow-sm transition-colors duration-300 motion-safe:hover:-translate-y-2 motion-safe:transition-transform hover:shadow-xl dark:border-slate-700 dark:bg-[#131f32] dark:hover:border-cyan-400/50 ${
                     index === 6 ? "lg:col-start-2" : ""
                   }`}
                 >
@@ -155,11 +155,13 @@ export default function About() {
                     {item.year}
                   </p>
 
-                  <h4 className="mt-3 text-2xl font-black text-[#0F2747]">
+                  <h4 className="mt-3 text-2xl font-black text-[#0F2747] dark:text-[#F1F6FC]">
                     {item.title}
                   </h4>
 
-                  <p className="mt-4 leading-7 text-slate-600">{item.text}</p>
+                  <p className="mt-4 leading-7 text-slate-600 dark:text-slate-300">
+                    {item.text}
+                  </p>
                 </div>
               </FadeIn>
             ))}
@@ -190,7 +192,7 @@ export default function About() {
                 Mission, Vision & Values
               </p>
 
-              <h3 className="mt-4 text-4xl font-black text-[#0F2747] md:text-5xl">
+              <h3 className="mt-4 text-4xl font-black text-[#0F2747] dark:text-[#F1F6FC] md:text-5xl">
                 What Guides Global Scholars.
               </h3>
             </div>
@@ -225,10 +227,10 @@ export default function About() {
               return (
                 <div
                   key={label as string}
-                  className="rounded-3xl border border-slate-200 bg-[#F8F9FB] p-8 transition hover:-translate-y-2 hover:shadow-xl"
+                  className="gsp-glow rounded-3xl border border-slate-200 bg-[#F8F9FB] p-8 transition-colors motion-safe:hover:-translate-y-2 motion-safe:transition-transform hover:shadow-xl dark:border-slate-700 dark:bg-[#131f32] dark:hover:border-cyan-400/50"
                 >
                   <ValueIcon className="text-[#C8A24A]" size={34} />
-                  <h4 className="mt-5 text-2xl font-black text-[#0F2747]">
+                  <h4 className="mt-5 text-2xl font-black text-[#0F2747] dark:text-[#F1F6FC]">
                     {label as string}
                   </h4>
                 </div>
@@ -252,7 +254,7 @@ export default function About() {
               href="https://calendly.com/thompsondwayne0055/free-10_minute-consultation"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-10 inline-flex items-center justify-center rounded-xl bg-[#C8A24A] px-8 py-4 font-bold text-[#071526] transition hover:scale-105"
+              className="gsp-glow mt-10 inline-flex items-center justify-center rounded-xl bg-[#C8A24A] px-8 py-4 font-bold text-[#071526] transition-colors hover:bg-[#E4C577] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               Book Your Free Consultation
             </a>

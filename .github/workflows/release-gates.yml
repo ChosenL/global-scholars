@@ -7,7 +7,7 @@ on:
 
 jobs:
   application:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -24,8 +24,13 @@ jobs:
           CLERK_SECRET_KEY: ${{ secrets.E2E_CLERK_SECRET_KEY || 'sk_test_release_validation' }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL || 'https://example.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.E2E_SUPABASE_PUBLISHABLE_KEY || 'release-validation-key' }}
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      # Staging-only end-to-end tests are opt-in. Never run on PRs or main pushes.
+      - name: Install Chromium for staged release E2E
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/') && vars.ENABLE_STAGING_E2E == 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Run staged release E2E
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/') && vars.ENABLE_STAGING_E2E == 'true'
+        run: npm run test:e2e
         env:
           PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}

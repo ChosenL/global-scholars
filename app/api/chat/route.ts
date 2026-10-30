@@ -13,9 +13,11 @@ import {
 
 export const runtime = "nodejs";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function createOpenAiClient() {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -168,15 +170,19 @@ export async function POST(request: Request) {
 
     const response = await executeAiProviderCall(
       "public_chat.response",
-      (signal) => openai.responses.create({
-        model: "gpt-5.6-luna",
-        reasoning: {
-          effort: "low",
-        },
-        instructions: advisorInstructions,
-        input: messages,
-        max_output_tokens: 500,
-      }, { signal }),
+      (signal) =>
+        createOpenAiClient().responses.create(
+          {
+            model: "gpt-5.6-luna",
+            reasoning: {
+              effort: "low",
+            },
+            instructions: advisorInstructions,
+            input: messages,
+            max_output_tokens: 500,
+          },
+          { signal },
+        ),
     );
 
     const answer = response.output_text?.trim();

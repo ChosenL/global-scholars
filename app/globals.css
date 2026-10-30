@@ -1,9 +1,32 @@
 @import "tailwindcss";
 
+/* -------------------------------------------
+   TAILWIND DARK MODE CONFIGURATION
+------------------------------------------- */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* -------------------------------------------
+   LIGHT MODE — DEFAULT
+------------------------------------------- */
+
 :root {
   --background: #ffffff;
   --foreground: #111827;
 }
+
+/* -------------------------------------------
+   DARK MODE
+------------------------------------------- */
+
+html.dark {
+  --background: #0b1323;
+  --foreground: #eaf1fa;
+}
+
+/* -------------------------------------------
+   HTML
+------------------------------------------- */
 
 html {
   scroll-behavior: smooth;
@@ -11,14 +34,24 @@ html {
   overflow-x: clip;
 }
 
+/* -------------------------------------------
+   BODY
+------------------------------------------- */
+
 body {
   min-width: 0;
   max-width: 100%;
   overflow-x: clip;
+
   background: var(--background);
   color: var(--foreground);
+
   font-family: var(--font-inter), sans-serif;
 }
+
+/* -------------------------------------------
+   RESPONSIVE MEDIA
+------------------------------------------- */
 
 img,
 video,
@@ -27,6 +60,10 @@ canvas {
   max-width: 100%;
 }
 
+/* -------------------------------------------
+   MOBILE FORM FIELDS
+------------------------------------------- */
+
 @media (max-width: 767px) {
   input,
   textarea,
@@ -34,6 +71,10 @@ canvas {
     font-size: 16px !important;
   }
 }
+
+/* -------------------------------------------
+   HEADINGS
+------------------------------------------- */
 
 h1,
 h2,
@@ -44,6 +85,20 @@ h6 {
   font-family: var(--font-merriweather), serif;
 }
 
+/* -------------------------------------------
+   SECTION NAVIGATION
+------------------------------------------- */
+
 section {
   scroll-margin-top: 100px;
+}
+
+/* -------------------------------------------
+   ACCESSIBILITY
+------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }

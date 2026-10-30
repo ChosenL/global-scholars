@@ -35,7 +35,7 @@ const steps = [
 
 export default function Pathway() {
   return (
-    <section className="bg-[#0F2747] py-24 text-white">
+    <section className="bg-[#0F2747] py-24 text-white dark:bg-[#071526]">
       <div className="mx-auto max-w-7xl px-6">
         <FadeIn>
           <div className="text-center">
@@ -57,14 +57,12 @@ export default function Pathway() {
         <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {steps.map((step, index) => (
             <FadeIn key={step.number} delay={index * 0.1}>
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-8 transition duration-300 hover:-translate-y-2 hover:border-[#C8A24A] hover:bg-white/10">
+              <div className="gsp-glow h-full rounded-3xl border border-white/10 bg-white/5 p-8 transition-colors duration-300 motion-safe:hover:-translate-y-2 motion-safe:transition-transform hover:border-[#C8A24A] hover:bg-white/10 dark:border-slate-600/40 dark:bg-[#142b46] dark:hover:bg-[#1a3654]">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#C8A24A] text-2xl font-bold text-[#0F2747]">
                   {step.number}
                 </div>
 
-                <h3 className="mt-6 text-2xl font-bold">
-                  {step.title}
-                </h3>
+                <h3 className="mt-6 text-2xl font-bold">{step.title}</h3>
 
                 <p className="mt-4 leading-7 text-white/75">
                   {step.description}

@@ -63,22 +63,31 @@ const services = [
 
 export default function Services() {
   return (
-    <section id="services" className="relative overflow-hidden bg-[#F8F9FB] py-24">
-      <div className="absolute left-0 top-20 h-72 w-72 rounded-full bg-[#C8A24A]/10 blur-3xl" />
-      <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-[#0F2747]/10 blur-3xl" />
+    <section
+      id="services"
+      className="relative overflow-hidden bg-[#F8F9FB] py-24 dark:bg-[#101c30]"
+    >
+      <div
+        aria-hidden="true"
+        className="gsp-decorative-glow pointer-events-none absolute left-0 top-20 h-72 w-72 rounded-full bg-[#C8A24A]/10 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="gsp-decorative-glow pointer-events-none absolute bottom-0 right-0 h-96 w-96 rounded-full bg-[#0F2747]/10 blur-3xl dark:bg-cyan-500/10"
+      />
 
       <div className="relative mx-auto max-w-7xl px-6">
         <FadeIn>
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.35em] text-[#C8A24A]">
+            <p className="text-sm font-bold uppercase tracking-[0.35em] text-[#967325] dark:text-[#E4C577]">
               Our Services
             </p>
 
-            <h2 className="mt-4 text-4xl font-black text-[#0F2747] md:text-5xl">
+            <h2 className="mt-4 text-4xl font-black text-[#0F2747] md:text-5xl dark:text-[#F1F6FC]">
               Comprehensive Support. Lasting Impact.
             </h2>
 
-            <p className="mt-6 text-lg leading-8 text-slate-600">
+            <p className="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300">
               From admissions and credential evaluations to career readiness and
               OPT/CPT education, Global Scholars supports students through every
               major step of the journey.
@@ -92,28 +101,28 @@ export default function Services() {
 
             return (
               <FadeIn key={service.title} delay={index * 0.06}>
-                <div className="group h-full rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-2 hover:border-[#C8A24A]/60 hover:shadow-xl">
-                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0F2747] transition group-hover:bg-[#C8A24A]">
+                <div className="gsp-glow group flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-colors duration-300 motion-safe:hover:-translate-y-2 motion-safe:transition-transform hover:border-[#C8A24A]/60 hover:shadow-xl dark:border-slate-700 dark:bg-[#17263b] dark:hover:border-cyan-400/50">
+                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0F2747] transition-colors group-hover:bg-[#C8A24A] dark:bg-[#223b59]">
                     <Icon
                       size={28}
                       className="text-[#C8A24A] transition group-hover:text-[#0F2747]"
                     />
                   </div>
 
-                  <h3 className="text-xl font-bold text-[#0F2747]">
+                  <h3 className="text-xl font-bold text-[#0F2747] dark:text-slate-100">
                     {service.title}
                   </h3>
 
-                  <p className="mt-4 text-sm leading-7 text-slate-600">
+                  <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
                     {service.description}
                   </p>
 
                   <a
-  href="#contact"
-  className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#0F2747] transition hover:text-[#C8A24A]"
->
-  Learn More →
-</a>
+                    href="#contact"
+                    className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-bold text-[#0F2747] transition-colors hover:text-[#8A6A1F] dark:text-[#E4C577] dark:hover:text-cyan-300"
+                  >
+                    Learn More →
+                  </a>
                 </div>
               </FadeIn>
             );

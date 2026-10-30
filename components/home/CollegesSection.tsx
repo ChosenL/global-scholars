@@ -6,8 +6,7 @@ const colleges = [
   {
     name: "Western Connecticut State University",
     location: "Danbury, Connecticut",
-    website:
-      "https://www.wcsu.edu/internationalstudents/undergraduate/",
+    website: "https://www.wcsu.edu/internationalstudents/undergraduate/",
     domain: "wcsu.edu",
   },
   {
@@ -20,29 +19,25 @@ const colleges = [
   {
     name: "University of New Hampshire",
     location: "Durham, New Hampshire",
-    website:
-      "https://admissions.unh.edu/international-students",
+    website: "https://admissions.unh.edu/international-students",
     domain: "unh.edu",
   },
   {
     name: "Pace University",
     location: "New York, New York",
-    website:
-      "https://www.pace.edu/admission-and-aid/international-admission",
+    website: "https://www.pace.edu/admission-and-aid/international-admission",
     domain: "pace.edu",
   },
   {
     name: "University of Massachusetts Dartmouth",
     location: "Dartmouth, Massachusetts",
-    website:
-      "https://www.umassd.edu/undergraduate/international/",
+    website: "https://www.umassd.edu/undergraduate/international/",
     domain: "umassd.edu",
   },
   {
     name: "Arizona State University",
     location: "Tempe, Arizona",
-    website:
-      "https://admission.asu.edu/apply/international",
+    website: "https://admission.asu.edu/apply/international",
     domain: "asu.edu",
   },
 ] as const;
@@ -55,10 +50,16 @@ export default function CollegesSection() {
   return (
     <section
       id="colleges"
-      className="relative overflow-hidden bg-[#F4F7FA] py-24"
+      className="relative overflow-hidden bg-[#F4F7FA] py-24 dark:bg-[#101c30]"
     >
-      <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-[#C8A24A]/10 blur-3xl" />
-      <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-[#0F2747]/10 blur-3xl" />
+      <div
+        aria-hidden="true"
+        className="gsp-decorative-glow pointer-events-none absolute left-0 top-0 h-72 w-72 rounded-full bg-[#C8A24A]/10 blur-3xl dark:bg-[#C8A24A]/10"
+      />
+      <div
+        aria-hidden="true"
+        className="gsp-decorative-glow pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-[#0F2747]/10 blur-3xl dark:bg-cyan-500/10"
+      />
 
       <div className="relative mx-auto max-w-7xl px-6">
         <FadeIn>
@@ -67,15 +68,15 @@ export default function CollegesSection() {
               <GraduationCap size={27} />
             </div>
 
-            <p className="mt-6 text-sm font-black uppercase tracking-[0.3em] text-[#C8A24A]">
+            <p className="mt-6 text-sm font-black uppercase tracking-[0.3em] text-[#967325] dark:text-[#E4C577]">
               Explore U.S. Colleges
             </p>
 
-            <h2 className="mt-4 text-4xl font-black leading-tight text-[#0F2747] md:text-5xl">
+            <h2 className="mt-4 text-4xl font-black leading-tight text-[#0F2747] md:text-5xl dark:text-[#F1F6FC]">
               Colleges That Welcome International Students
             </h2>
 
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
               Begin exploring universities with dedicated international
               admissions pathways, student support, and opportunities for
               applicants from across the Caribbean and around the world.
@@ -85,15 +86,12 @@ export default function CollegesSection() {
 
         <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {colleges.map((college, index) => (
-            <FadeIn
-              key={college.name}
-              delay={Math.min(index * 0.06, 0.3)}
-            >
+            <FadeIn key={college.name} delay={Math.min(index * 0.06, 0.3)}>
               <a
                 href={college.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex h-full min-h-64 flex-col rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#C8A24A]/60 hover:shadow-xl"
+                className="gsp-glow group flex h-full min-h-64 flex-col rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-colors duration-300 motion-safe:hover:-translate-y-1 motion-safe:transition-transform hover:border-[#C8A24A]/60 hover:shadow-xl dark:border-slate-700 dark:bg-[#17263b] dark:hover:border-cyan-400/60"
                 aria-label={`Visit ${college.name} international admissions website`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -111,22 +109,22 @@ export default function CollegesSection() {
                     />
                   </div>
 
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F4F7FA] text-[#0F2747] transition group-hover:bg-[#0F2747] group-hover:text-[#C8A24A]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F4F7FA] text-[#0F2747] transition-colors group-hover:bg-[#0F2747] group-hover:text-[#C8A24A] dark:bg-[#263c57] dark:text-[#E4C577] dark:group-hover:bg-[#315b78]">
                     <ArrowUpRight size={19} />
                   </div>
                 </div>
 
                 <div className="mt-6 flex flex-1 flex-col">
-                  <h3 className="text-xl font-black leading-7 text-[#0F2747]">
+                  <h3 className="text-xl font-black leading-7 text-[#0F2747] dark:text-slate-100">
                     {college.name}
                   </h3>
 
-                  <p className="mt-2 text-sm font-semibold text-slate-500">
+                  <p className="mt-2 text-sm font-semibold text-slate-500 dark:text-slate-300">
                     {college.location}
                   </p>
 
                   <div className="mt-auto pt-6">
-                    <span className="inline-flex items-center gap-2 text-sm font-black text-[#8A6A1F]">
+                    <span className="inline-flex items-center gap-2 text-sm font-black text-[#8A6A1F] dark:text-[#E4C577]">
                       View international admissions
                       <ArrowUpRight
                         size={16}
@@ -140,11 +138,11 @@ export default function CollegesSection() {
           ))}
         </div>
 
-        <p className="mx-auto mt-10 max-w-3xl text-center text-xs leading-6 text-slate-500">
-          Global Scholars Pathway Advisors is not affiliated with or endorsed
-          by the institutions displayed above. Admission requirements,
-          deadlines, tuition, and available programs may change. Always verify
-          current information directly with each institution.
+        <p className="mx-auto mt-10 max-w-3xl text-center text-xs leading-6 text-slate-500 dark:text-slate-300">
+          Global Scholars Pathway Advisors is not affiliated with or endorsed by
+          the institutions displayed above. Admission requirements, deadlines,
+          tuition, and available programs may change. Always verify current
+          information directly with each institution.
         </p>
       </div>
     </section>
