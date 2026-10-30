@@ -82,7 +82,8 @@ export default function Navbar() {
 
   const { isLoaded, isSignedIn } = useUser();
 
-  const portalHref = isLoaded && isSignedIn ? "/dashboard" : "/student-portal";
+  const portalHref =
+    isLoaded && isSignedIn ? "/scholar-dashboard" : "/student-portal";
 
   const portalLabel =
     isLoaded && isSignedIn ? "Scholar Dashboard" : "Student Portal";
