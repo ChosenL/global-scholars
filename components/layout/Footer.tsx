@@ -1,19 +1,50 @@
 import Image from "next/image";
-import { Phone, Mail, Globe, Clock } from "lucide-react";
+import Link from "next/link";
+
+import { Mail, Globe, Clock } from "lucide-react";
+
+const quickLinks = [
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
+  { label: "Services", href: "/services" },
+  { label: "Resources", href: "/resources" },
+  { label: "Contact", href: "/contact" },
+];
+
+const departmentEmails = [
+  {
+    label: "General Information",
+    email: "info@globalscholarspathway.com",
+  },
+  {
+    label: "Admissions",
+    email: "admissions@globalscholarspathway.com",
+  },
+  {
+    label: "Partnerships",
+    email: "partners@globalscholarspathway.com",
+  },
+  {
+    label: "Student Support",
+    email: "support@globalscholarspathway.com",
+  },
+];
 
 export default function Footer() {
   return (
     <footer className="bg-[#071526] text-white">
       <div className="mx-auto max-w-7xl px-6 py-20">
         <div className="grid gap-14 lg:grid-cols-4">
+          {/* COMPANY INFORMATION */}
+
           <div>
-           <Image
-  src="/logo.png"
-  alt="Global Scholars"
-  width={220}
-  height={60}
-  className="h-auto w-48"
-/>
+            <Image
+              src="/global-scholars-logo-dark-nav.webp"
+              alt="Global Scholars"
+              width={220}
+              height={60}
+              className="h-auto w-48"
+            />
 
             <p className="mt-6 leading-7 text-white/70">
               Guiding students and families through every step of the
@@ -22,19 +53,30 @@ export default function Footer() {
             </p>
           </div>
 
+          {/* QUICK LINKS */}
+
           <div>
             <h3 className="text-xl font-bold text-[#C8A24A]">Quick Links</h3>
+
             <ul className="mt-6 space-y-4 text-white/70">
-              <li><a href="#">Home</a></li>
-              <li><a href="#">About</a></li>
-              <li><a href="#">Services</a></li>
-              <li><a href="#">Resources</a></li>
-              <li><a href="#">Contact</a></li>
+              {quickLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="transition-colors hover:text-[#C8A24A]"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
+          {/* SERVICES */}
+
           <div>
             <h3 className="text-xl font-bold text-[#C8A24A]">Services</h3>
+
             <ul className="mt-6 space-y-4 text-white/70">
               <li>University Admissions</li>
               <li>Credential Evaluation</li>
@@ -44,31 +86,47 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* CONTACT INFORMATION */}
+
           <div>
             <h3 className="text-xl font-bold text-[#C8A24A]">Contact Us</h3>
 
             <div className="mt-6 space-y-5">
-              <div className="flex gap-3">
-                <Phone className="text-[#C8A24A]" size={20} />
-                <div>
-                  <p>781-308-7146</p>
-                  <p>781-579-9049</p>
+              {/* DEPARTMENT EMAILS */}
+
+              {departmentEmails.map((department) => (
+                <div key={department.email} className="flex items-start gap-3">
+                  <Mail className="mt-1 shrink-0 text-[#C8A24A]" size={20} />
+
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-[#C8A24A]">
+                      {department.label}
+                    </p>
+
+                    <a
+                      href={`mailto:${department.email}`}
+                      className="mt-1 block break-all text-sm text-white/75 transition-colors hover:text-white hover:underline"
+                    >
+                      {department.email}
+                    </a>
+                  </div>
                 </div>
+              ))}
+
+              {/* CONSULTATIONS */}
+
+              <div className="flex items-start gap-3 pt-2">
+                <Globe className="mt-1 shrink-0 text-[#C8A24A]" size={20} />
+
+                <p className="text-white/75">Virtual Consultations Worldwide</p>
               </div>
 
-              <div className="flex gap-3">
-                <Mail className="text-[#C8A24A]" size={20} />
-                <p>info@globalscholarspathway.com</p>
-              </div>
+              {/* BUSINESS HOURS */}
 
-              <div className="flex gap-3">
-                <Globe className="text-[#C8A24A]" size={20} />
-                <p>Virtual Consultations Worldwide</p>
-              </div>
+              <div className="flex items-start gap-3">
+                <Clock className="mt-1 shrink-0 text-[#C8A24A]" size={20} />
 
-              <div className="flex gap-3">
-                <Clock className="text-[#C8A24A]" size={20} />
-                <p>
+                <p className="text-white/75">
                   Monday – Friday
                   <br />
                   9:00 AM – 5:00 PM
@@ -77,6 +135,8 @@ export default function Footer() {
             </div>
           </div>
         </div>
+
+        {/* COPYRIGHT */}
 
         <div className="mt-16 border-t border-white/10 pt-8 text-center text-white/50">
           © {new Date().getFullYear()} Global Scholars Pathway Advisors. All

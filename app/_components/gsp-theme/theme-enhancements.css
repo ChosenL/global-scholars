@@ -1,0 +1,144 @@
+/* Scoped enhancements: existing light-mode branding and layout remain intact. */
+:root {
+  --gsp-page: #f8fafc;
+  --gsp-surface: #ffffff;
+  --gsp-text: #14243a;
+  --gsp-muted: #40546e;
+  --gsp-line: #dbe4ef;
+  --gsp-accent: #126da4;
+  --gsp-focus: #147eb6;
+  --gsp-glow: rgba(25, 117, 181, 0.22);
+}
+html.dark {
+  --gsp-page: #0b1323;
+  --gsp-surface: #131f32;
+  --gsp-text: #eaf1fa;
+  --gsp-muted: #b8c8db;
+  --gsp-line: #2b4058;
+  --gsp-accent: #5bbfe5;
+  --gsp-focus: #86d8f5;
+  --gsp-glow: rgba(75, 183, 224, 0.24);
+}
+.gsp-theme-page {
+  background: var(--gsp-page);
+  color: var(--gsp-text);
+}
+.gsp-theme-card {
+  background: var(--gsp-surface);
+  border: 1px solid var(--gsp-line);
+  color: var(--gsp-text);
+  border-radius: 0.875rem;
+}
+.gsp-theme-muted {
+  color: var(--gsp-muted);
+}
+.gsp-theme-button {
+  color: #fff;
+  background: #126da4;
+  border-radius: 0.625rem;
+  transition:
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+html.dark .gsp-theme-button {
+  background: #146d8b;
+  color: #fff;
+}
+.gsp-theme-input {
+  color: var(--gsp-text);
+  background: var(--gsp-surface);
+  border: 1px solid var(--gsp-line);
+  border-radius: 0.5rem;
+}
+.gsp-theme-input:focus-visible,
+.gsp-theme-button:focus-visible,
+.gsp-theme-select:focus-visible,
+.gsp-contact-department a:focus-visible {
+  outline: 2px solid var(--gsp-focus);
+  outline-offset: 3px;
+}
+.gsp-glow:hover,
+.gsp-glow:focus-visible {
+  box-shadow:
+    0 0 0 1px var(--gsp-accent),
+    0 0 18px var(--gsp-glow);
+}
+.gsp-theme-highlight {
+  border-left: 3px solid var(--gsp-accent);
+}
+html[data-glow="off"] .gsp-glow,
+html[data-glow="off"] .gsp-glow:hover,
+html[data-glow="off"] .gsp-glow:focus-visible {
+  box-shadow: none !important;
+}
+.gsp-theme-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--gsp-text);
+  font-size: 0.875rem;
+}
+.gsp-theme-control-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.gsp-theme-select {
+  border: 1px solid var(--gsp-line);
+  border-radius: 0.5rem;
+  background: var(--gsp-surface);
+  color: var(--gsp-text);
+  padding: 0.35rem 0.55rem;
+}
+.gsp-theme-glow-toggle {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.gsp-theme-glow-toggle input {
+  accent-color: #147eb6;
+}
+.gsp-contact-departments {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 1rem;
+}
+.gsp-contact-department {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.gsp-contact-department a {
+  color: var(--gsp-accent);
+  overflow-wrap: anywhere;
+}
+.gsp-contact-department a:hover {
+  text-decoration: underline;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gsp-theme-button {
+    transition: none;
+  }
+  .gsp-glow,
+  .gsp-glow:hover,
+  .gsp-glow:focus-visible {
+    box-shadow: none !important;
+  }
+}
+
+/* Optional decorative glow suppression */
+
+html[data-glow="off"] .gsp-decorative-glow {
+  opacity: 0;
+}
+
+/* Respect reduced-motion preferences */
+
+@media (prefers-reduced-motion: reduce) {
+  .gsp-decorative-glow {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -1,10 +1,12 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import GlobalScholarsAI from "@/components/GlobalScholarsAI";
 import StructuredData from "@/components/StructuredData";
-import Script from "next/script";
 import type { Metadata, Viewport } from "next";
 import { Inter, Merriweather } from "next/font/google";
+
+import { ThemeProvider } from "./_components/gsp-theme/ThemeProvider";
+
 import "./globals.css";
+import "./_components/gsp-theme/theme-enhancements.css";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -105,32 +107,19 @@ export default function RootLayout({
     <ClerkProvider>
       <html
         lang="en"
+        suppressHydrationWarning
         className={`${inter.variable} ${merriweather.variable}`}
       >
         <body>
-          <StructuredData />
+          <ThemeProvider>
+            {/* Existing structured data for SEO */}
+            <StructuredData />
 
-          {children}
+            {/* Existing application pages and components */}
+            {children}
 
-          <GlobalScholarsAI />
-
-          <Script
-            src="https://www.googletagmanager.com/gtag/js?id=G-2VVH8SD99D"
-            strategy="afterInteractive"
-          />
-
-          <Script id="google-analytics" strategy="afterInteractive">
-            {`
-              window.dataLayer = window.dataLayer || [];
-
-              function gtag() {
-                window.dataLayer.push(arguments);
-              }
-
-              gtag('js', new Date());
-              gtag('config', 'G-2VVH8SD99D');
-            `}
-          </Script>
+            {/* Option A: AI and authenticated telemetry remain disabled. */}
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>
