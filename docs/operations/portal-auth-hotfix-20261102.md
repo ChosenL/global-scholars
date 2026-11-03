@@ -1,5 +1,132 @@
 # Scholar Portal authentication investigation — November 2, 2026
 
+## Independent initial sign-in watchdog — November 3, 2026
+
+Branch: `fix/portal-signin-watchdog-20261103`. The owner authorized only the
+confirmed recovery-coverage correction. This does **not** establish or fix the
+root cause of the original browser-specific Clerk failure.
+
+### Why a separate watchdog is needed
+
+The installed Clerk React mounting fallback ends when its host has children.
+Those children can still be an internal loading surface. SDK `ready`, arbitrary
+children and completion of a mounting fallback therefore cannot establish a
+usable authentication interface. Existing SDK initialization and dashboard
+navigation recovery remain in place.
+
+The new PortalSignInWatchdog wraps the existing SignIn without changing its
+identity, routing, withSignUp behavior or redirect props. It starts its own
+15-second initial-controls deadline independently of the mounting fallback.
+The fallback remains a loading-only presentation to avoid duplicate recovery
+panels; the independent watchdog owns post-SDK initial-UI recovery, whether the
+component is still empty or has inserted a spinner.
+
+### Usability and active-authentication boundaries
+
+- Supported Clerk appearance.elements options add owned markers to
+  formFieldInput, socialButtonsBlockButton and formButtonPrimary. No private
+  Clerk class names, child counts, provider-specific English button text or
+  component internals are used as readiness signals.
+- A scoped MutationObserver inspects only these markers within the SignIn
+  surface. A usable control must be a native input/button with an accessible
+  name, positive layout dimensions, visible ancestors and an enabled state.
+  Hidden, transparent, inert, disabled and read-only controls do not count.
+  Native labels, aria-label and aria-labelledby are recognized. The check
+  determines naming presence, never reads credential values or sends telemetry.
+- A 250-ms visibility check covers stylesheet/animation changes that do not
+  mutate attributes. Both it and the observer stop permanently once readiness or
+  authentication activity is detected. Cleanup also removes event listeners and
+  the deadline on completion/unmount; this is not a continuously running
+  authentication monitor.
+- Supported useSignIn/useSignUp resource status and fetchStatus signals stop the
+  watchdog for an existing attempt or in-flight request, even if no control is
+  rendered. Focus, pointer/key/input/change events on usable marked controls and
+  form submission also stop it before a legitimate flow can be timed out.
+- Resumed non-root hash routes (including verification/MFA and OAuth callback
+  routes) and callback/invitation parameter names are excluded. Parameter values
+  are never read or logged. Returning to the initial route or ending a request
+  does not re-arm a watchdog that has already finished.
+- A genuinely stalled initial surface gets the existing alert, reload/support
+  links and safe fixed diagnostics. The alert is a sibling of the SignIn surface:
+  it never replaces, conceals, disables or remounts Clerk. There is no automatic
+  navigation, reload, focus transfer or session manipulation. If controls arrive
+  late, recovery disappears and the same mounted controls remain available.
+
+### Tests and limits
+
+The focused Playwright suite includes isolated component-state fixtures that
+execute the actual watchdog/recovery TypeScript source with installed React.
+Clerk hook snapshots and Link presentation are stubbed only in this test harness;
+imperative child updates represent Clerk's separately managed UI root. No test
+authentication shortcut is present in application code and no fixture accesses
+Clerk accounts, Supabase or student records.
+
+Independent scenarios cover empty mounting, a mounted indefinite spinner,
+unusable/hidden/disabled/zero-size children, slow readiness, readiness after the
+deadline, email-only and Google-only controls, password entry, later verification
+or MFA, request/sign-in/sign-up activity before controls appear, permanent
+disarming when that activity ends, resumed MFA/OAuth routes, and stylesheet-only
+visibility changes. Existing real-page synthetic SDK failure, stalled SDK and
+responsive logo checks remain included. Clock-based fixtures wait for React
+effects before advancing the deadline.
+
+The fixtures validate the recovery mechanism, not a real credential exchange,
+Google consent, email delivery or MFA provider. An isolated protected Preview
+must verify that the installed Clerk UI continues applying the documented
+appearance markers to its real named controls. Custom future controls that do
+not expose these markers/native semantics need a reviewed readiness adapter.
+Non-root/resumed authentication flows intentionally have no new deadline. Failures
+before React hydration cannot be handled by this client watchdog.
+
+### Exact scope
+
+1. `app/student-portal/page.tsx` — wrapper, owned appearance markers and loading-only fallback.
+2. `app/student-portal/PortalAuthLoading.tsx` — independent watchdog and reuse of the recovery presentation.
+3. `e2e/portal/login-loading.spec.ts` — isolated state fixtures and expanded scenarios.
+4. `tests/portal-auth-branding.test.mjs` — necessary additional test-only file: the pre-existing single-line fallback assertion was made whitespace-independent and updated to retain the wrapper/fallback contract. This additional file was explained before editing.
+5. `docs/operations/portal-auth-hotfix-20261102.md` — this record.
+
+No ClerkProvider, proxy, redirect, hash-routing, Invite-only, dependency, logo,
+dashboard, marketing, database migration/RLS, assignment, sharing or privilege
+changes. No production credentials, service configuration, commit, push, merge
+or deployment actions. The registry check during this turn still reported
+16.4.4 as latest stable Next.js 16.x. Dependencies were not upgraded; the announced
+November security release remains a reason to recheck before deployment.
+
+### Final validation and recommendation
+
+| Check                              | Result                                                                                                                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm.cmd run typecheck`            | Passed.                                                                                                                                                |
+| `npm.cmd run lint`                 | Passed.                                                                                                                                                |
+| `npm.cmd test`                     | All 158 passed; no failures/skips.                                                                                                                     |
+| Focused production-mode Playwright | All 16 passed: 13 isolated watchdog state/visibility/interaction fixtures and the 3 existing real-page/asset checks.                                   |
+| Synthetic production `next build`  | Passed on Next.js 16.4.4: compilation, built-in TypeScript, 26/26 static pages and optimization.                                                       |
+| `npm audit --omit=dev --json`      | Exit 0; zero reported production vulnerabilities. This does not clear the development-tool findings from the earlier review.                           |
+| Final stable-release recheck       | At 2026-11-03 16:35:55 UTC (11:35:55 a.m. America/New_York), latest stable 16.x remained 16.4.4, matching the installed version. No upgrade performed. |
+| Git whitespace and scope           | Passed; exactly the five listed files changed.                                                                                                         |
+
+The build child process received only allowlisted OS variables plus synthetic CI
+Clerk keys for `clerk.portal-test.invalid` and a placeholder Supabase URL/key for
+`supabase.build-test.invalid`. No inherited application credentials, production
+student accounts or production database were used. All fixtures are local and
+the real-page SDK-failure tests block or hold external requests. Verification
+logs and audit JSON are ignored artifacts in `playwright-report/signin-watchdog/`.
+
+The initial checks found and corrected prefer-const lint errors, and the existing
+format-sensitive source assertion needed the explained test-only update. An
+earlier 15-test run passed; the final 16-test run includes the zero-size/hidden
+control refinements, permanent disarming after requests finish, and stylesheet
+visibility coverage. No dependency compatibility changes were needed.
+
+**Recommendation:** ready for owner-approved protected Vercel Preview testing
+with isolated Clerk/Supabase resources and Invite-only intact. Verify real Clerk
+marker application, Google/email rendering, slow loading, real invited/uninvited
+registration behavior, verification/MFA and OAuth return without a watchdog
+interruption. This is recovery-gap verification, not evidence that the original
+Chrome-specific failure is fixed. No commit, push, merge, deployment or
+production configuration change was performed.
+
 ## Authorized dependency remediation — November 3, 2026
 
 This section supersedes the earlier dependency assessment and recommendation to

@@ -8,7 +8,11 @@ test("portal retains Clerk sign-in, routing and protected dashboard", async () =
   const proxy = await readFile("proxy.ts", "utf8");
   assert.match(portal, /<SignIn\s/);
   assert.match(portal, /routing="hash"/);
-  assert.match(portal, /fallback={<PortalAuthLoading phase="sign-in-ui"/);
+  assert.match(
+    portal,
+    /fallback=\{\s*<PortalAuthLoading phase="sign-in-ui" loadingOnly/,
+  );
+  assert.match(portal, /<PortalSignInWatchdog>/);
   assert.match(
     portal,
     /phase={isSignedIn \? "dashboard-redirect" : "initialization"}/,

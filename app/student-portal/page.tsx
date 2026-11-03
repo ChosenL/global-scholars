@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import PortalAuthLoading from "./PortalAuthLoading";
+import PortalAuthLoading, { PortalSignInWatchdog } from "./PortalAuthLoading";
 import {
   Bot,
   CalendarCheck,
@@ -163,39 +163,43 @@ export default function StudentPortalPage() {
             </div>
 
             <div className="flex justify-center">
-              <SignIn
-                fallback={<PortalAuthLoading phase="sign-in-ui" />}
-                routing="hash"
-                withSignUp
-                fallbackRedirectUrl="/scholar-dashboard"
-                signUpFallbackRedirectUrl="/scholar-dashboard"
-                appearance={{
-                  variables: {
-                    colorPrimary: "#0F2747",
-                    borderRadius: "0.9rem",
-                  },
-                  elements: {
-                    rootBox: "w-full",
-                    cardBox: "w-full shadow-none",
-                    card: "w-full rounded-[1.75rem] border border-slate-200 bg-white shadow-xl",
-                    headerTitle: "text-[#0F2747] font-black",
-                    headerSubtitle: "text-slate-500",
-                    socialButtonsBlockButton:
-                      "rounded-xl border-slate-200 font-bold transition hover:bg-slate-50",
-                    formFieldLabel: "font-bold text-[#0F2747]",
-                    formFieldInput:
-                      "rounded-xl border-slate-300 focus:border-[#C8A24A] focus:ring-[#C8A24A]",
-                    formButtonPrimary:
-                      "rounded-xl bg-[#C8A24A] py-3 font-black text-[#071526] shadow-none hover:bg-[#D5B35D]",
-                    footerActionLink:
-                      "font-black text-[#0F2747] hover:text-[#C8A24A]",
-                    identityPreviewEditButton:
-                      "text-[#0F2747] hover:text-[#C8A24A]",
-                    formResendCodeLink:
-                      "font-bold text-[#0F2747] hover:text-[#C8A24A]",
-                  },
-                }}
-              />
+              <PortalSignInWatchdog>
+                <SignIn
+                  fallback={
+                    <PortalAuthLoading phase="sign-in-ui" loadingOnly />
+                  }
+                  routing="hash"
+                  withSignUp
+                  fallbackRedirectUrl="/scholar-dashboard"
+                  signUpFallbackRedirectUrl="/scholar-dashboard"
+                  appearance={{
+                    variables: {
+                      colorPrimary: "#0F2747",
+                      borderRadius: "0.9rem",
+                    },
+                    elements: {
+                      rootBox: "w-full",
+                      cardBox: "w-full shadow-none",
+                      card: "w-full rounded-[1.75rem] border border-slate-200 bg-white shadow-xl",
+                      headerTitle: "text-[#0F2747] font-black",
+                      headerSubtitle: "text-slate-500",
+                      socialButtonsBlockButton:
+                        "portal-auth-action rounded-xl border-slate-200 font-bold transition hover:bg-slate-50",
+                      formFieldLabel: "font-bold text-[#0F2747]",
+                      formFieldInput:
+                        "portal-auth-field rounded-xl border-slate-300 focus:border-[#C8A24A] focus:ring-[#C8A24A]",
+                      formButtonPrimary:
+                        "portal-auth-action rounded-xl bg-[#C8A24A] py-3 font-black text-[#071526] shadow-none hover:bg-[#D5B35D]",
+                      footerActionLink:
+                        "font-black text-[#0F2747] hover:text-[#C8A24A]",
+                      identityPreviewEditButton:
+                        "text-[#0F2747] hover:text-[#C8A24A]",
+                      formResendCodeLink:
+                        "font-bold text-[#0F2747] hover:text-[#C8A24A]",
+                    },
+                  }}
+                />
+              </PortalSignInWatchdog>
             </div>
 
             <p className="mx-auto mt-6 max-w-sm text-center text-xs leading-5 text-slate-400">
