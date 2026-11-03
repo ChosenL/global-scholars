@@ -230,14 +230,14 @@ export default function ScholarDashboardPage() {
         {/* Desktop sidebar */}
 
         <aside className="hidden w-72 shrink-0 flex-col bg-[#071526] px-6 py-7 text-white lg:flex">
-          <Link href="/" className="inline-flex items-center gap-3">
+          <Link href="/" className="inline-flex flex-col items-start gap-2">
             <Image
-              src="/logo.png"
+              src="/global-scholars-preferred-nav.webp"
               alt="Global Scholars Pathway Advisors"
-              width={62}
-              height={62}
+              width={1779}
+              height={739}
               priority
-              className="h-auto w-[62px]"
+              className="h-auto w-[220px] max-w-full object-contain"
             />
 
             <div>
@@ -838,15 +838,15 @@ export default function ScholarDashboardPage() {
           <div className="flex items-center justify-between">
             <Link
               href="/"
-              className="inline-flex items-center gap-3"
+              className="inline-flex min-w-0 flex-col items-start gap-2"
               onClick={() => setMenuOpen(false)}
             >
               <Image
-                src="/logo.png"
+                src="/global-scholars-preferred-nav.webp"
                 alt="Global Scholars Pathway Advisors"
-                width={60}
-                height={60}
-                className="h-auto w-[60px]"
+                width={1779}
+                height={739}
+                className="h-auto w-[220px] max-w-full object-contain"
               />
 
               <div>

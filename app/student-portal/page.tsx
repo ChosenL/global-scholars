@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import PortalAuthLoading from "./PortalAuthLoading";
 import {
   Bot,
   CalendarCheck,
@@ -49,10 +50,11 @@ export default function StudentPortalPage() {
   if (!isLoaded || isSignedIn) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#071526] via-[#0F2747] to-[#173A68]">
-        <div className="text-center text-white">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-[#C8A24A]" />
-
-          <p className="mt-4 font-bold">Loading Scholar Dashboard...</p>
+        <div className="text-white">
+          <PortalAuthLoading
+            key={isSignedIn ? "redirect" : "init"}
+            phase={isSignedIn ? "dashboard-redirect" : "initialization"}
+          />
         </div>
       </main>
     );
@@ -69,12 +71,12 @@ export default function StudentPortalPage() {
           <div className="relative">
             <Link href="/" aria-label="Return to Global Scholars homepage">
               <Image
-                src="/logo.png"
+                src="/global-scholars-preferred-nav.webp"
                 alt="Global Scholars Pathway Advisors"
-                width={96}
-                height={96}
+                width={1779}
+                height={739}
                 priority
-                className="h-auto w-24"
+                className="h-auto w-[260px] max-w-full object-contain"
               />
             </Link>
 
@@ -128,12 +130,12 @@ export default function StudentPortalPage() {
             <div className="mb-8 text-center lg:hidden">
               <Link href="/" aria-label="Return to Global Scholars homepage">
                 <Image
-                  src="/logo.png"
+                  src="/global-scholars-preferred-light-nav.webp"
                   alt="Global Scholars Pathway Advisors"
-                  width={82}
-                  height={82}
+                  width={1784}
+                  height={711}
                   priority
-                  className="mx-auto h-auto w-[82px]"
+                  className="mx-auto h-auto w-[240px] max-w-full object-contain"
                 />
               </Link>
 
@@ -162,6 +164,7 @@ export default function StudentPortalPage() {
 
             <div className="flex justify-center">
               <SignIn
+                fallback={<PortalAuthLoading phase="sign-in-ui" />}
                 routing="hash"
                 withSignUp
                 fallbackRedirectUrl="/scholar-dashboard"
@@ -174,8 +177,7 @@ export default function StudentPortalPage() {
                   elements: {
                     rootBox: "w-full",
                     cardBox: "w-full shadow-none",
-                    card:
-                      "w-full rounded-[1.75rem] border border-slate-200 bg-white shadow-xl",
+                    card: "w-full rounded-[1.75rem] border border-slate-200 bg-white shadow-xl",
                     headerTitle: "text-[#0F2747] font-black",
                     headerSubtitle: "text-slate-500",
                     socialButtonsBlockButton:
